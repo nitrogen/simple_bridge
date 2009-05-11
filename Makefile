@@ -1,14 +1,17 @@
 all: compile
 
 compile:
-	mkdir -p ebin
-	erl \
+	@mkdir -p ebin
+	@erl \
 		-pa ./ebin \
 		-make
 	
 clean:
-	rm -rf ./ebin/*.*
+	@rm -rf ./ebin/*.*
 
-test:
-	git submodule update --init lib/etap
-	make -C lib/etap
+test: compile
+	@erl \
+		-noshell \
+		-pa ./ebin \
+		-s eunit_helper start \
+		-s init stop

@@ -21,10 +21,6 @@ behaviour_info(callbacks) -> [
 	
 	% URL PARTS
 	% protocol://hostname:port/path/pathinfo?query
-	{url, 1},
-	{protocol, 1},
-	{hostname, 1},
-	{port, 1},
 	{path, 1},
 	{querystring, 1},
 		
