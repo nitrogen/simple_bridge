@@ -1,4 +1,4 @@
-% Simple Erlang Web Bridge
+% Simple Bridge
 % Copyright (c) 2008-2009 Rusty Klophaus
 % See MIT-LICENSE for licensing information.
 

@@ -1,3 +1,7 @@
+% Simple Bridge
+% Copyright (c) 2008-2009 Rusty Klophaus
+% See MIT-LICENSE for licensing information.
+
 -module (inets_response_bridge).
 -behaviour (response_bridge).
 -include ("simplebridge.hrl").
