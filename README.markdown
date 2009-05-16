@@ -1,30 +1,33 @@
 <h1>Simple Bridge</h1>
 
-The Simple Bridge provides a common interface to:
-* Incoming web requests from Inets, Mochiweb, or Yaws.
-* Outgoing web responses through Inets, Mochiweb, or Yaws. 
+Simple Bridge takes the pain out of coding to multiple Erlang web servers by providing a 
+common interface to Inets, Mochiweb, and Yaws.
 
-Simple Bridge takes the pain out of coding to multiple web servers, and it allows
-you to create new "bridge modules" to handle other Erlang web servers. 
+Simple Bridge is split into two parts: 
 
-Simple Bridge works by wrapping the request or response in a parameterized
-module.
+* A *Request Bridge* allows you to see information about the incoming request.
+* A *Response Bridge* allows you to construct a response.
 
-***
 
-<h3>Requests</h3>
-<h5>How do I make a request bridge?</h5>
+<h2>Request Bridges</h2>
+<h4>How do I make a request bridge?</h4>
 
 To make a request bridge for an incoming request, call the request_bridge:make/2 function,
 specifying the correct bridge module for your http server. 
 
-For example:
+Inets example:
 
-> ReqBridge = request_bridge:make(inets_request_bridge, InetsRequestData)
-> ReqBridge = request_bridge:make(mochiweb_request_bridge, MochiwebRequestData)
-> ReqBridge = request_bridge:make(yaws_request_bridge, YawsRequestData)
+	Bridge = request_bridge:make(inets_request_bridge, InetsRequestData)
 
-<h5>What can I do with the request bridge?</h5>
+Mochiweb example:
+
+	Bridge = request_bridge:make(mochiweb_request_bridge, MochiwebRequestData)
+
+Yaws example:
+
+	Bridge = request_bridge:make(yaws_request_bridge, YawsRequestData)
+
+<h4>What can I do with the request bridge?</h4>
 
 The request bridge provides you with a standard interface for accessing the request method, 
 path, query parameters, post parameters, headers, and cookies of the request:
@@ -41,10 +44,12 @@ path, query parameters, post parameters, headers, and cookies of the request:
 * *Bridge:request_body()* - returns a proplist of post params, [{"Post1", "Value1"}, {"Post2", "Value2"}, ...]
 * *Bridge:request_body()* - returns the request body as a list.
 
-<h5>What modules are involved in a request bridge?</h5>
+.
+
+<h4>What modules are involved in a request bridge?</h4>
 
 * *request_bridge.erl* - The behaviour interface that request bridge modules must implement.
-* *request_bridge_wrapper.erl - A parameterized module that wraps a request. 
+* *request_bridge_wrapper.erl* - A parameterized module that wraps a request. 
 * *inets_request_bridge.erl* - The request bridge module for Inets.
 * *mochiweb_request_bridge.erl* - The request bridge module for Mochiweb.
 * *yaws_request_bridge.erl* - The request bridge module for Yaws.
@@ -52,21 +57,25 @@ path, query parameters, post parameters, headers, and cookies of the request:
 To extend the Simple Bridge to other HTTP servers (or other versions of Inets, Mochiweb, or Yaws), 
 copy and modify inets_request_bridge.erl, mochiweb_request_bridge.erl, or yaws_request_bridge.erl.
 
-***
-
-<h3>Responses</h3>
-<h5>How do I make a response bridge?</h5>
+<h2>Response Bridges</h2>
+<h4>How do I make a response bridge?</h4>
 
 To make a response bridge for a response to the client, call the response_bridge:make/1 function,
 specifying the correct bridge module for your http server.
 
-For example:
+Inets example:
 
-> Bridge = response_bridge:make(inets_response_bridge)
-> Bridge = response_bridge:make(mochiweb_response_bridge)
-> Bridge = response_bridge:make(yaws_response_bridge)
+	Bridge = response_bridge:make(inets_response_bridge)
 
-<h5>What can I do with the response bridge?</h5>
+Mochiweb example:
+
+	Bridge = response_bridge:make(mochiweb_response_bridge)
+
+Yaws example:
+
+	Bridge = response_bridge:make(yaws_response_bridge)
+
+<h4>What can I do with the response bridge?</h4>
 
 The response bridge provides you with a standard interface for combining headers, cookies,
 and a response body into a response appropriate for your http server. 
@@ -74,10 +83,10 @@ and a response body into a response appropriate for your http server.
 Each function below returns a new bridge object, so your will need to 
 chain together requests like this:
 
-> Bridge = response_bridge:mak(inets_response_bridge),
-> Bridge1 = Bridge:status_code(200),
-> Bridge2 = Bridge1:header("Header1", "Value1"),
-> etc.
+	Bridge = response_bridge:mak(inets_response_bridge),
+	Bridge1 = Bridge:status_code(200),
+	Bridge2 = Bridge1:header("Header1", "Value1"),
+	etc.
 
 * *Bridge:status_code(Code)* - set the HTTP status code. (200, 404, etc.)
 * *Bridge:header(Name, Value)* - set an HTTP header.
@@ -91,10 +100,12 @@ Finally, you build the response to send to your HTTP server with the build_respo
 
 * *Bridge:build_response()* - Create a response tuple that you can hand off to your HTTP server.
 
-<h5>What modules are involved in a response bridge?</h5>
+.
+
+<h4>What modules are involved in a response bridge?</h4>
 
 * *response_bridge.erl* - The behaviour interface that response bridge modules must implement.
-* *response_bridge_wrapper.erl - A parameterized module that wraps a response. 
+* *response_bridge_wrapper.erl* - A parameterized module that wraps a response. 
 * *inets_response_bridge.erl* - The response bridge module for Inets.
 * *mochiweb_response_bridge.erl* - The response bridge module for Mochiweb.
 * *yaws_response_bridge.erl* - The response bridge module for Yaws.
