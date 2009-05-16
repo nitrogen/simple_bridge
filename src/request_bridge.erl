@@ -20,16 +20,16 @@ behaviour_info(callbacks) -> [
 	{request_method, 1},
 	
 	% URL PARTS
-	% protocol://hostname:port/path/pathinfo?query
+	% protocol://hostname:port/path?query_string
 	{path, 1},
-	{querystring, 1},
+	{query_string, 1},
 		
 	% % Data Sent from Client
-	% {headers, 1},
-	% {cookies, 1},
-	% {query_params, 1},
-	% {post_params, 1},
-	% {request_body, 2},
+	{headers, 1},
+	{cookies, 1},
+	{query_params, 1},
+	{post_params, 1},
+	{request_body, 1},
 
 	% Client Information
 	{peer_ip, 1},

@@ -6,12 +6,15 @@
 -compile(export_all).
 
 request_method() -> Mod:request_method(Req).
-url() -> Mod:url(Req).
-protocol() -> Mod:protocol(Req).
-hostname() -> Mod:hostname(Req).
-port() -> Mod:port(Req).
 path() -> Mod:path(Req).
-querystring() -> Mod:querystring(Req).
+query_string() -> Mod:query_string(Req).
 
 peer_ip() -> Mod:peer_ip(Req).
 peer_port() -> Mod:peer_port(Req).
+
+headers() -> Mod:headers(Req).
+cookies() -> Mod:cookies(Req).
+
+query_params() -> Mod:query_params(Req).
+post_params() -> Mod:post_params(Req).
+request_body() -> Mod:request_body(Req).

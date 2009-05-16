@@ -1,13 +1,23 @@
 -module (utils).
+-include ("test.hrl").
 -compile(export_all).
 
-make_inets_bridge() ->
+make_inets_get_bridge() ->
 	% Construct the inets bridge...
-	{ok, [InetsRequest] } = file:consult("data/inets_request_data"),
+	{ok, [InetsRequest] } = file:consult("data/inets_get_request_data"),
 	{ok, Socket} = gen_tcp:connect(?PEER_IP, ?PEER_PORT, []),
 	InetsRequest1 = inject_socket(InetsRequest, Socket),
 	InetsBridge = request_bridge:make(inets_request_bridge, InetsRequest1),
 	InetsBridge.
+
+make_inets_post_bridge() ->
+	% Construct the inets bridge...
+	{ok, [InetsRequest] } = file:consult("data/inets_post_request_data"),
+	{ok, Socket} = gen_tcp:connect(?PEER_IP, ?PEER_PORT, []),
+	InetsRequest1 = inject_socket(InetsRequest, Socket),
+	InetsBridge = request_bridge:make(inets_request_bridge, InetsRequest1),
+	InetsBridge.
+
 
 % inject_socket(Term, FakeSocket) ->
 % Given a term and a fake socket, replace any instances of 'socket'
@@ -21,4 +31,7 @@ inject_socket(Term, Socket) when is_tuple(Term) ->
 	List1 = inject_socket(List, Socket),
 	list_to_tuple(List1);
 inject_socket(Other, _) -> Other.
+
+verify(Name, Value, PropList) ->
+	[Value] = [Y || {X, Y} <- PropList, X==Name].
 

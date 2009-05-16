@@ -2,4 +2,5 @@
 -export ([start/0]).
 
 start() ->
-	eunit:test(request_bridge).
+	eunit:test(inets_request_bridge),
+	eunit:test(inets_response_bridge).

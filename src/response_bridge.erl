@@ -4,7 +4,7 @@
 
 
 -module (response_bridge).
--include ("simplebridge.inc").
+-include ("simplebridge.hrl").
 -export ([
 	make/1,
 	behaviour_info/1
@@ -14,7 +14,7 @@ make(Mod) ->
 	response_bridge_wrapper:new(Mod, #response{}).
 
 behaviour_info(callbacks) -> [
-	{build_response, 0} 
+	{build_response, 1} 
 ];
 
 behaviour_info(_) -> ok.
