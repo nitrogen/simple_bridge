@@ -16,8 +16,7 @@ request_method_test() ->
 
 url_test() ->
 	Bridge = utils:make_inets_get_bridge(),
-	"/web/req" = Bridge:path(),
-	?QUERY_STRING = Bridge:query_string().
+	"/web/req" = Bridge:path().
 
 peer_test() ->
 	Bridge = utils:make_inets_get_bridge(),

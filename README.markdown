@@ -12,20 +12,20 @@ Simple Bridge is split into two parts:
 <h2>Request Bridges</h2>
 <h4>How do I make a request bridge?</h4>
 
-To make a request bridge for an incoming request, call the request_bridge:make/2 function,
+To make a request bridge for an incoming request, call the simple_bridge:make_request/2 function,
 specifying the correct bridge module for your http server. 
 
 Inets example:
 
-	Bridge = request_bridge:make(inets_request_bridge, InetsRequestData)
+	Bridge = request_bridgesimple_bridge:make_request(inets_request_bridge, InetsRequestData)
 
 Mochiweb example:
 
-	Bridge = request_bridge:make(mochiweb_request_bridge, MochiwebRequestData)
+	Bridge = simple_bridge:make_request(mochiweb_request_bridge, MochiwebRequestData)
 
 Yaws example:
 
-	Bridge = request_bridge:make(yaws_request_bridge, YawsRequestData)
+	Bridge = simple_bridge:make_request(yaws_request_bridge, YawsRequestData)
 
 <h4>What can I do with the request bridge?</h4>
 
@@ -34,7 +34,6 @@ path, query parameters, post parameters, headers, and cookies of the request:
 
 * *Bridge:request_method()* - returns 'GET', 'POST', 'HEAD', etc.
 * *Bridge:path()* - returns the requested path and file.
-* *Bridge:query_string()* - returns the query string, anything after the "?" in the URL.
 * *Bridge:peer_ip()* - returns the client's IP address in tuple format (74.125.67.100 = {74, 125, 67, 100})
 * *Bridge:peer_port()* - returns the client's port.
 * *Bridge:headers()* - returns a proplist of headers, [{"Header1", "Value1"}, {"Header2", "Value2"}, ...]
@@ -65,15 +64,15 @@ specifying the correct bridge module for your http server.
 
 Inets example:
 
-	Bridge = response_bridge:make(inets_response_bridge)
+	Bridge = response_bridgesimple_bridge:make_response(inets_response_bridge)
 
 Mochiweb example:
 
-	Bridge = response_bridge:make(mochiweb_response_bridge)
+	Bridge = response_bridgesimple_bridge:make_response(mochiweb_response_bridge)
 
 Yaws example:
 
-	Bridge = response_bridge:make(yaws_response_bridge)
+	Bridge = response_bridgesimple_bridge:make_response(yaws_response_bridge)
 
 <h4>What can I do with the response bridge?</h4>
 

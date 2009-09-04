@@ -3,12 +3,12 @@
 % See MIT-LICENSE for licensing information.
 
 -module (inets_request_bridge).
--behaviour (request_bridge).
+-behaviour (simple_bridge_request).
 -include ("httpd_r12b5.hrl").
 -include ("simplebridge.hrl").
 -export ([
 	init/1,
-	request_method/1, path/1, query_string/1,
+	request_method/1, path/1,
 	peer_ip/1, peer_port/1,
 	headers/1, cookies/1,
 	query_params/1, post_params/1, request_body/1
@@ -25,10 +25,6 @@ request_method(Req) ->
 path(Req) -> 
 	{Path, _QueryString} = split_request_uri(Req#mod.request_uri, []),
 	Path.
-
-query_string(Req) -> 
-	{_Path, QueryString} = split_request_uri(Req#mod.request_uri, []),
-	QueryString.
 
 peer_ip(Req) -> 
 	Socket = Req#mod.socket,
@@ -58,7 +54,7 @@ cookies(Req) ->
 	[F(X) || X <- string:tokens(CookieData, ";")].
 	
 query_params(Req) ->
-	QueryString = query_string(Req),
+	{_Path, QueryString} = split_request_uri(Req#mod.request_uri, []),
 	Query = httpd:parse_query(QueryString),
 	[{Key, Value} || {Key, Value} <- Query, Key /= []].
 	

@@ -3,11 +3,11 @@
 % See MIT-LICENSE for licensing information.
 
 -module (inets_response_bridge).
--behaviour (response_bridge).
+-behaviour (simple_bridge_response).
 -include ("simplebridge.hrl").
--export ([build_response/1]).
+-export ([build_response/2]).
 
-build_response(Res) ->	
+build_response(_Req, Res) ->	
 	ResponseCode = Res#response.statuscode,
 	Data = Res#response.data,
 	Size = integer_to_list(httpd_util:flatlength(Data)),
