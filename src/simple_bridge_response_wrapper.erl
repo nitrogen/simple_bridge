@@ -38,7 +38,11 @@ clear_cookies() ->
 	?MODULE:new(Mod, Req, Res1).
 
 data(Data) -> 
-	Res1 = Res#response { data=Data },
+	Res1 = Res#response { data={data, Data} },
+	?MODULE:new(Mod, Req, Res1).
+
+file(Path) ->
+	Res1 = Res#response { data={file, Path} },
 	?MODULE:new(Mod, Req, Res1).
 
 build_response() -> Mod:build_response(Req, Res).

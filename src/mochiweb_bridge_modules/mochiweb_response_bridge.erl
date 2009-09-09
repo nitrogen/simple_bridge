@@ -10,16 +10,20 @@
 build_response(Req, Res) ->	
 	% Some values...
 	Code = Res#response.statuscode, 
-	Body = Res#response.data,
+	case Res#response.data of
+		{data, Body} ->
 	
-	% Assemble headers...
-	Headers = lists:flatten([
-		[{X#header.name, X#header.value} || X <- Res#response.headers],
-		[create_cookie_header(X) || X <- Res#response.cookies]
-	]),		
+			% Assemble headers...
+			Headers = lists:flatten([
+				[{X#header.name, X#header.value} || X <- Res#response.headers],
+				[create_cookie_header(X) || X <- Res#response.cookies]
+			]),		
 	
-	% Send the mochiweb response...
-	Req:respond({Code, Headers, Body}).
+			% Send the mochiweb response...
+			Req:respond({Code, Headers, Body});
+		{file, File} ->
+			throw(not_supported)
+	end.
 
 create_cookie_header(Cookie) ->
 	SecondsToLive = Cookie#cookie.minutes_to_live * 60,

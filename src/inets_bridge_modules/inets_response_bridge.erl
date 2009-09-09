@@ -7,23 +7,29 @@
 -include ("simplebridge.hrl").
 -export ([build_response/2]).
 
-build_response(_Req, Res) ->	
+build_response(Req, Res) ->	
+	io:format("~p~n", [Req]),
 	ResponseCode = Res#response.statuscode,
-	Data = Res#response.data,
-	Size = integer_to_list(httpd_util:flatlength(Data)),
+	case Res#response.data of
+		{data, Data} ->
+			Size = integer_to_list(httpd_util:flatlength(Data)),
 	
-	% Assemble headers...
-	Headers = lists:flatten([
-		{code, ResponseCode},
-		{content_length, Size},
-		[{X#header.name, X#header.value} || X <- Res#response.headers],
-		[create_cookie_header(X) || X <- Res#response.cookies]
-	]),		
+			% Assemble headers...
+			Headers = lists:flatten([
+				{code, ResponseCode},
+				{content_length, Size},
+				[{X#header.name, X#header.value} || X <- Res#response.headers],
+				[create_cookie_header(X) || X <- Res#response.cookies]
+			]),		
 
-	% Send the inets response...
-	{break,[
-		{response, {response, Headers, Data}}
-	]}.
+			% Send the inets response...
+			{break,[
+				{response, {response, Headers, Data}}
+			]};
+			
+		{file, Path} ->
+			mod_get:do(Req)
+	end.
 
 create_cookie_header(Cookie) ->
 	SecondsToLive = Cookie#cookie.minutes_to_live * 60,
