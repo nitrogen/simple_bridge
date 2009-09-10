@@ -8,7 +8,6 @@
 -export ([build_response/2]).
 
 build_response(Req, Res) ->	
-	io:format("~p~n", [Req]),
 	ResponseCode = Res#response.statuscode,
 	case Res#response.data of
 		{data, Data} ->
@@ -27,7 +26,7 @@ build_response(Req, Res) ->
 				{response, {response, Headers, Data}}
 			]};
 			
-		{file, Path} ->
+		{file, _Path} ->
 			mod_get:do(Req)
 	end.
 

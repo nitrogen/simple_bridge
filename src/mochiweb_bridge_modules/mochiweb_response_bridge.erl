@@ -21,7 +21,7 @@ build_response(Req, Res) ->
 	
 			% Send the mochiweb response...
 			Req:respond({Code, Headers, Body});
-		{file, File} ->
+		{file, _File} ->
 			throw(not_supported)
 	end.
 
