@@ -7,7 +7,7 @@
 -include ("simplebridge.hrl").
 -export ([build_response/2]).
 
-build_response(Req, Res) ->	
+build_response({Req, DocRoot}, Res) ->	
 	% Some values...
 	Code = Res#response.statuscode, 
 	case Res#response.data of
@@ -21,8 +21,8 @@ build_response(Req, Res) ->
 	
 			% Send the mochiweb response...
 			Req:respond({Code, Headers, Body});
-		{file, _File} ->
-			throw(not_supported)
+		{file, Path} ->
+			Req:serve_file(tl(Path), DocRoot)
 	end.
 
 create_cookie_header(Cookie) ->

@@ -15,38 +15,38 @@
 
 -define(PRINT(Var), error_logger:info_msg("DEBUG: ~p:~p - ~p: ~p~n", [?MODULE, ?LINE, ??Var, Var])).
 
-init(Req) -> 
-	Req.
+init({Req, DocRoot}) -> 
+	{Req, DocRoot}.
 
-request_method(Req) -> 
+request_method({Req, _DocRoot}) -> 
 	Req:get(method).
 
-path(Req) -> 
+path({Req, _DocRoot}) -> 
 	RawPath = Req:get(raw_path),
 	{Path, _, _} = mochiweb_util:urlsplit_path(RawPath),
 	Path.
 
-peer_ip(Req) -> 
+peer_ip({Req, _DocRoot}) -> 
 	Socket = Req:get(socket),
 	{ok, {IP, _Port}} = inet:peername(Socket),
 	IP.
 	
-peer_port(Req) -> 
+peer_port({Req, _DocRoot}) -> 
 	Socket = Req:get(socket),
 	{ok, {_IP, Port}} = inet:peername(Socket),
 	Port.
 	
-headers(Req) ->
+headers({Req, _DocRoot}) ->
 	Req:get(headers).
 	
-cookies(Req) ->
+cookies({Req, _DocRoot}) ->
 	Req:parse_cookie().
 	
-query_params(Req) ->
+query_params({Req, _DocRoot}) ->
 	Req:parse_qs().
 	
-post_params(Req) ->
+post_params({Req, _DocRoot}) ->
 	Req:parse_post().
 
-request_body(_Req) -> 
+request_body({_Req, _DocRoot}) -> 
 	[].
