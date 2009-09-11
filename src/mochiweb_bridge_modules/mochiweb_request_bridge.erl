@@ -37,7 +37,29 @@ peer_port({Req, _DocRoot}) ->
 	Port.
 	
 headers({Req, _DocRoot}) ->
-	Req:get(headers).
+	F = fun(Header) -> Req:get_header_value(Header) end,
+	[
+		{connection, F("connection")},
+		{accept, F("accept")},
+		{host, F("host")},
+		{if_modified_since, F("if-modified-since")},
+		{if_match, F("if-match")},
+    {if_none_match, F("if-range")},
+    {if_unmodified_since, F("if-unmodified-since")},
+    {range, F("range")},
+		{referer, F("referer")},
+    {user_agent, F("user-agent")},
+    {accept_ranges, F("accept-ranges")},
+    {cookie, F("cookie")},
+    {keep_alive, F("keep-alive")},
+    {location, F("location")},
+    {content_length, F("content-length")},
+    {content_type, F("content-type")},
+    {content_encoding, F("content-encoding")},
+    {authorization, F("authorization")},
+    {x_forwarded_for, F("x-forwarded-for")},
+    {transfer_encoding, F("transfer-encoding")}
+	].
 	
 cookies({Req, _DocRoot}) ->
 	Req:parse_cookie().
@@ -48,5 +70,18 @@ query_params({Req, _DocRoot}) ->
 post_params({Req, _DocRoot}) ->
 	Req:parse_post().
 
-request_body({_Req, _DocRoot}) -> 
-	[].
+request_body({Req, _DocRoot}) ->
+	undefined.
+
+socket({Req, _DocRoot}) -> 	
+	Req:get(socket).
+
+recv_from_socket(Length, Timeout, {Req, _DocRoot}) -> 
+	Socket = socket(Req),
+	case gen_tcp:recv(Socket, Length, Timeout) of
+		{ok, Data} -> 
+			put(mochiweb_request_recv, true),
+			Data;
+		_Other -> 
+			exit(normal)
+	end.

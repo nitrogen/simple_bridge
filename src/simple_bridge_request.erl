@@ -8,9 +8,10 @@
 	behaviour_info/1
 ]).
 
-make(Module, Req) -> 
-	Req1 = Module:init(Req),
-	simple_bridge_request_wrapper:new(Module, Req1).
+make(Module, RequestData) -> 
+	RequestData1 = Module:init(RequestData),
+	RequestBridge = simple_bridge_request_wrapper:new(Module, RequestData1),
+	_RequestBridge1 = simple_bridge_multipart:update_for_multipart_request(RequestBridge).
 
 behaviour_info(callbacks) -> [
 	{init, 1},           % Should accept the request value passed by the http server.

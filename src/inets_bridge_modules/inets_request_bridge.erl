@@ -37,7 +37,29 @@ peer_port(Req) ->
 	Port.
 	
 headers(Req) ->
-	Req#mod.parsed_header.
+	Headers = Req#mod.parsed_header,
+	F = fun(Header) -> proplists:get_value(Header, Headers) end,
+	[
+		{connection, F("connection")},
+		{accept, F("accept")},
+		{host, F("host")},
+		{if_modified_since, F("if-modified-since")},
+		{if_match, F("if-match")},
+    {if_none_match, F("if-range")},
+    {if_unmodified_since, F("if-unmodified-since")},
+    {range, F("range")},
+		{referer, F("referer")},
+    {user_agent, F("user-agent")},
+    {accept_ranges, F("accept-ranges")},
+    {cookie, F("cookie")},
+    {keep_alive, F("keep-alive")},
+    {location, F("location")},
+    {content_length, F("content-length")},
+    {content_type, F("content-type")},
+    {content_encoding, F("content-encoding")},
+    {authorization, F("authorization")},
+    {transfer_encoding, F("transfer-encoding")}
+	].
 	
 cookies(Req) ->
 	Headers = headers(Req),
@@ -66,6 +88,18 @@ post_params(Req) ->
 request_body(Req) ->
 	Req#mod.entity_body.
 
+socket(Req) -> 
+	Req#mod.socket.
+
+recv_from_socket(Length, Timeout, Req) -> 
+	Socket = socket(Req),
+	case gen_tcp:recv(Socket, Length, Timeout) of
+		{ok, Data} -> Data;
+		_ -> exit(normal)
+	end.
+
+
+%%% PRIVATE FUNCTIONS %%%
 split_request_uri([], Path) -> {lists:reverse(Path), ""};
 split_request_uri([$?|QueryString], Path) -> {lists:reverse(Path), QueryString};
 split_request_uri([H|T], Path) -> split_request_uri(T,[H|Path]).
