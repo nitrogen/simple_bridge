@@ -10,8 +10,13 @@
 
 make(Module, RequestData) -> 
 	RequestData1 = Module:init(RequestData),
-	RequestBridge = simple_bridge_request_wrapper:new(Module, RequestData1),
-	_RequestBridge1 = simple_bridge_multipart:update_for_multipart_request(RequestBridge).
+	RequestBridge = simple_bridge_request_wrapper:new(Module, RequestData1, false, [], undefined),
+	case simple_bridge_multipart:parse(RequestBridge) of
+		{ok, Params, OriginalName, TempFile} ->
+			RequestBridge:set_multipart(Params, OriginalName, TempFile);
+		_ ->
+			RequestBridge
+	end.
 
 behaviour_info(callbacks) -> [
 	{init, 1},           % Should accept the request value passed by the http server.

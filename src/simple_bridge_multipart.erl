@@ -3,7 +3,7 @@
 % See MIT-LICENSE for licensing information.
 
 -module (simple_bridge_multipart).
--export ([update_for_multipart_request/1]).
+-export ([parse/1]).
 
 % Alas, so many Erlang HTTP Servers, and so little parsing of Multipart forms.
 % This file contains multipart form parsing logic that is shared by all 
@@ -17,20 +17,21 @@
 -record(mp, {state, boundary, length, buffer, callback}).
 -record(state, {queryargs = [], filename=undefined, localfiledata=undefined}).
 
-update_for_multipart_request(Req) ->
-	try
-		case is_multipart_request(Req) of
-			true -> 
-				io:format("Got a multipart request!~n"),
-				io:format("Results: ~p~n", [parse_upload(Req)]);
-			false -> 
-				io:format("Normal request~n")
-		end
-		
-	catch Type : Reason ->
-		io:format("~p~n~p~n~p~n", [Type, Reason, erlang:get_stacktrace()])
-	end,
-	Req.
+parse(Req) -> 
+	case is_multipart_request(Req) of
+		true ->
+			ScratchDir = ?SCRATCH_DIR,
+			file:make_dir(ScratchDir),
+			TempFileName = get_tempfilename(),
+			LocalFileData = filename:join(ScratchDir, TempFileName),
+		 	State = #state { localfiledata=LocalFileData },
+			Callback = fun(X) -> callback(X, undefined, State, Req) end,
+			{ok, Params, FileName, Tempfile} = parse(Callback, Req),
+			Params1 = [{Key, binary_to_list(Value)} || {Key, Value} <- Params],
+			{ok, Params1, FileName, Tempfile};
+		false ->
+			not_multipart
+	end.
 
 is_multipart_request(Req) ->
 	Headers = Req:headers(),
@@ -41,14 +42,6 @@ is_multipart_request(Req) ->
 		_ -> false
 	end.
 	
-parse_upload(Req) -> 
-	ScratchDir = ?SCRATCH_DIR,
-	file:make_dir(ScratchDir),
-	TempFileName = get_tempfilename(),
-	LocalFileData = filename:join(ScratchDir, TempFileName),
- 	State = #state { localfiledata=LocalFileData },
-	Callback = fun(X) -> callback(X, undefined, State, Req) end,
-	parse(Callback, Req).
 
 parse(Callback, Req) ->
 	% Figure out the boundary and length...
@@ -63,7 +56,7 @@ parse(Callback, Req) ->
 		((is_binary(Chunk) andalso size(Chunk) > 0) orelse (is_list(Chunk) andalso length(Chunk) > 0)),
 	Chunk1 = case HasChunk of
 		true  ->  to_binary(Chunk);
-		false ->  Req:read_chunk(Length, Req)
+		false ->  read_chunk(Length, Req)
 	end,
 	
 	% Parse the first chunk...

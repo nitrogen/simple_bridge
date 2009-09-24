@@ -10,7 +10,8 @@
 	request_method/1, path/1,
 	peer_ip/1, peer_port/1,
 	headers/1, cookies/1,
-	query_params/1, post_params/1, request_body/1
+	query_params/1, post_params/1, request_body/1,
+	socket/1, recv_from_socket/3
 ]).
 
 -define(PRINT(Var), error_logger:info_msg("DEBUG: ~p:~p - ~p: ~p~n", [?MODULE, ?LINE, ??Var, Var])).
@@ -70,14 +71,14 @@ query_params({Req, _DocRoot}) ->
 post_params({Req, _DocRoot}) ->
 	Req:parse_post().
 
-request_body({Req, _DocRoot}) ->
+request_body({_Req, _DocRoot}) ->
 	undefined.
 
 socket({Req, _DocRoot}) -> 	
 	Req:get(socket).
 
-recv_from_socket(Length, Timeout, {Req, _DocRoot}) -> 
-	Socket = socket(Req),
+recv_from_socket(Length, Timeout, {Req, DocRoot}) -> 
+	Socket = socket({Req, DocRoot}),
 	case gen_tcp:recv(Socket, Length, Timeout) of
 		{ok, Data} -> 
 			put(mochiweb_request_recv, true),

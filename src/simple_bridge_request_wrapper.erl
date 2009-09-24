@@ -2,8 +2,15 @@
 % Copyright (c) 2008-2009 Rusty Klophaus
 % See MIT-LICENSE for licensing information.
 
--module (simple_bridge_request_wrapper, [Mod, Req]).
+-module (simple_bridge_request_wrapper, [Mod, Req, IsMultiPart, PostParams, File]).
 -compile(export_all).
+-include ("simplebridge.hrl").
+
+set_multipart(Params, OriginalName, TempFile) ->
+	simple_bridge_request_wrapper:new(Mod, Req, true, Params, #uploaded_file {
+		original_name=OriginalName,
+		temp_file=TempFile
+	}).
 
 request_method() -> Mod:request_method(Req).
 path() -> Mod:path(Req).
@@ -26,7 +33,13 @@ cookies() -> Mod:cookies(Req).
 
 query_params() -> Mod:query_params(Req).
 
-post_params() -> Mod:post_params(Req).
+post_params() -> 
+	case IsMultiPart of
+		true -> PostParams;
+		false -> Mod:post_params(Req)
+	end.
+	
+uploaded_file() -> File.
 
 request_body() -> Mod:request_body(Req).
 
