@@ -83,7 +83,6 @@ query_params(Req) ->
 	
 post_params(Req) ->
 	Body = request_body(Req),
-	io:format("Body: ~p~n", [Body]),
 	Query = httpd:parse_query(Body),
 	[{Key, Value} || {Key, Value} <- Query, Key /= []].
 
