@@ -10,12 +10,12 @@
 
 make(Module, RequestData) -> 
 	RequestData1 = Module:init(RequestData),
-	RequestBridge = simple_bridge_request_wrapper:new(Module, RequestData1, false, [], undefined),
+	RequestBridge = simple_bridge_request_wrapper:new(Module, RequestData1, false, [], [], none),
 	case simple_bridge_multipart:parse(RequestBridge) of
-		{ok, Params, OriginalName, TempFile} ->
-			RequestBridge:set_multipart(Params, OriginalName, TempFile);
-		_ ->
-			RequestBridge
+		{ok, Params, Files} -> RequestBridge:set_multipart(Params, Files);
+		{ok, not_multipart} -> RequestBridge;
+		{error, Error} -> RequestBridge:set_error(Error);
+		Other -> throw({unexpected, Other})
 	end.
 
 behaviour_info(callbacks) -> [

@@ -2,15 +2,15 @@
 % Copyright (c) 2008-2009 Rusty Klophaus
 % See MIT-LICENSE for licensing information.
 
--module (simple_bridge_request_wrapper, [Mod, Req, IsMultiPart, PostParams, File]).
+-module (simple_bridge_request_wrapper, [Mod, Req, IsMultiPart, PostParams, PostFiles, Error]).
 -compile(export_all).
 -include ("simplebridge.hrl").
 
-set_multipart(Params, OriginalName, TempFile) ->
-	simple_bridge_request_wrapper:new(Mod, Req, true, Params, #uploaded_file {
-		original_name=OriginalName,
-		temp_file=TempFile
-	}).
+set_multipart(PostParams1, PostFiles1) ->
+	simple_bridge_request_wrapper:new(Mod, Req, true, PostParams1, PostFiles1, Error).
+	
+set_error(Error1) ->
+	simple_bridge_request_wrapper:new(Mod, Req, true, PostParams, PostFiles, Error1).
 
 request_method() -> Mod:request_method(Req).
 path() -> Mod:path(Req).
@@ -39,7 +39,7 @@ post_params() ->
 		false -> Mod:post_params(Req)
 	end.
 	
-uploaded_file() -> File.
+post_files() -> PostFiles.
 
 request_body() -> Mod:request_body(Req).
 
@@ -56,3 +56,5 @@ recv_from_socket(Length, Timeout) ->
 		true ->  Mod:recv_from_socket(Length, Timeout, Req);
 		false -> throw({not_supported, Mod, recv_from_socket})
 	end.
+	
+error() -> Error.
