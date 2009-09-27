@@ -4,12 +4,12 @@ Simple Bridge takes the pain out of coding to multiple Erlang web servers by cre
 
 In a sense, it is similar to <a href="http://github.com/skarab/ewgi">EWGI</a>, except SimpleBridge has some key improvements/differences:
 
-* <b>Smaller code base</b> SimpleBridge is 870 lines, compared to 1,974 lines for EWGI. This is because SimpleBridge uses the underlying HTTP server's built in parsing functions as much as possible.
+* <b>Smaller code base</b> - SimpleBridge is 870 lines, compared to 1,974 lines for EWGI. This is because SimpleBridge uses the underlying HTTP server's built in parsing functions as much as possible.
 * <b>Easily extended</b> - Takes about 150 lines to add support for a new HTTP server, vs. ~350 for EWGI.
 * <b>MultiPart File Uploads</b> - SimpleBridge has better support for HTTP POSTS, including support for multipart file uploads, with size limits and handle-able errors.
 * <b>Static File Support</b> - Support for sending a static file to the browser, using the underlying HTTP server's own methods.
 * <b>Cookies Support</b> - SimpleBridge provides interface functions for getting and setting cookies.
-* <b>No Middleware Components</b> - One disadvantage, SimpleBridge does not explicitly support EWGI's concept of "middleware components". (Though you could probably fake it, haven't tried.)
+* <b>No Middleware Components</b> - SimpleBridge does not explicitly support EWGI's concept of "middleware components". (Though you could probably fake it, haven't tried.)
 
 Simple Bridge is split into two parts: 
 
