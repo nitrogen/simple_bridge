@@ -16,6 +16,7 @@ Simple Bridge is split into two parts:
 * A *Request Bridge* is a parameterized module that allows you to see information about the incoming request.
 * A *Response Bridge* is a parameterized module that allows you to construct a response.
 
+
 </h2>Hello World Example</h2>
 
     % SimpleBridge Hello World Example in Mochiweb
@@ -61,7 +62,8 @@ Mochiweb example:
 
 Once you have created the request bridge object (a parameterized module), it provides you with a standard interface for accessing the request method, path, query parameters, post parameters, headers, and cookies of the request:
 
-Request Bridge Interface:
+
+<h4>Request Bridge Interface</h4>
 
 * *Bridge:request_method()* - returns 'GET', 'POST', 'HEAD', etc.
 * *Bridge:path()* - returns the requested path and file.
@@ -76,6 +78,7 @@ Request Bridge Interface:
 * *Bridge:request_body()* - returns the request body that has been read so far, as a list.
 * *Bridge:error()* - returns an Erlang term describing any errors that happened while parsing a multipart post.
 
+
 <h4>What modules are involved in a request bridge?</h4>
 
 * *request_bridge.erl* - The behaviour interface that request bridge modules must implement.
@@ -85,6 +88,7 @@ Request Bridge Interface:
 * *???_request_bridge.erl* - Support for more servers on the way.
 
 To extend the Simple Bridge to work with other HTTP servers (or other versions of Inets, Mochiweb, or Yaws), copy and modify inets_request_bridge.erl or mochiweb_request_bridge.erl.
+
 
 <h2>Response Bridges</h2>
 <h4>How do I make a response bridge?</h4>
@@ -100,7 +104,8 @@ Mochiweb example:
 
     ResponseBridge = simple_bridge:make_response(mochiweb_response_bridge, {Req, Docroot})
 
-<h4>What can I do with the response bridge?</h4>
+
+<h4>What can I do with the Response Bridge?</h4>
 
 Once you have created the request bridge object (a parameterized module), it provides you with a standard interface for combining headers, cookies, and a response body into a response appropriate for your http server. 
 
@@ -113,7 +118,8 @@ chain together requests like this:
 	Bridge3 = Bridge2:data(HTML),
 	etc.
 	
-Response Bridge Interface:
+	
+<h4>Response Bridge Interface</h4>
 
 * *Bridge:status_code(Code)* - set the HTTP status code. (200, 404, etc.)
 * *Bridge:header(Name, Value)* - set an HTTP header.
@@ -127,6 +133,7 @@ Response Bridge Interface:
 Finally, you build the response to send to your HTTP server with the build_response/0 function.
 
 * *Bridge:build_response()* - Create a response tuple that you can hand off to your HTTP server.
+
 
 <h4>What modules are involved in a response bridge?</h4>
 
