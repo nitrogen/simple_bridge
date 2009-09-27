@@ -18,7 +18,6 @@ Simple Bridge is split into two parts:
 
 <h2>Hello World Example</h3>
 
-
 	% SimpleBridge Hello World Example in Mochiweb
 	
 	start(_, _) ->
@@ -29,11 +28,11 @@ Simple Bridge is split into two parts:
 	loop(Req) ->
 		Request = simple_bridge:make_request(mochiweb_request_bridge, {Req, "./wwwroot"}),
 		HTML = [
-			"<h1>Hello, World!</h1>",
-			io_lib:format("METHOD: ~p~n<br><br>", [Request:request_method()]),
-			io_lib:format("COOKIES: ~p~n<br><br>", [Request:cookies()]),
-			io_lib:format("HEADERS: ~p~n<br><br>", [Request:headers()]),
-			io_lib:format("QUERY PARAMETERS: ~p~n<br><br>", [Request:query_params()])		
+			"&lt;h1&gt;Hello, World!&lt;/h1&gt;",
+			io_lib:format("METHOD: ~p~n&lt;br&gt;&lt;br&gt;", [Request:request_method()]),
+			io_lib:format("COOKIES: ~p~n&lt;br&gt;&lt;br&gt;", [Request:cookies()]),
+			io_lib:format("HEADERS: ~p~n&lt;br&gt;&lt;br&gt;", [Request:headers()]),
+			io_lib:format("QUERY PARAMETERS: ~p~n&lt;br&gt;&lt;br&gt;", [Request:query_params()])		
 		],
 		
 		Response = simple_bridge:make_response(mochiweb_response_bridge, {Req, "./wwwroot"}),		
