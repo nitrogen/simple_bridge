@@ -18,28 +18,28 @@ Simple Bridge is split into two parts:
 
 <h2>Hello World Example</h3>
 
-	% SimpleBridge Hello World Example in Mochiweb
-	
-	start(_, _) ->
-		Options = [{ip, "127.0.0.1"}, {port, 8000}],
-		Loop = fun loop/1,
-		mochiweb_http:start([{name, mochiweb_example_app}, {loop, Loop} | Options]).
+    % SimpleBridge Hello World Example in Mochiweb
 
-	loop(Req) ->
-		Request = simple_bridge:make_request(mochiweb_request_bridge, {Req, "./wwwroot"}),
-		HTML = [
-			"&lt;h1&gt;Hello, World!&lt;/h1&gt;",
-			io_lib:format("METHOD: ~p~n&lt;br&gt;&lt;br&gt;", [Request:request_method()]),
-			io_lib:format("COOKIES: ~p~n&lt;br&gt;&lt;br&gt;", [Request:cookies()]),
-			io_lib:format("HEADERS: ~p~n&lt;br&gt;&lt;br&gt;", [Request:headers()]),
-			io_lib:format("QUERY PARAMETERS: ~p~n&lt;br&gt;&lt;br&gt;", [Request:query_params()])		
-		],
-		
-		Response = simple_bridge:make_response(mochiweb_response_bridge, {Req, "./wwwroot"}),		
-		Response1 = Response:status_code(200),
-		Response2 = Response1:header("Content-Type", "text/html"),
-		Response3 = Response2:data(HTML),
-		Response3:build_response().
+    start(_, _) ->
+    	Options = [{ip, "127.0.0.1"}, {port, 8000}],
+    	Loop = fun loop/1,
+    	mochiweb_http:start([{name, mochiweb_example_app}, {loop, Loop} | Options]).
+
+    loop(Req) ->
+    	Request = simple_bridge:make_request(mochiweb_request_bridge, {Req, "./wwwroot"}),
+    	HTML = [
+    		"&lt;h1&gt;Hello, World!&lt;/h1&gt;",
+    		io_lib:format("METHOD: ~p~n&lt;br&gt;&lt;br&gt;", [Request:request_method()]),
+    		io_lib:format("COOKIES: ~p~n&lt;br&gt;&lt;br&gt;", [Request:cookies()]),
+    		io_lib:format("HEADERS: ~p~n&lt;br&gt;&lt;br&gt;", [Request:headers()]),
+    		io_lib:format("QUERY PARAMETERS: ~p~n&lt;br&gt;&lt;br&gt;", [Request:query_params()])		
+    	],
+
+    	Response = simple_bridge:make_response(mochiweb_response_bridge, {Req, "./wwwroot"}),		
+    	Response1 = Response:status_code(200),
+    	Response2 = Response1:header("Content-Type", "text/html"),
+    	Response3 = Response2:data(HTML),
+    	Response3:build_response().
 
 
 <h2>Request Bridges</h2>
@@ -75,7 +75,7 @@ Request Bridge Interface:
 * *Bridge:post_files()* - returns a list of upload_file records, describing the files uploaded in a multipart post. 
 * *Bridge:request_body()* - returns the request body that has been read so far, as a list.
 * *Bridge:error()* - returns an Erlang term describing any errors that happened while parsing a multipart post.
-.
+
 <h4>What modules are involved in a request bridge?</h4>
 
 * *request_bridge.erl* - The behaviour interface that request bridge modules must implement.
@@ -94,12 +94,11 @@ specifying the appropriate bridge module for your HTTP server, and the arguments
 
 Inets example:
 
-	ResponseBridge = simple_bridge:make_response(inets_response_bridge, Info)
+    ResponseBridge = simple_bridge:make_response(inets_response_bridge, Info)
 
 Mochiweb example:
 
-	ResponseBridge = simple_bridge:make_response(mochiweb_response_bridge, {Req, Docroot})
-
+    ResponseBridge = simple_bridge:make_response(mochiweb_response_bridge, {Req, Docroot})
 
 <h4>What can I do with the response bridge?</h4>
 
