@@ -141,6 +141,7 @@ Finally, you build the response to send to your HTTP server with the build_respo
 * *response_bridge_wrapper.erl* - A parameterized module that wraps a response. 
 * *inets_response_bridge.erl* - The response bridge module for Inets.
 * *mochiweb_response_bridge.erl* - The response bridge module for Mochiweb.
+* *???_response_bridge.erl* - Support for more servers on the way.
 
 To extend the Simple Bridge to other HTTP servers (or other versions of Inets, Mochiweb, or Yaws), 
 copy and modify inets_response_bridge.erl or mochiweb_response_bridge.erl.
