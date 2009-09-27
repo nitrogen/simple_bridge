@@ -18,6 +18,7 @@ Simple Bridge is split into two parts:
 
 <h2>Hello World Example</h3>
 
+
     % SimpleBridge Hello World Example in Mochiweb
 
     start(_, _) ->
