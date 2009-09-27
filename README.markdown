@@ -16,7 +16,7 @@ Simple Bridge is split into two parts:
 * A *Request Bridge* is a parameterized module that allows you to see information about the incoming request.
 * A *Response Bridge* is a parameterized module that allows you to construct a response.
 
-<h2>Hello World Example</h3>
+</h2>Hello World Example</h2>
 
     % SimpleBridge Hello World Example in Mochiweb
 
