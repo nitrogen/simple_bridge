@@ -44,7 +44,7 @@ Simple Bridge is split into two parts:
 
 
 <h2>Request Bridges</h2>
-<h4>How do I make a request bridge?</h4>
+<h3>How do I make a request bridge?</h3>
 
 To make a request bridge for an incoming request, call the simple_bridge:make_request/2 function,
 specifying the appropriate bridge module for your HTTP server, and the arguments that it needs. This code would sit in the loop/1 function of a Mochiweb server, or the do/1 function of an Inets server.
@@ -58,12 +58,12 @@ Mochiweb example:
 	RequestBridge = simple_bridge:make_request(mochiweb_response_bridge, [{Req, Docroot}]).
 	
 	
-<h4>What can I do with the request bridge object?</h4>
+<h3>What can I do with the request bridge object?</h3>
 
 Once you have created the request bridge object (a parameterized module), it provides you with a standard interface for accessing the request method, path, query parameters, post parameters, headers, and cookies of the request:
 
 
-<h4>Request Bridge Interface</h4>
+<h3>Request Bridge Interface</h3>
 
 * *Bridge:request_method()* - returns 'GET', 'POST', 'HEAD', etc.
 * *Bridge:path()* - returns the requested path and file.
@@ -79,7 +79,7 @@ Once you have created the request bridge object (a parameterized module), it pro
 * *Bridge:error()* - returns an Erlang term describing any errors that happened while parsing a multipart post.
 
 
-<h4>What modules are involved in a request bridge?</h4>
+<h3>What modules are involved in a request bridge?</h3>
 
 * *request_bridge.erl* - The behaviour interface that request bridge modules must implement.
 * *request_bridge_wrapper.erl* - A parameterized module that wraps a request. 
@@ -91,7 +91,7 @@ To extend the Simple Bridge to work with other HTTP servers (or other versions o
 
 
 <h2>Response Bridges</h2>
-<h4>How do I make a response bridge?</h4>
+<h3>How do I make a response bridge?</h3>
 
 To make a request bridge for an incoming request, call the simple_bridge:make_response/2 function,
 specifying the appropriate bridge module for your HTTP server, and the arguments that it needs. This code would sit in the loop/1 function of a Mochiweb server, or the do/1 function of an Inets server.
@@ -105,7 +105,7 @@ Mochiweb example:
     ResponseBridge = simple_bridge:make_response(mochiweb_response_bridge, {Req, Docroot})
 
 
-<h4>What can I do with the Response Bridge?</h4>
+<h3>What can I do with the Response Bridge?</h3>
 
 Once you have created the request bridge object (a parameterized module), it provides you with a standard interface for combining headers, cookies, and a response body into a response appropriate for your http server. 
 
@@ -119,7 +119,7 @@ chain together requests like this:
 	etc.
 	
 	
-<h4>Response Bridge Interface</h4>
+<h3>Response Bridge Interface</h3>
 
 * *Bridge:status_code(Code)* - set the HTTP status code. (200, 404, etc.)
 * *Bridge:header(Name, Value)* - set an HTTP header.
@@ -135,7 +135,7 @@ Finally, you build the response to send to your HTTP server with the build_respo
 * *Bridge:build_response()* - Create a response tuple that you can hand off to your HTTP server.
 
 
-<h4>What modules are involved in a response bridge?</h4>
+<h3>What modules are involved in a response bridge?</h3>
 
 * *response_bridge.erl* - The behaviour interface that response bridge modules must implement.
 * *response_bridge_wrapper.erl* - A parameterized module that wraps a response. 
