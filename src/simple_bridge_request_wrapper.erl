@@ -25,11 +25,20 @@ header(Header) ->
 		true -> 
 			Mod:header(Header, Req);
 		false ->
-				Headers = Mod:headers(Req),
-				proplists:get_value(Header, Headers)
+			Headers = Mod:headers(Req),
+			proplists:get_value(Header, Headers)
 	end.
 	
 cookies() -> Mod:cookies(Req).
+
+cookie(Cookie) ->
+	case erlang:function_exported(Mod, cookie, 2) of
+		true -> 
+			Mod:cookie(Cookie, Req);
+		false ->
+			Cookies = Mod:cookies(Req),
+			proplists:get_value(Cookie, Cookies)
+	end.
 
 query_params() -> Mod:query_params(Req).
 

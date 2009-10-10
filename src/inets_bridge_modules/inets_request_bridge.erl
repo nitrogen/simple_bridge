@@ -15,7 +15,6 @@
 	socket/1, recv_from_socket/3
 ]).
 
--define(PRINT(Var), error_logger:info_msg("DEBUG: ~p:~p - ~p: ~p~n", [?MODULE, ?LINE, ??Var, Var])).
 
 init(Req) -> 
 	Req.
@@ -40,7 +39,7 @@ peer_port(Req) ->
 headers(Req) ->
 	Headers = Req#mod.parsed_header,
 	F = fun(Header) -> proplists:get_value(Header, Headers) end,
-	[
+	Headers1 = [
 		{connection, F("connection")},
 		{accept, F("accept")},
 		{host, F("host")},
@@ -60,11 +59,12 @@ headers(Req) ->
     {content_encoding, F("content-encoding")},
     {authorization, F("authorization")},
     {transfer_encoding, F("transfer-encoding")}
-	].
+	],
+	[{K, V} || {K, V} <- Headers1, V /= undefined].
 	
 cookies(Req) ->
 	Headers = headers(Req),
-	CookieData = proplists:get_value("cookie", Headers, ""),
+	CookieData = proplists:get_value(cookie, Headers, ""),
 	F = fun(Cookie) ->
 		case string:tokens(Cookie, "=") of
 			[] -> [];

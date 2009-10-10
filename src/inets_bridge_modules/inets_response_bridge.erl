@@ -20,7 +20,7 @@ build_response(Req, Res) ->
 				[{X#header.name, X#header.value} || X <- Res#response.headers],
 				[create_cookie_header(X) || X <- Res#response.cookies]
 			]),		
-
+			
 			% Send the inets response...
 			{break,[
 				{response, {response, Headers, Data}}

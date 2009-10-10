@@ -5,7 +5,6 @@
 -module (simple_bridge_multipart).
 -include ("simplebridge.hrl").
 -export ([parse/1]).
--define(PRINT(Var), error_logger:info_msg("DEBUG: ~p:~p - ~p: ~p~n", [?MODULE, ?LINE, ??Var, Var])).
 
 % Alas, so many Erlang HTTP Servers, and so little parsing of Multipart forms.
 % This file contains multipart form parsing logic that is shared by all 

@@ -3,19 +3,32 @@
 % See MIT-LICENSE for licensing information.
 
 -module (simple_bridge_request).
+-include ("simplebridge.hrl").
 -export ([
 	make/2, 
 	behaviour_info/1
 ]).
 
-make(Module, RequestData) -> 
+make(Module, RequestData) ->
+	try
+		make_nocatch(Module, RequestData)
+	catch Type : Error ->
+		error_logger:error_msg("Error in simple_bridge_request:make/2 - ~p - ~p~n~p", [Type, Error, erlang:get_stacktrace()]),
+		erlang:Type(Error)
+	end.
+
+make_nocatch(Module, RequestData) -> 
 	RequestData1 = Module:init(RequestData),
 	RequestBridge = simple_bridge_request_wrapper:new(Module, RequestData1, false, [], [], none),
 	case simple_bridge_multipart:parse(RequestBridge) of
-		{ok, Params, Files} -> RequestBridge:set_multipart(Params, Files);
-		{ok, not_multipart} -> RequestBridge;
-		{error, Error} -> RequestBridge:set_error(Error);
-		Other -> throw({unexpected, Other})
+		{ok, Params, Files} -> 
+			RequestBridge:set_multipart(Params, Files);
+		{ok, not_multipart} -> 
+			RequestBridge;
+		{error, Error} -> 
+			RequestBridge:set_error(Error);
+		Other -> 
+			throw({unexpected, Other})
 	end.
 
 behaviour_info(callbacks) -> [

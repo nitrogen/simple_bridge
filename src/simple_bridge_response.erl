@@ -9,8 +9,17 @@
 	behaviour_info/1
 ]).
 
-make(Mod, Req) ->
-	simple_bridge_response_wrapper:new(Mod, Req, #response{}).
+
+make(Module, ResponseData) ->
+	try
+		make_nocatch(Module, ResponseData)
+	catch Type : Error ->
+		error_logger:error_msg("Error in simple_bridge_response:make/2 - ~p - ~p~n~p", [Type, Error, erlang:get_stacktrace()]),
+		erlang:Type(Error)
+	end.
+
+make_nocatch(Mod, ResponseData) ->
+	simple_bridge_response_wrapper:new(Mod, ResponseData, #response{}).
 
 behaviour_info(callbacks) -> [
 	{build_response, 2} 

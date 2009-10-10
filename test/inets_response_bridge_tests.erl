@@ -14,4 +14,3 @@ build_response_test() ->
 	B05 = B04:cookie("cookie2", "value2"),
 	B06 = B05:data("This is the data."),
 	_Response = B06:build_response().
-	% ?PRINT(Response).
