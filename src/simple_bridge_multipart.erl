@@ -197,7 +197,7 @@ get_next_line(Data, Acc, Part, State) when Data == undefined orelse Data == <<>>
 	% We don't want Acc to grow too big, so if we have more than ?CHUNKSIZE 
 	% data already read, then flush it to the current part.
 	{Acc1, Part1} = case Part /= undefined andalso size(Acc) > ?CHUNKSIZE of
-		true -> {Acc, update_part_with_value(Acc, false, Part)};
+		true -> {<<>>, update_part_with_value(Acc, false, Part)};
 		false -> {Acc, Part}
 	end,
 	% it into a part.
