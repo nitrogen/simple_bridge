@@ -1,6 +1,8 @@
-<h1>Simple Bridge</h1>
+<h1>SimpleBridge</h1>
 
-Simple Bridge takes the pain out of coding to multiple Erlang web servers by creating a standardized interface. It is used by the soon to be released new version of <a href="http://nitrogenproject.com">The Nitrogen Web Framework</a>.
+SimpleBridge takes the pain out of coding to multiple Erlang HTTP servers by creating a standardized interface. It currently supports Mochiweb, Inets, and Misultin, with Yaws coming soon.
+
+SimpleBridge is used in the experimental branch of the <a href="http://nitrogenproject.com">The Nitrogen Web Framework</a>.
 
 In a sense, it is similar to <a href="http://github.com/skarab/ewgi">EWGI</a>, except SimpleBridge has some key improvements/differences:
 
@@ -11,7 +13,7 @@ In a sense, it is similar to <a href="http://github.com/skarab/ewgi">EWGI</a>, e
 * <b>Cookies Support</b> - SimpleBridge provides interface functions for getting and setting cookies.
 * <b>No Middleware Components</b> - SimpleBridge does not explicitly support EWGI's concept of "middleware components". (Though you could probably fake it, haven't tried.)
 
-Simple Bridge is split into two parts: 
+SimpleBridge is split into two parts: 
 
 * A *Request Bridge* is a parameterized module that allows you to see information about the incoming request.
 * A *Response Bridge* is a parameterized module that allows you to construct a response.
@@ -88,7 +90,7 @@ Once you have created the request bridge object (a parameterized module), it pro
 * *mochiweb_request_bridge.erl* - The request bridge module for Mochiweb.
 * *???_request_bridge.erl* - Support for more servers on the way.
 
-To extend the Simple Bridge to work with other HTTP servers (or other versions of Inets, Mochiweb, or Yaws), copy and modify inets_request_bridge.erl or mochiweb_request_bridge.erl.
+To extend the SimpleBridge to work with other HTTP servers (or other versions of Inets, Mochiweb, or Yaws), copy and modify inets_request_bridge.erl or mochiweb_request_bridge.erl.
 
 
 <h2>Response Bridges</h2>
@@ -144,5 +146,5 @@ Finally, you build the response to send to your HTTP server with the build_respo
 * *mochiweb_response_bridge.erl* - The response bridge module for Mochiweb.
 * *???_response_bridge.erl* - Support for more servers on the way.
 
-To extend the Simple Bridge to other HTTP servers (or other versions of Inets, Mochiweb, or Yaws), 
+To extend the SimpleBridge to other HTTP servers (or other versions of Inets, Mochiweb, or Yaws), 
 copy and modify inets_response_bridge.erl or mochiweb_response_bridge.erl.
