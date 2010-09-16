@@ -9,7 +9,7 @@
     init/1,
     request_method/1, path/1, uri/1,
     peer_ip/1, peer_port/1,
-    headers/1, cookies/1,
+    headers/1, header/2, cookies/1,
     query_params/1, post_params/1, request_body/1,
     socket/1, recv_from_socket/3
 ]).
@@ -63,6 +63,14 @@ headers({Req, _DocRoot}) ->
         {transfer_encoding, F("transfer-encoding")}
     ],
     [{K, V} || {K, V} <- Headers1, V /= undefined].
+
+header(Header,Req) when is_atom(Header) ->
+    F = fun($_) -> $-;(X) -> X end,
+    HeaderAsString = [F(X) || X <- erlang:atom_to_list(Header)],
+    header(HeaderAsString,Req);			   
+header(Header,{Req, _DocRoot}) when is_list(Header) ->
+    Req:get_header_value(Header).
+    
 
 cookies({Req, _DocRoot}) ->
     Req:parse_cookie().
