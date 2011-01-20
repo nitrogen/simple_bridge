@@ -1,10 +1,10 @@
 all: compile
 
 compile:
-	@rebar compile
+	./rebar compile
 
 clean:
-	@rebar clean
+	./rebar clean
 
 test: compile
-	@rebar eunit
+	./rebar eunit
