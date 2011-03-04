@@ -11,42 +11,56 @@
 build_response(_Arg, Res) ->
     % Get vars...
     Code = Res#response.statuscode,
+
+    %% Assemble headers...
+    Headers = assemble_headers(Res),
+
+    %% Get the content type...
+    ContentType = get_content_type(Res),
+
     case Res#response.data of
         {data, Body} ->
-            % Assemble headers...
-            Headers = lists:flatten([
-                [{header, {X#header.name, X#header.value}} || X <- Res#response.headers],
-                [create_cookie(X) || X <- Res#response.cookies]
-            ]),
-
-            % Get the content type...
-            ContentType = coalesce([
-                kvl3(content_type, Res#response.headers),
-                kvl3("content-type", Res#response.headers),
-                kvl3("Content-Type", Res#response.headers),
-                kvl3("CONTENT-TYPE", Res#response.headers),
-                "text/html"
-            ]),
 
             % Send the yaws response...
             lists:flatten([
-                {status, Code},
-                Headers,
-                {content, ContentType, Body}
-            ]);
+                           {status, Code},
+                           Headers,
+                           {content, ContentType, Body}
+                          ]);
 
         {file, Path} ->
+
             %% Calculate expire date far into future...
             Seconds = calendar:datetime_to_gregorian_seconds(calendar:local_time()),
             TenYears = 10 * 365 * 24 * 60 * 60,
             Seconds1 = calendar:gregorian_seconds_to_datetime(Seconds + TenYears),
             ExpireDate = httpd_util:rfc1123_date(Seconds1),
 
-            % Create the response telling Yaws to server file...
-            Options = [{header, {"Expires", ExpireDate}}],
-            Path = filename:join(".", Path),
-            {page, {Options, Path}}
+            %% Get the file content
+            {ok,Bin} = file:read_file(Path),
+
+            %% Send the yaws response...
+            lists:flatten([
+                           {status, Code},
+                           [{header, {"Expires", ExpireDate}} | Headers],
+                           {content, ContentType, Bin}
+                          ])
     end.
+
+assemble_headers(Res) ->
+    lists:flatten([
+                   [{header, {X#header.name, X#header.value}} || X <- Res#response.headers],
+                   [create_cookie(X) || X <- Res#response.cookies]
+                  ]).
+    
+get_content_type(Res) ->
+    coalesce([
+              kvl3(content_type, Res#response.headers),
+              kvl3("content-type", Res#response.headers),
+              kvl3("Content-Type", Res#response.headers),
+              kvl3("CONTENT-TYPE", Res#response.headers),
+              "text/html"
+             ]).
 
 kvl3(Key,L) ->
     case lists:keysearch(Key,2,L) of
