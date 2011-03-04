@@ -3,7 +3,6 @@
 % See MIT-LICENSE for licensing information.
 
 -module(yaws_request_bridge).
--include_lib ("yaws_api.hrl").
 -include_lib ("simple_bridge.hrl").
 -export ([
     init/1,
@@ -18,14 +17,13 @@ init(Req) ->
     Req.
 
 request_method(Arg) ->
-    (Arg#arg.req)#http_request.method.
+    yaws_api:http_request_method(yaws_api:arg_req(Arg)).
 
 path(Arg) ->
-    Arg#arg.server_path.
+    yaws_api:arg_server_path(Arg).
 
 uri(Arg) ->
-    Req = Arg#arg.req,
-    {abs_path, Path} = Req#http_request.path,
+    {abs_path, Path} = yaws_api:http_request_path(yaws_api:arg_req(Arg)),
     Path.
 
 peer_ip(Arg) -> 
@@ -39,38 +37,38 @@ peer_port(Arg) ->
     Port.
 
 headers(Arg) ->
-    Headers = Arg#arg.headers,
+    Headers = yaws_api:arg_headers(Arg),
     [
-        {connection, Headers#headers.connection},
-        {accept, Headers#headers.accept},
-        {host, Headers#headers.host},
-        {if_modified_since, Headers#headers.if_modified_since},
-        {if_match, Headers#headers.if_match},
-        {if_none_match, Headers#headers.if_none_match},
-        {if_range, Headers#headers.if_range},
-        {if_unmodified_since, Headers#headers.if_unmodified_since},
-        {range, Headers#headers.range},
-        {referer, Headers#headers.referer},
-        {user_agent, Headers#headers.user_agent},
-        {accept_ranges, Headers#headers.accept_ranges},
-        {cookie, Headers#headers.cookie},
-        {keep_alive, Headers#headers.keep_alive},
-        {location, Headers#headers.location},
-        {content_length, Headers#headers.content_length},
-        {content_type, Headers#headers.content_type},
-        {content_encoding, Headers#headers.content_encoding},
-        {authorization, Headers#headers.authorization},
-        {transfer_encoding, Headers#headers.transfer_encoding}
+        {connection, yaws_api:headers_connection(Headers)},
+        {accept, yaws_api:headers_accept(Headers)},
+        {host, yaws_api:headers_host(Headers)},
+        {if_modified_since, yaws_api:headers_if_modified_since(Headers)},
+        {if_match, yaws_api:headers_if_match(Headers)},
+        {if_none_match, yaws_api:headers_if_none_match(Headers)},
+        {if_range, yaws_api:headers_if_range(Headers)},
+        {if_unmodified_since, yaws_api:headers_if_unmodified_since(Headers)},
+        {range, yaws_api:headers_range(Headers)},
+        {referer, yaws_api:headers_referer(Headers)},
+        {user_agent, yaws_api:headers_user_agent(Headers)},
+        {accept_ranges, yaws_api:headers_accept_ranges(Headers)},
+        {cookie, yaws_api:headers_cookie(Headers)},
+        {keep_alive, yaws_api:headers_keep_alive(Headers)},
+        {location, yaws_api:headers_location(Headers)},
+        {content_length, yaws_api:headers_content_length(Headers)},
+        {content_type, yaws_api:headers_content_type(Headers)},
+        {content_encoding, yaws_api:headers_content_encoding(Headers)},
+        {authorization, yaws_api:headers_authorization(Headers)},
+        {transfer_encoding, yaws_api:headers_transfer_encoding(Headers)}
     ].
 
 cookie(Key, Req) ->
     Key1 = wf:to_list(Key),
-    Headers = Req#arg.headers,
-    yaws_api:find_cookie_val(Key1, Headers#headers.cookie).
+    Headers = yaws_api:arg_headers(Req),
+    yaws_api:find_cookie_val(Key1, yaws_api:headers_cookie(Headers)).
 
 cookies(Req) ->
-    Headers = Req#arg.headers,
-    CookieList = Headers#headers.cookie,
+    Headers = yaws_api:arg_headers(Req),
+    CookieList = yaws_api:headers_cookie(Headers),
     F = fun(Cookie) ->
         Key = hd(string:tokens(Cookie, "=")),
         Val = yaws_api:find_cookie_val(Key, [Cookie]),
@@ -85,13 +83,13 @@ post_params(Arg) ->
     yaws_api:parse_post(Arg).
 
 request_body(Arg) ->
-    case Arg#arg.clidata of
+    case yaws_api:arg_clidata(Arg) of
         {partial, Data} -> Data;
         Data -> Data
     end.  
 
 socket(Arg) ->
-    Arg#arg.clisock.
+    yaws_api:arg_clisock(Arg).
 
 recv_from_socket(Length, Timeout, Arg) -> 
     Socket = socket(Arg),
