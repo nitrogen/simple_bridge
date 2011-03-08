@@ -58,7 +58,9 @@ headers(Arg) ->
         {content_type, yaws_api:headers_content_type(Headers)},
         {content_encoding, yaws_api:headers_content_encoding(Headers)},
         {authorization, yaws_api:headers_authorization(Headers)},
-        {transfer_encoding, yaws_api:headers_transfer_encoding(Headers)}
+        {transfer_encoding, yaws_api:headers_transfer_encoding(Headers)},
+        {x_forwarded_for, yaws_api:headers_x_forwarded_for(Headers)},
+        {other, yaws_api:headers_other(Headers)}
     ].
 
 cookie(Key, Req) ->
