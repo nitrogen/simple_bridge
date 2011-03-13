@@ -38,9 +38,30 @@ peer_port(Arg) ->
     {ok, {_IP, Port}} = inet:peername(Socket),
     Port.
 
+%% converts a Header to a lower-case, underscored version
+%% ie. "X-Forwarded-For" -> x_forwarded_for
+atomize_header(Header) when is_atom(Header) ->
+    % convert a possible atom like 'X-Forwarded-For' to a
+    % string so it can be normalized to lower-case
+    % apparently, some of the headers are strings, and others are atoms in yaws
+    atomize_header(atom_to_list(Header));
+atomize_header(Header) when is_list(Header) ->
+    LowerUnderscore = fun(H) -> 
+        if
+            H >= 65 andalso H =< 90 ->
+                H + 32; % Convert "A" to "a" by adding 32 to its ASCII val
+            H == 45 ->
+                95; %% convert "-" to "_"
+            true -> H
+        end
+    end,
+    list_to_atom(lists:map(LowerUnderscore,Header)).
+
 headers(Arg) ->
     Headers = Arg#arg.headers,
-    [
+    Others = [{atomize_header(Header),Value} || {http_header,_Num,Header,_,Value} <- Headers#headers.other],
+
+    Others ++ [
         {connection, Headers#headers.connection},
         {accept, Headers#headers.accept},
         {host, Headers#headers.host},
