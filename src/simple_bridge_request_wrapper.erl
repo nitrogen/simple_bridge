@@ -17,6 +17,8 @@ path() -> Mod:path(Req).
 uri() -> Mod:uri(Req).
 scheme() -> Mod:scheme(Req).
 
+port() -> Mod:port(Req).
+
 peer_ip() -> Mod:peer_ip(Req).
 peer_port() -> Mod:peer_port(Req).
 
