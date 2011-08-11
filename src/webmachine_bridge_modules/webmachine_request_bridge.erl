@@ -36,11 +36,12 @@ uri(Req) ->
     {_, QueryString, _} = mochiweb_util:urlsplit_path(RawPath),
     QueryString.
 
-peer_ip(_Req) -> 
-    throw(unsupported).
+peer_ip(Req) ->
+    {ok, Address} = inet_parse:address(wrq:peer(Req)),
+    Address.
 
-peer_port(_Req) -> 
-    throw(unsupported).
+peer_port(Req) ->
+    wrq:port(Req).
 
 headers(Req) ->
     F = fun(Header) -> wrq:get_req_header(Header, Req) end,
