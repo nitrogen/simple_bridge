@@ -58,7 +58,7 @@ atomize_header(Header) when is_list(Header) ->
 headers(Arg) ->
     Headers = yaws_api:arg_headers(Arg),
 
-    ReparedHeaders = [
+    PreparedHeaders = [
         {connection, yaws_api:headers_connection(Headers)},
         {accept, yaws_api:headers_accept(Headers)},
         {host, yaws_api:headers_host(Headers)},
