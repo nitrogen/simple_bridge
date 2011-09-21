@@ -32,9 +32,7 @@ path(Req) ->
     wrq:path(Req).
 
 uri(Req) -> 
-    RawPath = wrq:raw_path(Req),
-    {_, QueryString, _} = mochiweb_util:urlsplit_path(RawPath),
-    QueryString.
+    wrq:raw_path(Req).
 
 peer_ip(Req) ->
     {ok, Address} = inet_parse:address(wrq:peer(Req)),
