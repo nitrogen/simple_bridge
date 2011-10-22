@@ -4,8 +4,8 @@
 
 -module(yaws_response_bridge).
 -behaviour (simple_bridge_response).
--include_lib ("yaws_api.hrl").
--include_lib ("simple_bridge.hrl").
+-include_lib ("yaws/include/yaws_api.hrl").
+-include ("simple_bridge.hrl").
 -export ([build_response/2]).
 
 build_response(_Arg, Res) ->

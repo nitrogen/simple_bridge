@@ -3,8 +3,8 @@
 % See MIT-LICENSE for licensing information.
 
 -module(yaws_request_bridge).
--include_lib ("yaws_api.hrl").
--include_lib ("simple_bridge.hrl").
+-include_lib ("yaws/include/yaws_api.hrl").
+-include ("simple_bridge.hrl").
 -export ([
     init/1,
     request_method/1, path/1, uri/1,
