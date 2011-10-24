@@ -14,11 +14,12 @@ build_response(_Arg, Res) ->
     %% Assemble headers...
     Headers = assemble_headers(Res),
 
-    %% Get the content type...
-    ContentType = get_content_type(Res),
 
     case Res#response.data of
         {data, Body} ->
+
+			%% Get the content type...
+			ContentType = get_content_type(Res),
 
             % Send the yaws response...
             lists:flatten([
@@ -35,15 +36,25 @@ build_response(_Arg, Res) ->
             Seconds1 = calendar:gregorian_seconds_to_datetime(Seconds + TenYears),
             ExpireDate = httpd_util:rfc1123_date(Seconds1),
 
-            %% Get the file content
-            {ok,Bin} = file:read_file(Path),
+			%OutSocket = yaws_api:arg_clisock(_Arg),
+			Docroot = yaws_api:arg_docroot(_Arg),
 
-            %% Send the yaws response...
-            lists:flatten([
-                           {status, Code},
-                           [{header, {"Expires", ExpireDate}} | Headers],
-                           {content, ContentType, Bin}
-                          ])
+			FullPath = [Docroot,Path],
+
+			ContentType = yaws_api:mime_type(Path),
+
+            %% Get the file content
+            FullResponse = case file:read_file(FullPath) of
+				{error,enoent} -> 
+					yaws_outmod:out404(_Arg);
+				{ok,Bin} -> 
+					[
+						{status, Code},
+						[{header, {"Expires", ExpireDate}} | Headers],
+						{content, ContentType, Bin}
+				   ]
+			end,
+			lists:flatten(FullResponse)
     end.
 
 assemble_headers(Res) ->
