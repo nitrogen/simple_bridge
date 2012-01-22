@@ -19,7 +19,8 @@ make(Module, ResponseData) ->
     end.
 
 make_nocatch(Mod, ResponseData) ->
-    simple_bridge_response_wrapper:new(Mod, ResponseData, #response{}).
+	ResponseData1 = Mod:init(ResponseData),
+    simple_bridge_response_wrapper:new(Mod, ResponseData1, #response{}).
 
 behaviour_info(callbacks) -> [
     {build_response, 2} 

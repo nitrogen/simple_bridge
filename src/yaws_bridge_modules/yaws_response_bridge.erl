@@ -5,7 +5,10 @@
 -module(yaws_response_bridge).
 -behaviour (simple_bridge_response).
 -include_lib ("simple_bridge.hrl").
--export ([build_response/2]).
+-export ([build_response/2,init/1]).
+
+init(_Arg) ->
+	_Arg.
 
 build_response(_Arg, Res) ->
     % Get vars...
