@@ -36,29 +36,14 @@ peer_port(Arg) ->
     {ok, {_IP, Port}} = inet:peername(Socket),
     Port.
 
-%% converts a Header to a lower-case, underscored version
-%% ie. "X-Forwarded-For" -> x_forwarded_for
-atomize_header(Header) when is_atom(Header) ->
-    % convert a possible atom like 'X-Forwarded-For' to a
-    % string so it can be normalized to lower-case
-    % apparently, some of the headers are strings, and others are atoms in yaws
-    atomize_header(atom_to_list(Header));
-atomize_header(Header) when is_list(Header) ->
-    LowerUnderscore = fun(H) -> 
-        if
-            H >= 65 andalso H =< 90 ->
-                H + 32; % Convert "A" to "a" by adding 32 to its ASCII val
-            H == 45 ->
-                95; %% convert "-" to "_"
-            true -> H
-        end
-    end,
-    list_to_atom(lists:map(LowerUnderscore,Header)).
-
 headers(Arg) ->
     Headers = yaws_api:arg_headers(Arg),
+    
+	%% Get the other headers and format them to fit the paradigm we're using above
+    Others = yaws_api:headers_other(Headers),
+    Others2 = [{simple_bridge_util:atomize_header(Header),Value} || {http_header,_Num,Header,_,Value} <- Others],
 
-    PreparedHeaders = [
+    [
         {connection, yaws_api:headers_connection(Headers)},
         {accept, yaws_api:headers_accept(Headers)},
         {host, yaws_api:headers_host(Headers)},
@@ -79,16 +64,9 @@ headers(Arg) ->
         {content_encoding, yaws_api:headers_content_encoding(Headers)},
         {authorization, yaws_api:headers_authorization(Headers)},
         {transfer_encoding, yaws_api:headers_transfer_encoding(Headers)},
-        {x_forwarded_for, yaws_api:headers_x_forwarded_for(Headers)}
-    ],
-
-
-    %% Get the other headers and format them to fit the paradigm we're using above
-    Others = yaws_api:headers_other(Headers),
-    Others2 = [{atomize_header(Header),Value} || {http_header,_Num,Header,_,Value} <- Others],
-
-    %% Prepend the "other headers" since, it's probably shorter than the normal headers
-    Others2 ++ PreparedHeaders.
+        {x_forwarded_for, yaws_api:headers_x_forwarded_for(Headers)} 
+		| Others2
+    ].
 
 cookie(Key, Req) ->
     Key1 = wf:to_list(Key),
