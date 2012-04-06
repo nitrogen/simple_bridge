@@ -56,7 +56,6 @@ build_response(ReqKey, Res) ->
             ExpireDate = httpd_util:rfc1123_date(Seconds1),
             
             [$. | Ext] = filename:extension(Path),
-            %% We can use the mimetypes module because it's a dependency for cowboy
             Mimetype =  mimetypes:extension(Ext),
 
             %% Create the response telling Mochiweb to serve the file...
