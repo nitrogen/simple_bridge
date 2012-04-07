@@ -52,12 +52,16 @@ uri(ReqKey) ->
 
 peer_ip(ReqKey) ->
     ?GET,
-    {{IP, _Port, Req}} = cowboy_http_req:peer(Req),
+    {{IP, _Port}, NewReq} = cowboy_http_req:peer(Req),
+    NewRequestCache = _RequestCache#request_cache{request=NewReq},
+    ?PUT,
     IP.
 
 peer_port(ReqKey) ->
     ?GET,
-    {{_IP, Port, Req}} = cowboy_http_req:peer(Req),
+    {{_IP, Port}, NewReq} = cowboy_http_req:peer(Req),
+    NewRequestCache = _RequestCache#request_cache{request=NewReq},
+    ?PUT,
     Port.
 
 headers(ReqKey) ->
