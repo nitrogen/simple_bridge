@@ -48,7 +48,9 @@ build_response(ReqKey, Res) ->
             cowboy_request_server:set(ReqKey,NewRequestCache),
             {ok,FinReq};
             
-        {file, Path} ->
+        {file, P} ->
+            % Cowboy path starts with / so we need to remove it
+            Path = lists:nthtail(length("/"), P),
             %% Calculate expire date far into future...
             Seconds = calendar:datetime_to_gregorian_seconds(calendar:local_time()),
             TenYears = 10 * 365 * 24 * 60 * 60,
@@ -64,9 +66,9 @@ build_response(ReqKey, Res) ->
                 {"Content-Type",Mimetype}
             ],
             
-            io:format("Serving static file ~p~n",[Path]),
+            io:format("Serving static file ~p from docroot of ~p ~n",[Path, DocRoot]),
         
-            FullPath = filename:join(DocRoot,Path),
+            FullPath = filename:join(DocRoot, Path),
             {ok, FinReq} = case file:read_file(FullPath) of
                 {error,enoent} -> 
                     {ok, _R} = send(404,[],[],"Not Found",Req);
