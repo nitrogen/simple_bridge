@@ -4,49 +4,86 @@
 
 -module(yaws_response_bridge).
 -behaviour (simple_bridge_response).
--include_lib ("yaws_api.hrl").
 -include_lib ("simple_bridge.hrl").
--export ([build_response/2]).
+-export ([build_response/2,init/1]).
+
+init(_Arg) ->
+	_Arg.
 
 build_response(_Arg, Res) ->
     % Get vars...
     Code = Res#response.statuscode,
+
+    %% Assemble headers...
+    Headers = assemble_headers(Res),
+
+
     case Res#response.data of
         {data, Body} ->
-            % Assemble headers...
-            Headers = lists:flatten([
-                [{header, {X#header.name, X#header.value}} || X <- Res#response.headers],
-                [create_cookie(X) || X <- Res#response.cookies]
-            ]),
 
-            % Get the content type...
-            ContentType = coalesce([
-                kvl3(content_type, Res#response.headers),
-                kvl3("content-type", Res#response.headers),
-                kvl3("Content-Type", Res#response.headers),
-                kvl3("CONTENT-TYPE", Res#response.headers),
-                "text/html"
-            ]),
+			%% Get the content type...
+			ContentType = get_content_type(Res),
 
             % Send the yaws response...
             lists:flatten([
-                {status, Code},
-                Headers,
-                {content, ContentType, Body}
-            ]);
+                           {status, Code},
+                           Headers,
+                           {content, ContentType, Body}
+                          ]);
 
         {file, Path} ->
+			%% Note: This section should only be entered in the event that a static file is
+			%% requested that isn't found in the 'appmod' section of the yaws.conf file.
+			%% I've not found a way to "pass the buck" back to yaws and say "even though this
+			%% directory isn't found in the appmod, I want you to serve it anyway".  This
+			%% means that with the current implementation, you don't want to be serving files
+			%% big files that aren't covered in the appmod section, primarily because this little
+			%% snippet loads the entire file into memory then passes it off to yaws to be served,
+			%% rather than streaming it.  I'll need to look further into to either 1) Pass the buck
+			%% completely back to Yaws, or 2) how the streamcontent return types work as define in
+			%% yaws_server:handle_out_reply
+
             %% Calculate expire date far into future...
             Seconds = calendar:datetime_to_gregorian_seconds(calendar:local_time()),
             TenYears = 10 * 365 * 24 * 60 * 60,
             Seconds1 = calendar:gregorian_seconds_to_datetime(Seconds + TenYears),
             ExpireDate = httpd_util:rfc1123_date(Seconds1),
 
-            % Create the response telling Yaws to server file...
-            Options = [{header, {"Expires", ExpireDate}}],
-            Path = filename:join(".", Path),
-            {page, {Options, Path}}
+			%% Docroot needed to find file in Path
+			Docroot = yaws_api:arg_docroot(_Arg),
+			FullPath = [Docroot,Path],
+
+			%% Get the content type as defined by yaws
+			ContentType = yaws_api:mime_type(Path),
+
+            %% Get the file content
+            FullResponse = case file:read_file(FullPath) of
+				{error,enoent} -> 
+					yaws_outmod:out404(_Arg);
+				{ok,Bin} -> 
+					[
+						{status, Code},
+						[{header, {"Expires", ExpireDate}} | Headers],
+						{content, ContentType, Bin}
+				   ]
+			end,
+			lists:flatten(FullResponse)
     end.
+
+assemble_headers(Res) ->
+    lists:flatten([
+                   [{header, {X#header.name, X#header.value}} || X <- Res#response.headers],
+                   [create_cookie(X) || X <- Res#response.cookies]
+                  ]).
+    
+get_content_type(Res) ->
+    coalesce([
+              kvl3(content_type, Res#response.headers),
+              kvl3("content-type", Res#response.headers),
+              kvl3("Content-Type", Res#response.headers),
+              kvl3("CONTENT-TYPE", Res#response.headers),
+              "text/html"
+             ]).
 
 kvl3(Key,L) ->
     case lists:keysearch(Key,2,L) of
