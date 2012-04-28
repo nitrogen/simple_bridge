@@ -14,6 +14,9 @@
     socket/1, recv_from_socket/3
 ]).
 
+%% Mochiweb's max request size is 1MB, let's updated it to 1GB
+-define(MAX_BODY_SIZE, (1024*1024*1024)).
+
 init({Req, DocRoot}) -> 
     {Req, DocRoot}.
 
@@ -74,7 +77,7 @@ post_params({Req, _DocRoot}) ->
     Req:parse_post().
 
 request_body({Req, _DocRoot}) ->
-    Req:recv_body().
+    Req:recv_body(?MAX_BODY_SIZE).
 
 socket({Req, _DocRoot}) -> 	
     Req:get(socket).

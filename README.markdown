@@ -88,6 +88,10 @@ Once you have created the request bridge object (a parameterized module), it pro
 * *request_bridge_wrapper.erl* - A parameterized module that wraps a request. 
 * *inets_request_bridge.erl* - The request bridge module for Inets.
 * *mochiweb_request_bridge.erl* - The request bridge module for Mochiweb.
+* *webmachine_request_bridge.erl* - The request bridge module for Webmachine.
+* *cowboy_request_bridge.erl* - The request bridge module for Cowboy.
+* *yaws_request_bridge.erl* - The request bridge module for Yaws.
+* *misultin_request_bridge.erl* - The request bridge module for Misultin.
 * *???_request_bridge.erl* - Support for more servers on the way.
 
 To extend the SimpleBridge to work with other HTTP servers (or other versions of Inets, Mochiweb, or Yaws), copy and modify inets_request_bridge.erl or mochiweb_request_bridge.erl.
@@ -144,6 +148,10 @@ Finally, you build the response to send to your HTTP server with the build_respo
 * *response_bridge_wrapper.erl* - A parameterized module that wraps a response. 
 * *inets_response_bridge.erl* - The response bridge module for Inets.
 * *mochiweb_response_bridge.erl* - The response bridge module for Mochiweb.
+* *webmachine_response_bridge.erl* - The response bridge module for Webmachine.
+* *cowboy_response_bridge.erl* - The response bridge module for Cowboy.
+* *yaws_response_bridge.erl* - The response bridge module for Yaws.
+* *misultin_response_bridge.erl* - The response bridge module for Misultin.
 * *???_response_bridge.erl* - Support for more servers on the way.
 
 To extend the SimpleBridge to other HTTP servers (or other versions of Inets, Mochiweb, or Yaws), 

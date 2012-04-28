@@ -5,7 +5,10 @@
 -module (webmachine_response_bridge).
 -behaviour (simple_bridge_response).
 -include_lib ("simple_bridge.hrl").
--export ([build_response/2]).
+-export ([build_response/2,init/1]).
+
+init(Req) ->
+	Req.
 
 build_response(Req, Res) ->	
     Code = Res#response.statuscode,
