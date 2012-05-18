@@ -42,7 +42,7 @@ path(ReqKey) ->
     {Path, Req} = cowboy_http_req:path(Req),
     case Path of
         [] -> "/";
-        _ -> b2l(filename:join(Path))
+        _ -> "/" ++ b2l(filename:join(Path)) %Mochweb returns path as /path and Cowboy does not
     end.
 
 uri(ReqKey) ->
