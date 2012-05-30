@@ -22,7 +22,8 @@ build_response({Req, DocRoot}, Res) ->
                 [create_cookie_header(X) || X <- Res#response.cookies]
             ]),		
 
-            % Ensure content type...
+			%
+            %  Ensure content type...
             F = fun(Key) -> lists:keymember(Key, 1, Headers) end,
             HasContentType = lists:any(F, ["content-type", "Content-Type", "CONTENT-TYPE"]),
             Headers2 = case HasContentType of
@@ -34,13 +35,14 @@ build_response({Req, DocRoot}, Res) ->
             Req:respond({Code, Headers2, Body});
         {file, Path} ->
             %% Calculate expire date far into future...
-            Seconds = calendar:datetime_to_gregorian_seconds(calendar:local_time()),
-            TenYears = 10 * 365 * 24 * 60 * 60,
-            Seconds1 = calendar:gregorian_seconds_to_datetime(Seconds + TenYears),
-            ExpireDate = httpd_util:rfc1123_date(Seconds1),
+			%% This method copied from Evan Miller's implementation
+            {{Y, _, _}, _} = calendar:local_time(),
+
+            ExpireDate = httpd_util:rfc1123_date(),
+            ExpireDate1 = re:replace(ExpireDate, " \\d\\d\\d\\d ", io_lib:format(" ~4.4.0w ", [Y + 10])),
 
             %% Create the response telling Mochiweb to serve the file...
-            Headers = [{"Expires", ExpireDate}],
+            Headers = [{"Expires", ExpireDate1}],
             Req:serve_file(tl(Path), DocRoot, Headers)
     end.
 
