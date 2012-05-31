@@ -1,9 +1,12 @@
 -module (misultin_response_bridge).
 -behaviour (simple_bridge_response).
 -include_lib ("simple_bridge.hrl").
--export ([build_response/2]).
+-export ([build_response/2,init/1]).
 
-build_response(Req, Res) ->	
+init({Req,DocRoot}) ->
+    {Req,DocRoot}.
+
+build_response({Req, DocRoot}, Res) ->	
     % Some values...
     Code = Res#response.statuscode, 
     case Res#response.data of
@@ -18,7 +21,7 @@ build_response(Req, Res) ->
             % Send the misultin response...
             Req:respond(Code, Headers, Body);
         {file, Path} ->
-            Req:file([Path])
+            Req:file([DocRoot, Path])
     end.
 
 create_cookie_header(Cookie) ->

@@ -5,14 +5,10 @@
     init/1,
     request_method/1, path/1, uri/1,
     peer_ip/1, peer_port/1,
-    headers/1, cookies/1,
-    query_params/1, post_params/1, request_body/1
+    headers/1, header/2, cookies/1,
+    query_params/1, post_params/1, request_body/1,
+    socket/1, recv_from_socket/3
 ]).
-
-
-%% @todo could not figure out how to get the socket from misultin 
-%% so could not implement socket/1, recv_from_socket/3 that are 
-%% present in other request modules 
 
 init(Req) -> 
     Req.
@@ -28,36 +24,70 @@ uri(Req) ->
     Req:get(uri).
 
 peer_ip(Req) -> 
-    Req:get(peer_addr).
+    case Req:get(peer_addr) of
+        {ok, IP} -> IP;
+        IP -> IP
+    end.
 
 peer_port(Req) -> 
     Req:get(peer_port).
 
+header(connection, Req) ->
+    misultin_utility:get_key_value('Connection', Req:get(headers));
+header(accept, Req) ->
+    misultin_utility:get_key_value('Accept', Req:get(headers));
+header(host, Req) ->
+    misultin_utility:get_key_value('Host', Req:get(headers));
+header(if_modified_since, Req) ->
+    misultin_utility:get_key_value('If-Modified-Since', Req:get(headers));
+header(if_match, Req) ->
+    misultin_utility:get_key_value('If-Match', Req:get(headers));
+header(if_none_match, Req) ->
+    misultin_utility:get_key_value('If-None-Match', Req:get(headers));
+header(if_range, Req) ->
+    misultin_utility:get_key_value('If-Range', Req:get(headers));
+header(if_unmodified_since, Req) ->
+    misultin_utility:get_key_value('If-Unmodified-Since', Req:get(headers));
+header(range, Req) ->
+    misultin_utility:get_key_value('Range', Req:get(headers));
+header(referer, Req) ->
+    misultin_utility:get_key_value('Referer', Req:get(headers));
+header(user_agent, Req) ->
+    misultin_utility:get_key_value('User-Agent', Req:get(headers));
+header(accept_ranges, Req) ->
+    misultin_utility:get_key_value('Accept-Ranges', Req:get(headers));
+header(cookie, Req) ->
+    misultin_utility:get_key_value('Cookie', Req:get(headers));
+header(keep_alive, Req) ->
+    misultin_utility:get_key_value('Keep-Alive', Req:get(headers));
+header(location, Req) ->
+    misultin_utility:get_key_value('Location', Req:get(headers));
+header(content_length, Req) ->
+    misultin_utility:get_key_value('Content-Length', Req:get(headers));
+header(content_type, Req) ->
+    misultin_utility:get_key_value('Content-Type', Req:get(headers));
+header(content_encoding, Req) ->
+    misultin_utility:get_key_value('Content-Encoding', Req:get(headers));
+header(authorization, Req) ->
+    misultin_utility:get_key_value('Authorization', Req:get(headers));
+header(x_forwarded_for, Req) ->
+    misultin_utility:get_key_value('X-Forwarded-For', Req:get(headers));
+header(transfer_encoding, Req) ->
+    misultin_utility:get_key_value('Transfer-Encoding', Req:get(headers));
+header(accept_language, Req) ->
+    misultin_utility:get_key_value('Accept-Language', Req:get(headers));
+header(Header, Req) ->
+    misultin_utility:get_key_value(Header, Req:get(headers)).
+
 headers(Req) ->
-    Headers = Req:get(headers),
-    F = fun(Header) -> proplists:get_value(Header, Headers) end,
-    Headers1 = [
-        {connection, F('Connection')},
-        {accept, F('Accept')},
-        {host, F('Host')},
-        {if_modified_since, F('If-Modified-Since')},
-        {if_match, F('If-Match')},
-        {if_none_match, F('If-Range')},
-        {if_unmodified_since, F('If-Unmodified-Since')},
-        {range, F('Range')},
-        {referer, F('Referer')},
-        {user_agent, F('User-Agent')},
-        {accept_ranges, F('Accept-Ranges')},
-        {cookie, F('Cookie')},
-        {keep_alive, F('Keep-Alive')},
-        {location, F('Location')},
-        {content_length, F('Content-Length')},
-        {content_type, F('Content-Type')},
-        {content_encoding, F('Content-Encoding')},
-        {authorization, F('Authorization')},
-        {transfer_encoding, F('Transfer-Encoding')}
+    Headers1 = [ connection, accept, host, if_modified_since, 
+        if_match, if_none_match, if_range, if_unmodified_since, 
+        range, referer, user_agent, accept_language, accept_ranges, cookie, 
+        keep_alive, location, content_length, content_type, 
+        content_encoding, authorization, x_forwarded_for, transfer_encoding
     ],
-    [{K, V} || {K, V} <- Headers1, V /= undefined].
+    Headers2 = lists:map(fun(H) -> {H, header(H, Req)} end, Headers1),
+    [{K, V} || {K, V} <- Headers2, V /= undefined].
 
 cookies(Req) ->
     Headers = headers(Req),
@@ -81,3 +111,15 @@ post_params(Req) ->
 
 request_body(Req) ->
     Req:get(body).
+
+socket(Req) -> 	
+    Req:get(socket).
+
+recv_from_socket(Length, Timeout, Req) -> 
+    Socket = socket(Req),
+    case gen_tcp:recv(Socket, Length, Timeout) of
+        {ok, Data} -> 
+            Data;
+        _Other -> 
+            exit(normal)
+    end.

@@ -1,12 +1,15 @@
-
+% vim: ts=4 sw=4 et
 -module(simple_bridge_util).
--export([atomize_header/1]).
+-export([
+    atomize_header/1,
+    expires/2
+]).
 
 
 %% converts a Header to a lower-case, underscored version
 %% ie. "X-Forwarded-For" -> x_forwarded_for
 atomize_header(Header) when is_binary(Header) ->
-	atomize_header(binary_to_list(Header));
+    atomize_header(binary_to_list(Header));
 atomize_header(Header) when is_atom(Header) ->
     atomize_header(atom_to_list(Header));
 atomize_header(Header) when is_list(Header) ->
@@ -20,3 +23,12 @@ atomize_header(Header) when is_list(Header) ->
         end
     end,
     list_to_atom(lists:map(LowerUnderscore,Header)).
+
+%% TODO: Make this flexibile beyond just years
+expires(years, Years) when is_integer(Years) ->
+    %% Calculate expire date far into future...
+    %% This method copied from Evan Miller's implementation
+    {{Y, _, _}, _} = calendar:local_time(),
+
+    ExpireDate = httpd_util:rfc1123_date(),
+    _FinalExpiresDate = re:replace(ExpireDate, " \\d\\d\\d\\d ", io_lib:format(" ~4.4.0w ", [Y + Years])).
