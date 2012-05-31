@@ -47,8 +47,9 @@ build_response(ReqKey, Res) ->
             },
             cowboy_request_server:set(ReqKey,NewRequestCache),
             {ok,FinReq};
-            
-        {file, Path} ->
+           
+
+        {file, P} ->
             %% Note: that this entire {file, Path} section should be avoided
             %% as much as possible, since this reads the entire file into
             %% memory before sending.
@@ -60,6 +61,11 @@ build_response(ReqKey, Res) ->
             %% See https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/etc/cowboy.config
             %% and
             %% https://github.com/choptastic/nitrogen/blob/master/rel/overlay/cowboy/site/src/nitrogen_sup.erl
+
+
+            % Cowboy path starts with / so we need to remove it
+            Path = strip_leading_slash(P),
+
             ExpireDate = simple_bridge_util:expires(years, 10),
             
             [$. | Ext] = filename:extension(Path),
@@ -70,7 +76,9 @@ build_response(ReqKey, Res) ->
                 {"Content-Type",Mimetype}
             ],
             
-            FullPath = filename:join(DocRoot,Path),
+            io:format("Serving static file ~p from docroot of ~p ~n",[Path, DocRoot]),
+        
+            FullPath = filename:join(DocRoot, Path),
             {ok, FinReq} = case file:read_file(FullPath) of
                 {error,enoent} -> 
                     {ok, _R} = send(404,[],[],"Not Found",Req);
@@ -84,6 +92,15 @@ build_response(ReqKey, Res) ->
             cowboy_request_server:set(ReqKey,NewRequestCache),
             {ok, FinReq}
     end.
+
+
+%% Just to strip leading slash, as cowboy tends to do this.
+%% If no leading slash, just return the path.
+strip_leading_slash([$/ | Path]) ->
+    Path;
+strip_leading_slash(Path) ->
+    Path.
+
 
 send(Code,Headers,Cookies,Body,Req) ->
     Req1 = prepare_cookies(Req,Cookies),
