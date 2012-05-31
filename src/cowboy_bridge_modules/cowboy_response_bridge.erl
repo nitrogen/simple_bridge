@@ -49,23 +49,27 @@ build_response(ReqKey, Res) ->
             {ok,FinReq};
             
         {file, Path} ->
-            %% Calculate expire date far into future...
-            Seconds = calendar:datetime_to_gregorian_seconds(calendar:local_time()),
-            TenYears = 10 * 365 * 24 * 60 * 60,
-            Seconds1 = calendar:gregorian_seconds_to_datetime(Seconds + TenYears),
-            ExpireDate = httpd_util:rfc1123_date(Seconds1),
+            %% Note: that this entire {file, Path} section should be avoided
+            %% as much as possible, since this reads the entire file into
+            %% memory before sending.
+            %%
+            %% You want to make sure that cowboy.config is properly set
+            %% up with paths so that the requests for static files are
+            %% properly handled by cowboy directly.
+            %%
+            %% See https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/etc/cowboy.config
+            %% and
+            %% https://github.com/choptastic/nitrogen/blob/master/rel/overlay/cowboy/site/src/nitrogen_sup.erl
+            ExpireDate = simple_bridge_util:expires(years, 10),
             
             [$. | Ext] = filename:extension(Path),
             Mimetype =  mimetypes:extension(Ext),
 
-            %% Create the response telling Mochiweb to serve the file...
             Headers = [
                 {"Expires", ExpireDate},
                 {"Content-Type",Mimetype}
             ],
             
-            io:format("Serving static file ~p~n",[Path]),
-        
             FullPath = filename:join(DocRoot,Path),
             {ok, FinReq} = case file:read_file(FullPath) of
                 {error,enoent} -> 

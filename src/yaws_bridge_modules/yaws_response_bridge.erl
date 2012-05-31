@@ -43,11 +43,7 @@ build_response(_Arg, Res) ->
 			%% completely back to Yaws, or 2) how the streamcontent return types work as define in
 			%% yaws_server:handle_out_reply
 
-            %% Calculate expire date far into future...
-            Seconds = calendar:datetime_to_gregorian_seconds(calendar:local_time()),
-            TenYears = 10 * 365 * 24 * 60 * 60,
-            Seconds1 = calendar:gregorian_seconds_to_datetime(Seconds + TenYears),
-            ExpireDate = httpd_util:rfc1123_date(Seconds1),
+			ExpireDate = simple_bridge_util:expires(years, 10),
 
 			%% Docroot needed to find file in Path
 			Docroot = yaws_api:arg_docroot(_Arg),

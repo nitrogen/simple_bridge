@@ -34,15 +34,10 @@ build_response({Req, DocRoot}, Res) ->
             % Send the mochiweb response...
             Req:respond({Code, Headers2, Body});
         {file, Path} ->
-            %% Calculate expire date far into future...
-			%% This method copied from Evan Miller's implementation
-            {{Y, _, _}, _} = calendar:local_time(),
-
-            ExpireDate = httpd_util:rfc1123_date(),
-            ExpireDate1 = re:replace(ExpireDate, " \\d\\d\\d\\d ", io_lib:format(" ~4.4.0w ", [Y + 10])),
+			ExpireDate = simple_bridge_util:expires(years, 10),
 
             %% Create the response telling Mochiweb to serve the file...
-            Headers = [{"Expires", ExpireDate1}],
+            Headers = [{"Expires", ExpireDate}],
             Req:serve_file(tl(Path), DocRoot, Headers)
     end.
 
