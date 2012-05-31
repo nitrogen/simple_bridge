@@ -31,12 +31,26 @@ uri(Req) ->
 
 peer_ip(Req) -> 
     Socket = Req#mod.socket,
-    {ok, {IP, _Port}} = inet:peername(Socket),
+    {ok, {IP, _Port}} =
+        case Socket of
+            S when is_tuple(S), 
+                   element(1, S) =:= sslsocket -> 
+                ssl:peername(Socket);
+            _ -> 
+                inet:peername(Socket)
+        end,
     IP.
 
 peer_port(Req) -> 
     Socket = Req#mod.socket,
-    {ok, {_IP, Port}} = inet:peername(Socket),
+    {ok, {_IP, Port}} =
+        case Socket of
+            S when is_tuple(S), 
+                   element(1, S) =:= sslsocket ->
+                ssl:peername(Socket);
+            _ -> 
+                inet:peername(Socket)
+        end,
     Port.
 
 headers(Req) ->
