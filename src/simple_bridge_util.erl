@@ -1,4 +1,4 @@
-
+% vim: ts=4 sw=4 et
 -module(simple_bridge_util).
 -export([atomize_header/1]).
 
@@ -6,7 +6,7 @@
 %% converts a Header to a lower-case, underscored version
 %% ie. "X-Forwarded-For" -> x_forwarded_for
 atomize_header(Header) when is_binary(Header) ->
-	atomize_header(binary_to_list(Header));
+    atomize_header(binary_to_list(Header));
 atomize_header(Header) when is_atom(Header) ->
     atomize_header(atom_to_list(Header));
 atomize_header(Header) when is_list(Header) ->
@@ -20,3 +20,5 @@ atomize_header(Header) when is_list(Header) ->
         end
     end,
     list_to_atom(lists:map(LowerUnderscore,Header)).
+
+
