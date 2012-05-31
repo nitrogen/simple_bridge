@@ -17,6 +17,10 @@
 %% Max Body of 10MB by default
 -define(MAX_RECV_BODY,(1024*1024*10)).
 
+%% {Req, DocRoot} is deprecated
+%% Maintained for backwards compatibility.
+init({Req, _DocRoot}) -> 
+	init(Req);
 init(Req) -> 
     Req.
 
