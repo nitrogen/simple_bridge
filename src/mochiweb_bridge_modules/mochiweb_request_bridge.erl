@@ -103,7 +103,7 @@ headers(Req) ->
         referer, user_agent, accept_language, accept_ranges, 
         cookie, keep_alive, location, content_length, content_type,
         content_encoding, authorization, x_forwarded_for, transfer_encoding,
-	accept_encoding
+        accept_encoding
     ],
     Headers1 = lists:map(fun(H) -> {H, header(H, Req)} end, Headers),
     [{K, V} || {K, V} <- Headers1, V /= undefined].
