@@ -91,6 +91,8 @@ header(x_forwarded_for, Req) ->
     Req:get_header_value("x-forwarded-for");
 header(transfer_encoding, Req) ->
     Req:get_header_value("transfer-encoding");
+header(accept_encoding, Req) ->
+    Req:get_header_value("accept-encoding");
 header(Header, Req) ->
     Req:get_header_value(Header).
 
@@ -100,7 +102,8 @@ headers(Req) ->
         if_none_match, if_unmodified_since, if_range, range, 
         referer, user_agent, accept_language, accept_ranges, 
         cookie, keep_alive, location, content_length, content_type,
-        content_encoding, authorization, x_forwarded_for, transfer_encoding
+        content_encoding, authorization, x_forwarded_for, transfer_encoding,
+	accept_encoding
     ],
     Headers1 = lists:map(fun(H) -> {H, header(H, Req)} end, Headers),
     [{K, V} || {K, V} <- Headers1, V /= undefined].

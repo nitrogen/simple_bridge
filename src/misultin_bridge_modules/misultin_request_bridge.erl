@@ -76,6 +76,8 @@ header(transfer_encoding, Req) ->
     misultin_utility:get_key_value('Transfer-Encoding', Req:get(headers));
 header(accept_language, Req) ->
     misultin_utility:get_key_value('Accept-Language', Req:get(headers));
+header(accept_encoding, Req) ->
+    misultin_utility:get_key_value('Accept-Encoding', Req:get(headers));
 header(Header, Req) ->
     misultin_utility:get_key_value(Header, Req:get(headers)).
 
@@ -84,7 +86,8 @@ headers(Req) ->
         if_match, if_none_match, if_range, if_unmodified_since, 
         range, referer, user_agent, accept_language, accept_ranges, cookie, 
         keep_alive, location, content_length, content_type, 
-        content_encoding, authorization, x_forwarded_for, transfer_encoding
+        content_encoding, authorization, x_forwarded_for, transfer_encoding, 
+	accept_encoding
     ],
     Headers2 = lists:map(fun(H) -> {H, header(H, Req)} end, Headers1),
     [{K, V} || {K, V} <- Headers2, V /= undefined].
