@@ -47,7 +47,7 @@ path(ReqKey) ->
 
 uri(ReqKey) ->
     ?GET,
-    {RawPath, Req} = cowboy_http_request:raw_path(Req),
+    {RawPath, Req} = cowboy_http_req:raw_path(Req),
     b2l(RawPath).
 
 peer_ip(ReqKey) ->
