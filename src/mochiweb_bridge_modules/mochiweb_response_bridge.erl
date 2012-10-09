@@ -9,7 +9,7 @@
 -export ([build_response/2,init/1]).
 
 init({Req,DocRoot}) ->
-	{Req,DocRoot}.
+    {Req,DocRoot}.
 
 build_response({Req, DocRoot}, Res) ->	
     % Some values...
@@ -23,7 +23,6 @@ build_response({Req, DocRoot}, Res) ->
                 [create_cookie_header(X) || X <- Res#response.cookies]
             ]),		
 
-			%
             %  Ensure content type...
             F = fun(Key) -> lists:keymember(Key, 1, Headers) end,
             HasContentType = lists:any(F, ["content-type", "Content-Type", "CONTENT-TYPE"]),
@@ -35,8 +34,7 @@ build_response({Req, DocRoot}, Res) ->
             % Send the mochiweb response...
             Req:respond({Code, Headers2, Body});
         {file, Path} ->
-			ExpireDate = simple_bridge_util:expires(years, 10),
-
+            ExpireDate = simple_bridge_util:expires(years, 10),
             %% Create the response telling Mochiweb to serve the file...
             Headers = [{"Expires", ExpireDate}],
             Req:serve_file(tl(Path), DocRoot, Headers)
