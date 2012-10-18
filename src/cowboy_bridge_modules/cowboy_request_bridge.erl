@@ -154,13 +154,3 @@ b2l(B) when is_binary(B) ->
 b2l(B) ->
     B.
 
-l2b(L) when is_list(L) ->
-    list_to_binary(L);
-l2b(L) ->
-    L.
-
-b2a(B) when is_binary(B) ->
-    list_to_atom(binary_to_list(B)).
-
-
-
