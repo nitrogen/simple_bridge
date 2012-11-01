@@ -62,7 +62,7 @@ peer_ip(ReqKey) ->
 
 peer_port(ReqKey) ->
     ?GET,
-    {{_IP, Port}, NewReq} = cowboy_http_req:peer(Req),
+    {Port, NewReq} = cowboy_http_req:port(Req),
     NewRequestCache = _RequestCache#request_cache{request=NewReq},
     ?PUT,
     Port.
