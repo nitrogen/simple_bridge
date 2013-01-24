@@ -21,7 +21,7 @@
 %% {Req, DocRoot} is deprecated
 %% Maintained for backwards compatibility.
 init({Req, _DocRoot}) -> 
-	init(Req);
+    init(Req);
 init(Req) -> 
     Req.
 
@@ -118,18 +118,18 @@ post_params(Req) ->
     Req:parse_post().
 
 request_body(Req) ->
-	MaxBody = case application:get_env(mochiweb,max_request_size) of
-		undefined -> 
-			?MAX_RECV_BODY;
-		{ok, Max} when is_integer(Max) -> 
-			Max;
-		Other -> 
-			error_logger:warning_msg("Mochiweb Simple Bridge Configuration Error!  Unknown value for 'mochiweb' application variable 'max_request_size': ~p. Expected: integer() or undefined. Using Default of ~p~n",[Other,?MAX_RECV_BODY]),
-			?MAX_RECV_BODY
-	end,
+    MaxBody = case application:get_env(mochiweb,max_request_size) of
+        undefined -> 
+            ?MAX_RECV_BODY;
+        {ok, Max} when is_integer(Max) -> 
+            Max;
+        Other -> 
+            error_logger:warning_msg("Mochiweb Simple Bridge Configuration Error!  Unknown value for 'mochiweb' application variable 'max_request_size': ~p. Expected: integer() or undefined. Using Default of ~p~n",[Other,?MAX_RECV_BODY]),
+            ?MAX_RECV_BODY
+    end,
     Req:recv_body(MaxBody).
 
-socket(Req) -> 	
+socket(Req) ->  
     Req:get(socket).
 
 recv_from_socket(Length, Timeout, Req) -> 
