@@ -12,6 +12,7 @@ set_multipart(PostParams1, PostFiles1) ->
 set_error(Error1) ->
     simple_bridge_request_wrapper:new(Mod, Req, true, PostParams, PostFiles, Error1).
 
+protocol() -> Mod:protocol(Req).
 request_method() -> Mod:request_method(Req).
 path() -> Mod:path(Req).
 uri() -> Mod:uri(Req).
