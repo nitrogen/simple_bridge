@@ -8,6 +8,7 @@
 
 -export ([
     init/1,
+    protocol/1,
     request_method/1, 
     path/1, 
     uri/1,
@@ -24,6 +25,8 @@
 
 init(Req) -> 
     Req.
+
+protocol(_Req) -> undefined.
 
 request_method(Req) -> 
     wrq:method(Req).

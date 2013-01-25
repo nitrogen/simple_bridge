@@ -34,6 +34,7 @@ make_nocatch(Module, RequestData) ->
 behaviour_info(callbacks) -> [
     {init, 1},           % Should accept the request value passed by the http server.
 
+    {protocol, 1},       % http | https | undefined
     {request_method, 1}, % GET, POST, etc.
     {uri, 1},            % The uri (path and querystring)
     {path, 1},           % Just the path. (http://server.com/<PATH>?querystring)
