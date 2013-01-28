@@ -8,7 +8,7 @@
 -include_lib ("simple_bridge.hrl").
 -export ([
     init/1,
-    request_method/1, path/1, uri/1,
+    protocol/1, request_method/1, path/1, uri/1,
     peer_ip/1, peer_port/1,
     headers/1, header/2, cookies/1,
     query_params/1, post_params/1, request_body/1,
@@ -24,6 +24,9 @@ init({Req, _DocRoot}) ->
     init(Req);
 init(Req) -> 
     Req.
+
+protocol(Req) ->
+    Req:get(scheme).
 
 request_method(Req) -> 
     Req:get(method).
