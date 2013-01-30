@@ -1,3 +1,4 @@
+% vim: ts=4 sw=4 et
 % Simple Bridge
 % Copyright (c) 2008-2010 Rusty Klophaus
 % See MIT-LICENSE for licensing information.
@@ -16,7 +17,11 @@
 init(Req) ->
     Req.
 
-protocol(_Arg) -> undefined.
+protocol(Arg) -> 
+    case yaws_api:arg_clisock(Arg) of
+        S when is_tuple(S), element(1, S) =:= sslsocket -> https;
+        _ -> http
+    end.
 
 request_method(Arg) ->
     yaws_api:http_request_method(yaws_api:arg_req(Arg)).
@@ -41,7 +46,7 @@ peer_port(Arg) ->
 headers(Arg) ->
     Headers = yaws_api:arg_headers(Arg),
     
-	%% Get the other headers and format them to fit the paradigm we're using above
+    %% Get the other headers and format them to fit the paradigm we're using above
     Others = yaws_api:headers_other(Headers),
     Others2 = [{simple_bridge_util:atomize_header(Header),Value} || {http_header,_Num,Header,_,Value} <- Others],
 
@@ -67,7 +72,7 @@ headers(Arg) ->
         {authorization, yaws_api:headers_authorization(Headers)},
         {transfer_encoding, yaws_api:headers_transfer_encoding(Headers)},
         {x_forwarded_for, yaws_api:headers_x_forwarded_for(Headers)} 
-		| Others2
+        | Others2
     ].
 
 cookie(Key, Req) ->
