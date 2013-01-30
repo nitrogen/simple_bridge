@@ -8,3 +8,4 @@
 -record(response, { statuscode=200, headers=[], cookies=[], data=[] }).
 -record(uploaded_file, { original_name, temp_file, size }).
 -record(request_cache, {request, docroot="", body=""}).
+-compile({parse_transform,pmod_pt}).
