@@ -2,3 +2,6 @@ erl_crash.dump
 *~
 .*.sw?
 .eunit/
+/deps/*
+test/logs/*
+logs

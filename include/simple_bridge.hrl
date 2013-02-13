@@ -9,3 +9,5 @@
 -record(uploaded_file, { original_name, temp_file, size }).
 -record(request_cache, {request, docroot="", body=""}).
 -compile({parse_transform,pmod_pt}).
+
+-define(B2L(B), simple_bridge_util:b2l(B)).

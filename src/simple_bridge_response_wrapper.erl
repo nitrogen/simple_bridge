@@ -6,38 +6,38 @@
 -include_lib ("simple_bridge.hrl").
 -compile(export_all).
 
-status_code(StatusCode) -> 
+status_code(StatusCode) ->
     Res1 = Res#response { statuscode=StatusCode },
     ?MODULE:new(Mod, Req, Res1).
 
-header(Name, Value) -> 
+header(Name, Value) ->
     Header = #header { name=Name, value=Value },
     Headers = Res#response.headers,
     Headers1 = [X || X <- Headers, X#header.name /= Name orelse X#header.name =:= "Set-Cookie"],
     Headers2 = [Header|Headers1],
     Res1 = Res#response { headers=Headers2 },
-    ?MODULE:new(Mod, Req, Res1).	
+    ?MODULE:new(Mod, Req, Res1).
 
-clear_headers() -> 
+clear_headers() ->
     Res1 = Res#response { headers=[] },
     ?MODULE:new(Mod, Req, Res1).
 
 cookie(Name, Value) ->
     cookie(Name, Value, "/", 20).
 
-cookie(Name, Value, Path, MinutesToLive) -> 
+cookie(Name, Value, Path, MinutesToLive) ->
     Cookie = #cookie { name=Name, value=Value, path=Path, minutes_to_live=MinutesToLive },
     Cookies = Res#response.cookies,
     Cookies1 = [X || X <- Cookies, X#cookie.name /= Name],
     Cookies2 = [Cookie|Cookies1],
     Res1 = Res#response { cookies=Cookies2 },
-    ?MODULE:new(Mod, Req, Res1).	
+    ?MODULE:new(Mod, Req, Res1).
 
-clear_cookies() -> 
+clear_cookies() ->
     Res1 = Res#response { cookies=[] },
     ?MODULE:new(Mod, Req, Res1).
 
-data(Data) -> 
+data(Data) ->
     Res1 = Res#response { data={data, Data} },
     ?MODULE:new(Mod, Req, Res1).
 

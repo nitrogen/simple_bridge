@@ -1,9 +1,10 @@
 % vim: ts=4 sw=4 et
 -module(simple_bridge_util).
 -export([
-    atomize_header/1,
-    expires/2
-]).
+	 atomize_header/1,
+	 expires/2,
+	 b2l/1
+	]).
 
 
 %% converts a Header to a lower-case, underscored version
@@ -13,7 +14,7 @@ atomize_header(Header) when is_binary(Header) ->
 atomize_header(Header) when is_atom(Header) ->
     atomize_header(atom_to_list(Header));
 atomize_header(Header) when is_list(Header) ->
-    LowerUnderscore = fun(H) -> 
+    LowerUnderscore = fun(H) ->
         if
             H >= 65 andalso H =< 90 ->
                 H + 32; % Convert "A" to "a" by adding 32 to its ASCII val
@@ -32,3 +33,6 @@ expires(years, Years) when is_integer(Years) ->
 
     ExpireDate = httpd_util:rfc1123_date(),
     _FinalExpiresDate = re:replace(ExpireDate, " \\d\\d\\d\\d ", io_lib:format(" ~4.4.0w ", [Y + Years])).
+
+b2l(B) when is_binary(B) -> binary_to_list(B);
+b2l(B) -> B.
