@@ -45,7 +45,10 @@ cookie(Cookie) ->
 query_params() -> Mod:query_params(Req).
 
 query_param(Param) ->
-    proplists:get_value(Param, query_params()).
+    query_param(Param, undefined).
+
+query_param(Param, DefaultValue) ->
+    proplists:get_value(Param, query_params(), DefaultValue).
 
 post_params() -> 
     case {request_method(), IsMultiPart} of
@@ -56,7 +59,16 @@ post_params() ->
     end.
 
 post_param(Param) ->
-    proplists:get_value(Param, post_params()).
+    post_param(Param, undefined).
+
+post_param(Param, DefaultValue) ->
+    proplists:get_value(Param, post_params(), DefaultValue).
+
+param(Param) ->
+    param(Param, undefined).
+
+param(Param, DefaultValue) ->
+    post_param(Param, query_param(Param, DefaultValue)).
 
 post_files() -> PostFiles.
 
