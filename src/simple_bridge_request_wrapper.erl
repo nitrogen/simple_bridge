@@ -13,7 +13,15 @@ set_error(Error1) ->
     simple_bridge_request_wrapper:new(Mod, Req, true, PostParams, PostFiles, Error1).
 
 protocol() -> Mod:protocol(Req).
-request_method() -> Mod:request_method(Req).
+request_method() ->
+    case Mod:request_method(Req) of
+        Method when is_binary(Method) ->
+            list_to_atom(binary_to_list(Method));
+        Method when is_list(Method) ->
+            list_to_atom(Method);
+        Method when is_atom(Method) ->
+            Method
+    end.
 path() -> Mod:path(Req).
 uri() -> Mod:uri(Req).
 
