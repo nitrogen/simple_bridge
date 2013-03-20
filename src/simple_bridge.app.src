@@ -1,6 +1,6 @@
 {application, simple_bridge, [
     {description,  "Common Interface to Erlang HTTP Servers"},
-    {vsn,          "1.2.1"},
+    {vsn,          "1.3.0-pre"},
     {applications, [kernel, stdlib, sasl]},
     {registered,   []}
 ]}.

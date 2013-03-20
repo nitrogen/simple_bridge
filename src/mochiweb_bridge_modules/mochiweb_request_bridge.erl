@@ -20,7 +20,10 @@
 
 %% {Req, DocRoot} is deprecated
 %% Maintained for backwards compatibility.
-init({Req, _DocRoot}) -> 
+%% In Mochiweb 2.4.1, Req is a two-tuple, and this was parsing out just the
+%% first element of the tuple.  This ensures that only if it's an old-style
+%% {req, docroot} tuple will this clause match.
+init({Req, _DocRoot}) when Req =/= mochiweb_request -> 
     init(Req);
 init(Req) -> 
     Req.
