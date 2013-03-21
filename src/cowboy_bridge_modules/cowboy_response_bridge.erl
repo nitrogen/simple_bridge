@@ -45,14 +45,14 @@ build_response(ReqKey, Res) ->
             %% Note: that this entire {file, Path} section should be avoided
             %% as much as possible, since this reads the entire file into
             %% memory before sending.
-            %%
+            %% 
             %% You want to make sure that cowboy.config is properly set
             %% up with paths so that the requests for static files are
             %% properly handled by cowboy directly.
-            %%
+            %% 
             %% See https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/etc/cowboy.config
             %% and
-            %% https://github.com/choptastic/nitrogen/blob/master/rel/overlay/cowboy/site/src/nitrogen_sup.erl
+            %% https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/site/src/nitrogen_sup.erl
 
             %% % Cowboy path starts with / so we need to remove it
             %% Path = strip_leading_slash(P),
@@ -65,13 +65,21 @@ build_response(ReqKey, Res) ->
 
             %% FullPath = filename:join(DocRoot, Path),
             %% {ok, FinReq} =
-	    %% 	case file:read_file(FullPath) of
-	    %% 	    {error,enoent} -> {ok, _R} = send(404, [], [], "Not Found", Req);
-	    %% 	    {ok,Bin} -> {ok, _R} = send(200, Headers, [], Bin, Req)
-	    %% 	end,
+            %%     case file:read_file(FullPath) of
+            %%         {error,enoent} -> {ok, _R} = send(404, [], [], "Not Found", Req);
+            %%         {ok,Bin} -> {ok, _R} = send(200, Headers, [], Bin, Req)
+            %%     end,
             %% cowboy_request_server:set(ReqKey, RequestCache#request_cache{request = FinReq}),
             %% {ok, FinReq}
-	    throw({error, P, fix_cowboy_routing})
+            throw({unrouted_static_file, [
+                {requested_file, P},
+                {description, "Simple Bridge through Cowboy is not set up to handle static files. Static Files should be handled by Cowboy through the routing table."},
+                {see_also, [
+                    "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/site/src/nitrogen_sup.erl",
+                    "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/etc/cowboy.config"
+                ]}
+
+            ]})
     end.
 
 %% %% Just to strip leading slash, as cowboy tends to do this.

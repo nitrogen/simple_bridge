@@ -1,3 +1,4 @@
+%% vim: ts=4 sw=4 et
 %% Simple Bridge
 %% Copyright (c) 2008-2010 Rusty Klophaus
 %% See MIT-LICENSE for licensing information.
@@ -8,9 +9,9 @@
 -export ([build_response/2,init/1]).
 
 init(Req) ->
-	Req.
+    Req.
 
-build_response(Req, Res) ->	
+build_response(Req, Res) -> 
     Code = Res#response.statuscode,
     case Res#response.data of
         {data, Body} ->
@@ -21,7 +22,7 @@ build_response(Req, Res) ->
                 {content_length, Size},
                 [{X#header.name, X#header.value} || X <- Res#response.headers],
                 [create_cookie_header(X) || X <- Res#response.cookies]
-            ]),		
+            ]),     
 
             Req1 = wrq:set_response_code(Code, Req),
             Req2 = wrq:set_resp_headers(Headers, Req1),
@@ -31,7 +32,15 @@ build_response(Req, Res) ->
             %% works via a dispatch table mapping routes to
             %% modules. For this case to happen, it means the dispatch
             %% table mapped a route to a static file.
-            throw({not_yet_implemented, {file, Path}})
+            throw({unrouted_static_file, [
+                {requested_file, Path},
+                {description, "Simple Bridge for Webmachine is not set up to handle static files. Static files should be handled by Webmachine through the dispatch table."},
+                {see_also, [
+                    "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/webmachine/site/src/nitrogen_sup.erl#L46",
+                    "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/webmachine/etc/webmachine.config"
+                ]}
+            ]})
+            
     end.
 
 create_cookie_header(Cookie) ->
