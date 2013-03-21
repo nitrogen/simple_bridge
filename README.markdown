@@ -77,10 +77,20 @@ Once you have created the request bridge object (a parameterized module), it pro
 * *Bridge:cookies()* - returns a proplist of cookies, [{"Cookie1", "Value1"}, {"Cookie2", "Value2"}, ...]
 * *Bridge:query_params()* - returns a proplist of query params, [{"Query1", "Value1"}, {"Query2", "Value2"}, ...]
 * *Bridge:post_params()* - returns a proplist of post params, [{"Post1", "Value1"}, {"Post2", "Value2"}, ...]
-* *Bridge:post_files()* - returns a list of upload_file records, describing the files uploaded in a multipart post. 
+* *Bridge:post_files()* - returns a list of `#uploaded_file` records, describing the files uploaded in a multipart post.
 * *Bridge:request_body()* - returns the request body that has been read so far, as a list.
 * *Bridge:error()* - returns an Erlang term describing any errors that happened while parsing a multipart post.
 
+<h3>Uploaded File Interface</h3>
+
+`Bridge:post_files()` returns a list of `#uploaded_file` records, but it's inconvenient to have to include the `simple_bridge.hrl` header in your application's modules.  The safer and more portable approach is to use the `uploaded_file` module provided by Simple Bridge.
+
+`uploaded_file` exports the following functions:
+
+* *UploadedFile:original_name()* - The original name of the file from the user's system
+* *UploadedFile:temp_name()* - The temporary name for the file as it's stored on the server.
+* *UploadedFile:size()* - The size of the file in bytes
+* *UploadedFile:field_name()* - The name of the HTML `<input type=file>` element from the page.
 
 <h3>What modules are involved in a request bridge?</h3>
 
@@ -93,6 +103,7 @@ Once you have created the request bridge object (a parameterized module), it pro
 * *yaws_request_bridge.erl* - The request bridge module for Yaws.
 * *misultin_request_bridge.erl* - The request bridge module for Misultin.
 * *???_request_bridge.erl* - Support for more servers on the way.
+* *uploaded_file.erl* - API to access information about an uploaded file.
 
 To extend the SimpleBridge to work with other HTTP servers (or other versions of Inets, Mochiweb, or Yaws), copy and modify inets_request_bridge.erl or mochiweb_request_bridge.erl.
 
