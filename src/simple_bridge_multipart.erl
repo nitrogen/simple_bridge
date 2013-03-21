@@ -80,11 +80,12 @@ parse_multipart(Req) ->
         {
             ok,
             [{Name, Value} || #part { name=Name, value=Value, filename=undefined } <- State1#state.parts],
-            [#uploaded_file { 
-                original_name=Filename,
-                temp_file=TempFile, 
-                size=Size 
-            } || #part { filename=Filename, value={file, TempFile}, size=Size } <- State1#state.parts]
+            [{Name, [
+                {original_name, Filename},
+                {temp_file, TempFile},
+                {size, Size},
+                {field_name, Name}
+            ]} || #part { filename=Filename, value={file, TempFile}, size=Size, name=Name } <- State1#state.parts]
     }
     catch 
         throw : post_too_big -> {error, post_too_big};
