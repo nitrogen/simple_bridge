@@ -1,6 +1,7 @@
 erl_crash.dump
 *~
 .*.sw?
+*.beam
 .eunit/
 /deps/*
 test/logs/*

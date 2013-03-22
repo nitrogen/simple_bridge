@@ -9,5 +9,7 @@ compile: get-deps
 clean:
 	./rebar clean
 
-test: compile
-	./rebar ct
+test: clean
+	./rebar --config "rebar.test.config" get-deps
+	./rebar --config "rebar.test.config" compile
+	./rebar --config "rebar.test.config" skip_deps=true ct
