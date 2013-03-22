@@ -16,6 +16,18 @@
 ]).
 
 %% Max Body of 10MB by default
+%% NOTE: It seems to be common for folks to manually override this directly in
+%% the code here.  That, however, is not necessary.  It's far simpler to set
+%% the faux-mochiweb environment variable max_reqest_size. I say "faux-mochiweb"
+%% because it isn't ACTUALLY a stock mochiweb variable, but just one that
+%% simple_bridge uses to override this hard-coded default.
+%%
+%% Either put the value into a mochiweb.config and load that, or you can
+%% just specify it in code or the console with:
+%% 
+%%      application:set_env(mochiweb, max_request_size, Size).
+%%
+%% where size is an integer containing the number of bytes
 -define(MAX_RECV_BODY,(1024*1024*10)).
 
 %% {Req, DocRoot} is deprecated
