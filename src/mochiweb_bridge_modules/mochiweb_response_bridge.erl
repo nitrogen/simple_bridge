@@ -11,33 +11,33 @@
 init({Req,DocRoot}) ->
     {Req,DocRoot}.
 
-build_response({Req, DocRoot}, Res) ->	
+build_response({Req, DocRoot}, Res) ->
     % Some values...
-    Code = Res#response.statuscode, 
+    Code = Res#response.statuscode,
+
+    %% Assemble headers...
+    Headers = lists:flatten([
+			     [{X#header.name, X#header.value} || X <- Res#response.headers],
+			     [create_cookie_header(X) || X <- Res#response.cookies]
+			    ]),
+
+    %%  Ensure content type...
+    F = fun(Key) ->
+		lists:keymember(Key, 1, Headers)
+	end,
+    HasContentType = lists:any(F, ["content-type", "Content-Type", "CONTENT-TYPE"]),
+    Headers2 = case HasContentType of
+		   true -> Headers;
+		   false -> [{"Content-Type", "text/html"}|Headers]
+	       end,
+
     case Res#response.data of
         {data, Body} ->
-
-            % Assemble headers...
-            Headers = lists:flatten([
-                [{X#header.name, X#header.value} || X <- Res#response.headers],
-                [create_cookie_header(X) || X <- Res#response.cookies]
-            ]),		
-
-            %  Ensure content type...
-            F = fun(Key) -> lists:keymember(Key, 1, Headers) end,
-            HasContentType = lists:any(F, ["content-type", "Content-Type", "CONTENT-TYPE"]),
-            Headers2 = case HasContentType of
-                true -> Headers;
-                false -> [{"Content-Type", "text/html"}|Headers]
-            end,
-
             % Send the mochiweb response...
             Req:respond({Code, Headers2, Body});
         {file, Path} ->
-            ExpireDate = simple_bridge_util:expires(years, 10),
             %% Create the response telling Mochiweb to serve the file...
-            Headers = [{"Expires", ExpireDate}],
-            Req:serve_file(tl(Path), DocRoot, Headers)
+            Req:serve_file(tl(Path), DocRoot, Headers2)
     end.
 
 create_cookie_header(Cookie) ->
