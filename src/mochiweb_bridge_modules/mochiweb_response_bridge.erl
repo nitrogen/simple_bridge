@@ -19,26 +19,20 @@ build_response({Req, DocRoot}, Res) ->
     Headers = lists:flatten([
 			     [{X#header.name, X#header.value} || X <- Res#response.headers],
 			     [create_cookie_header(X) || X <- Res#response.cookies]
-			    ]),
-
-    %%  Ensure content type...
-    F = fun(Key) ->
-		lists:keymember(Key, 1, Headers)
-	end,
-    HasContentType = lists:any(F, ["content-type", "Content-Type", "CONTENT-TYPE"]),
-    Headers2 = case HasContentType of
-		   true -> Headers;
-		   false -> [{"Content-Type", "text/html"}|Headers]
-	       end,
+			  ]),
 
     case Res#response.data of
         {data, Body} ->
             % Send the mochiweb response...
+            Headers2 = simple_bridge_util:ensure_header(Headers,{"Content-Type","text/html"}),
             Req:respond({Code, Headers2, Body});
         {file, Path} ->
             %% Create the response telling Mochiweb to serve the file...
+            Headers2 = simple_bridge_util:ensure_expires_header(Headers),
             Req:serve_file(tl(Path), DocRoot, Headers2)
     end.
+
+
 
 create_cookie_header(Cookie) ->
     SecondsToLive = Cookie#cookie.minutes_to_live * 60,

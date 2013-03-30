@@ -49,6 +49,7 @@ to_cookie_expire(SecondsToLive) ->
 
 %% Inets wants some headers as lowercase atoms, so we
 %% need to do some special massage here.
+%% TODO: This needs to be reworked. We shouldn't be making atoms from every request
 massage(Header) ->
     X = list_to_atom(
           binary_to_list(

@@ -44,7 +44,8 @@ build_response(_Arg, Res) ->
             %% completely back to Yaws, or 2) how the streamcontent return types work as define in
             %% yaws_server:handle_out_reply
 
-            ExpireDate = simple_bridge_util:expires(years, 10),
+            %% Static Content should have an expires date.  If not, we're going to make one
+            Headers2 = ensure_expires_header(Res, Headers),
 
             %% Docroot needed to find file in Path
             Docroot = yaws_api:arg_docroot(_Arg),
@@ -52,7 +53,7 @@ build_response(_Arg, Res) ->
 
             %% Get the content type as defined by yaws
             ContentType = yaws_api:mime_type(Path),
-
+           
             %% Get the file content
             FullResponse = case file:read_file(FullPath) of
                 {error,enoent} -> 
@@ -60,7 +61,7 @@ build_response(_Arg, Res) ->
                 {ok,Bin} -> 
                     [
                         {status, Code},
-                        [{header, {"Expires", ExpireDate}} | Headers],
+                        Headers2,
                         {content, ContentType, Bin}
                     ]
             end,
@@ -72,7 +73,18 @@ assemble_headers(Res) ->
                    [{header, {X#header.name, X#header.value}} || X <- Res#response.headers],
                    [create_cookie(X) || X <- Res#response.cookies]
                   ]).
+
+%% This is slightly different from the one in simple_bridge_util due to the
+%% formatting of the yaws headers isn't just a simple proplist.
+ensure_expires_header(Res,Headers) ->
+    case simple_bridge_util:needs_expires_header(Res#response.headers) of
+        true -> 
+            Expires = simple_bridge_util:default_static_expires_header(),
+            [{header, Expires} | Headers];
+        false -> Headers
+    end.
     
+
 get_content_type(Res) ->
     coalesce([
               kvl3(content_type, Res#response.headers),

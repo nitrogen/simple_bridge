@@ -22,19 +22,13 @@ build_response(ReqKey, Res) ->
     % Some values...
     Code = Res#response.statuscode,
 
+    %% assemble headers...
+    Headers = lists:flatten([[{X#header.name, X#header.value} || X <- Res#response.headers]]),
+
     case Res#response.data of
         {data, Body} ->
             % Assemble headers...
-            Headers = lists:flatten([[{X#header.name, X#header.value} || X <- Res#response.headers]]),
-
-            % Ensure content type...
-            F = fun(Key) -> lists:keymember(Key, 1, Headers) end,
-            HasContentType = lists:any(F, ["content-type", "Content-Type", "CONTENT-TYPE"]),
-            Headers2 =
-		case HasContentType of
-		    true -> Headers;
-		    false -> [{"Content-Type", "text/html"} | Headers]
-		end,
+            Headers2 = simple_bridge_util:ensure_header(Headers,"Content-Type","text/html"),
 
             % Send the cowboy cookies
             {ok, FinReq} = send(Code, Headers2, Res#response.cookies, Body, Req),
@@ -53,34 +47,42 @@ build_response(ReqKey, Res) ->
             %% See https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/etc/cowboy.config
             %% and
             %% https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/site/src/nitrogen_sup.erl
-
-            %% % Cowboy path starts with / so we need to remove it
-            %% Path = strip_leading_slash(P),
-            %% ExpireDate = simple_bridge_util:expires(years, 10),
-            %% [$. | Ext] = filename:extension(Path),
-            %% Mimetype =  mimetypes:extension(Ext),
-            %% Headers = [{"Expires", ExpireDate}, {"Content-Type",Mimetype}],
-
-            %% io:format("Serving static file ~p from docroot of ~p ~n",[Path, DocRoot]),
-
-            %% FullPath = filename:join(DocRoot, Path),
-            %% {ok, FinReq} =
-            %%     case file:read_file(FullPath) of
-            %%         {error,enoent} -> {ok, _R} = send(404, [], [], "Not Found", Req);
-            %%         {ok,Bin} -> {ok, _R} = send(200, Headers, [], Bin, Req)
-            %%     end,
-            %% cowboy_request_server:set(ReqKey, RequestCache#request_cache{request = FinReq}),
-            %% {ok, FinReq}
-            throw({unrouted_static_file, [
-                {requested_file, P},
-                {description, "Simple Bridge through Cowboy is not set up to handle static files. Static Files should be handled by Cowboy through the routing table."},
-                {see_also, [
-                    "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/site/src/nitrogen_sup.erl",
-                    "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/etc/cowboy.config"
-                ]}
-
-            ]})
+ 
+            throw(wip)          
+%%            Path = strip_leading_slash(P),
+%%            Mimetype = get_mimetype(Path),
+%%
+%%            Headers2 = simple_bridge_util:ensure_header(Headers,{"Content-Type",Mimetype}),
+%%            Headers3 = simple_bridge_util:ensure_expires_header(Headers),
+%%
+%%            FullPath = filename:join(DocRoot, Path),
+%%            {ok, FinReq} =
+%%                case file:read_file(FullPath) of
+%%                    {error,enoent} ->
+%%                        {ok, _R} = send(404, [], [], "Not Found", Req);
+%%                    {ok,Bin} ->
+%%                        {ok, _R} = send(200, Headers, [], Bin, Req)
+%%                end,
+%%            cowboy_request_server:set(ReqKey, RequestCache#request_cache{request = FinReq}),
+%%            generate_static_error(P),
+%%            {ok, FinReq}
     end.
+
+generate_static_error(P) ->
+    error_logger:warning_msg("~p",[
+            {unrouted_static_file, [
+            {requested_file, P},
+            {description, "Simple Bridge through Cowboy is not set up to handle static files. Static Files should be handled by Cowboy through the routing table."},
+            {see_also, [
+                "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/site/src/nitrogen_sup.erl",
+                "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/etc/cowboy.config"
+            ]}
+        ]}
+    ]).
+
+get_mimetype(Path) ->
+    [$. | Ext] = filename:extension(Path),
+    mimetypes:extension(Ext).
 
 %% %% Just to strip leading slash, as cowboy tends to do this.
 %% %% If no leading slash, just return the path.
