@@ -14,7 +14,7 @@
     needs_expires_header/1
 ]).
 
--type header_key() :: string() | binary().
+-type header_key() :: string() | binary() | atom().
 -type header() :: {header_key(), string()}.
 -type header_list() :: [header()].
 
@@ -95,6 +95,8 @@ lower_keys(HeaderList) ->
     [to_lower(Key) || {Key,_} <- HeaderList].
 
 -spec to_lower(header_key()) -> string().
+to_lower(Header) when is_atom(Header) ->
+    to_lower(atom_to_list(Header));
 to_lower(Header) when is_binary(Header) ->
     to_lower(b2l(Header));
 to_lower(Header) when is_list(Header) ->
