@@ -23,12 +23,9 @@
 	  recv_from_socket/3
 	 ]).
 
-init({Req, _DocRoot}) ->
-    %% This two-tuple version is deprecated but maintained for backwards compatibility
-    init(Req);
-init(Req) ->
+init({Req, DocRoot}) ->
     ReqKey = new_key(),
-    put_key(ReqKey, #request_cache{body = not_loaded, request = Req}),
+    put_key(ReqKey, #request_cache{body = not_loaded, docroot=DocRoot, request = Req}),
     ReqKey.
 
 protocol(_ReqKey) -> undefined.

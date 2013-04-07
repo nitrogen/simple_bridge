@@ -18,7 +18,7 @@ init(Req) ->
     cowboy_request_bridge:init(Req).
 
 build_response(ReqKey, Res) ->
-    RequestCache = #request_cache{request = Req} = cowboy_request_server:get(ReqKey),
+    RequestCache = #request_cache{request = Req, docroot=DocRoot} = cowboy_request_server:get(ReqKey),
     % Some values...
     Code = Res#response.statuscode,
 
@@ -48,51 +48,59 @@ build_response(ReqKey, Res) ->
             %% and
             %% https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/site/src/nitrogen_sup.erl
  
-            throw(wip)          
-%%            Path = strip_leading_slash(P),
-%%            Mimetype = get_mimetype(Path),
-%%
-%%            Headers2 = simple_bridge_util:ensure_header(Headers,{"Content-Type",Mimetype}),
-%%            Headers3 = simple_bridge_util:ensure_expires_header(Headers),
-%%
-%%            FullPath = filename:join(DocRoot, Path),
-%%            {ok, FinReq} =
-%%                case file:read_file(FullPath) of
-%%                    {error,enoent} ->
-%%                        {ok, _R} = send(404, [], [], "Not Found", Req);
-%%                    {ok,Bin} ->
-%%                        {ok, _R} = send(200, Headers, [], Bin, Req)
-%%                end,
-%%            cowboy_request_server:set(ReqKey, RequestCache#request_cache{request = FinReq}),
-%%            generate_static_error(P),
-%%            {ok, FinReq}
+            Path = strip_leading_slash(P),
+            Mimetype = get_mimetype(Path),
+            Headers2 = simple_bridge_util:ensure_header(Headers,{"Content-Type",Mimetype}),
+            Headers3 = simple_bridge_util:ensure_expires_header(Headers2),
+            FullPath = filename:join(DocRoot, Path),
+            {ok, FinReq} = case filelib:is_regular(FullPath) of
+                false ->
+                    send(404, [], [], "Not Found", Req);
+                true -> 
+                    Size = filelib:file_size(FullPath),
+                    StreamFun = fun(Socket, Transport) ->
+                        case Transport:sendfile(Socket, FullPath) of
+                            {ok, _} -> ok;
+                            {error, closed} -> ok
+                        end
+                    end,
+                    Body = {stream, Size, StreamFun},
+                    send(200, Headers3, [], Body, Req)
+            end,
+            cowboy_request_server:set(ReqKey, RequestCache#request_cache{request = FinReq}),
+            {ok, FinReq}
     end.
 
-generate_static_error(P) ->
-    error_logger:warning_msg("~p",[
-            {unrouted_static_file, [
-            {requested_file, P},
-            {description, "Simple Bridge through Cowboy is not set up to handle static files. Static Files should be handled by Cowboy through the routing table."},
-            {see_also, [
-                "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/site/src/nitrogen_sup.erl",
-                "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/etc/cowboy.config"
-            ]}
-        ]}
-    ]).
+%% generate_static_error(P) ->
+%%     error_logger:warning_msg("~p",[
+%%             {unrouted_static_file, [
+%%             {requested_file, P},
+%%             {description, "Simple Bridge through Cowboy is not set up to handle static files. Static Files should be handled by Cowboy through the routing table."},
+%%             {see_also, [
+%%                 "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/site/src/nitrogen_sup.erl",
+%%                 "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/etc/cowboy.config"
+%%             ]}
+%%         ]}
+%%     ]).
 
 get_mimetype(Path) ->
     [$. | Ext] = filename:extension(Path),
     mimetypes:extension(Ext).
 
-%% %% Just to strip leading slash, as cowboy tends to do this.
-%% %% If no leading slash, just return the path.
-%% strip_leading_slash([$/ | Path]) -> Path;
-%% strip_leading_slash(Path) -> Path.
+%% Just to strip leading slash, as cowboy tends to do this.
+%% If no leading slash, just return the path.
+strip_leading_slash([$/ | Path]) -> Path;
+strip_leading_slash(Path) -> Path.
 
 send(Code, Headers, Cookies, Body, Req) ->
     Req1 = prepare_cookies(Req, Cookies),
     Req2 = prepare_headers(Req1, Headers),
-    Req3 = cowboy_req:set_resp_body(Body, Req2),
+    Req3 = case Body of
+        {stream, Size, Fun} -> 
+            cowboy_req:set_resp_body_fun(Size, Fun, Req2);
+        _ ->
+            cowboy_req:set_resp_body(Body, Req2)
+    end,
     {ok, _ReqFinal} = cowboy_req:reply(Code, Req3).
 
 prepare_cookies(Req, Cookies) ->
