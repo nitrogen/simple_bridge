@@ -36,20 +36,20 @@ protocol(_ReqKey) -> undefined.
 
 request_method(ReqKey) ->
     ?GET,
-    {Method, Req} = cowboy_http_req:method(Req),
+    {Method, Req} = cowboy_req:method(Req),
     Method.
 
 path(ReqKey) ->
     ?GET,
-    {Path, Req} = cowboy_http_req:path(Req),
+    {Path, Req} = cowboy_req:path(Req),
     case Path of
         [] -> "/";
-        _ -> "/" ++ b2l(filename:join(Path)) %Mochweb returns path as /path and Cowboy does not
+        _ -> "/" ++ b2l(Path) %Mochweb returns path as /path and Cowboy does not
     end.
 
 uri(ReqKey) ->
     ?GET,
-    {RawPath, Req} = case cowboy_http_req:raw_path(Req) of
+    {RawPath, Req} = case cowboy_req:raw_path(Req) of
      undefined -> {undefined, ok};
      {P, R} -> {P, R}
      end,
@@ -57,34 +57,34 @@ uri(ReqKey) ->
 
 peer_ip(ReqKey) ->
     ?GET,
-    {{IP, _Port}, NewReq} = cowboy_http_req:peer(Req),
+    {{IP, _Port}, NewReq} = cowboy_req:peer(Req),
     NewRequestCache = _RequestCache#request_cache{request=NewReq},
     ?PUT,
     IP.
 
 peer_port(ReqKey) ->
     ?GET,
-    {Port, NewReq} = cowboy_http_req:port(Req),
+    {Port, NewReq} = cowboy_req:port(Req),
     NewRequestCache = _RequestCache#request_cache{request=NewReq},
     ?PUT,
     Port.
 
 headers(ReqKey) ->
     ?GET,
-    {Headers,Req} = cowboy_http_req:headers(Req),
+    {Headers,Req} = cowboy_req:headers(Req),
     [{simple_bridge_util:atomize_header(Header),b2l(Val)} || {Header,Val} <- Headers].
 
 
 cookies(ReqKey) ->
     ?GET,
-    {Cookies, NewReq} = cowboy_http_req:cookies(Req),
+    {Cookies, NewReq} = cowboy_req:cookies(Req),
     NewRequestCache = _RequestCache#request_cache{request=NewReq},
     ?PUT,
     [{b2l(K),b2l(V)} || {K,V} <- Cookies].
 
 query_params(ReqKey) ->
     ?GET,
-    {QsVals, NewReq} = cowboy_http_req:qs_vals(Req),
+    {QsVals, NewReq} = cowboy_req:qs_vals(Req),
     NewRequestCache = _RequestCache#request_cache{request=NewReq},
     ?PUT,
     [{b2l(K),b2l(V)} || {K,V} <- QsVals].
@@ -104,7 +104,7 @@ request_body(ReqKey,binary) ->
      %% We cache the body here because we can't request the body twice in cowboy or it'll crash
     {Body,NewReq} = case _RequestCache#request_cache.body of
         not_loaded -> 
-            {ok, B, R} = cowboy_http_req:body(Req),
+            {ok, B, R} = cowboy_req:body(Req),
             {B,R};
         B -> {B,Req}
     end,
@@ -120,14 +120,14 @@ request_body(ReqKey,string) ->
 
 socket(ReqKey) ->
     ?GET,
-    {ok, _Transport, Socket} = cowboy_http_req:transport(Req),
+    {ok, _Transport, Socket} = cowboy_req:transport(Req),
     Socket.
 
 %% TODO: Cowboy's stream_body doesn't support customizable Length and Timeout
 recv_from_socket(_Length, _Timeout, ReqKey) ->
     ?GET,
     %cowboy_http_req:init_stream(
-    case cowboy_http_req:stream_body(Req) of
+    case cowboy_req:stream_body(Req) of
         {ok, Data, NewReq} ->
             NewRequestCache = _RequestCache#request_cache{request=NewReq},
             ?PUT,
