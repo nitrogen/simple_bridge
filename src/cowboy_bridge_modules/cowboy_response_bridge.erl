@@ -105,8 +105,8 @@ strip_leading_slash(Path) ->
 send(Code,Headers,Cookies,Body,Req) ->
     Req1 = prepare_cookies(Req,Cookies),
     Req2 = prepare_headers(Req1,Headers),
-    {ok, Req3} = cowboy_http_req:set_resp_body(Body,Req2),
-    {ok, _ReqFinal} = cowboy_http_req:reply(Code, Req3).
+    Req3 = cowboy_req:set_resp_body(Body,Req2),
+    {ok, _ReqFinal} = cowboy_req:reply(Code, Req3).
 
 prepare_cookies(Req,Cookies) ->
     lists:foldl(fun(C,R) ->
@@ -115,13 +115,13 @@ prepare_cookies(Req,Cookies) ->
         Path = iol2b(C#cookie.path),
         SecsToLive = C#cookie.minutes_to_live * 60,
         Options = [{path,Path},{max_age,SecsToLive}],
-        {ok,NewReq} = cowboy_http_req:set_resp_cookie(Name,Value,Options,R),
+        NewReq = cowboy_req:set_resp_cookie(Name,Value,Options,R),
         NewReq
     end,Req,Cookies).
 
 prepare_headers(Req,Headers) ->
     lists:foldl(fun({Header,Value},R) ->
-        {ok,NewReq} = cowboy_http_req:set_resp_header(iol2b(Header),iol2b(Value),R),
+        NewReq = cowboy_req:set_resp_header(iol2b(Header),iol2b(Value),R),
         NewReq
     end,Req,Headers).
 
