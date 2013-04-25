@@ -82,7 +82,8 @@ init({_Transport, http}, Req, _Opts) ->
 handle(Req, State) ->
     ct:log("-> init RequestBridge and ResponseBridge", []),
     %% init RequestBridge and ResponseBridge
-    RequestBridge = simple_bridge:make_request(cowboy_request_bridge, Req),
+	DocRoot = undefined,
+    RequestBridge = simple_bridge:make_request(cowboy_request_bridge, {Req, DocRoot}),
     ResponseBridge = simple_bridge:make_response(cowboy_response_bridge, RequestBridge),
 
     %% test API functions for RequestBridge interface
