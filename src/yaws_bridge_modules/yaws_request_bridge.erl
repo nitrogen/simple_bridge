@@ -35,7 +35,13 @@ uri(Arg) ->
 
 peer_ip(Arg) -> 
     Socket = socket(Arg),
-    {ok, {IP, _Port}} = inet:peername(Socket),
+    {ok, {IP, _Port}} =
+        case Socket of
+            S when is_tuple(S) andalso element(1, S) =:= sslsocket ->
+                ssl:peername(Socket);
+            _ ->
+                inet:peername(Socket)
+        end,
     IP.
 
 peer_port(Arg) -> 
