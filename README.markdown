@@ -88,7 +88,7 @@ Once you have created the request bridge object (a parameterized module), it pro
 `uploaded_file` exports the following functions:
 
 * *UploadedFile:original_name()* - The original name of the file from the user's system
-* *UploadedFile:temp_name()* - The temporary name for the file as it's stored on the server.
+* *UploadedFile:temp_file()* - The temporary name for the file as it's stored on the server.
 * *UploadedFile:size()* - The size of the file in bytes
 * *UploadedFile:field_name()* - The name of the HTML `<input type=file>` element from the page.
 
