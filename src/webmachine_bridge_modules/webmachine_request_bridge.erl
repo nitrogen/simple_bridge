@@ -20,7 +20,8 @@
     post_params/1, 
     request_body/1,
     socket/1,
-    recv_from_socket/3
+    recv_from_socket/3,
+    protocol_version/1
 ]).
 
 init(Req) -> 
@@ -96,3 +97,6 @@ recv_from_socket(Length, Timeout, Req) ->
         _ -> exit(normal)
     end.
 
+
+protocol_version(Req) ->
+  wrq:version(Req).

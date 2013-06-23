@@ -44,7 +44,8 @@ behaviour_info(callbacks) -> [
     {query_params, 1},   % Return a proplist of query parameters, key and value are strings.
     {post_params, 1},    % Return a proplist of post parameters, key and value are strings.
 
-    {peer_ip, 1}        % The remote IP address
+    {peer_ip, 1},        % The remote IP address
+    {protocol_version, 1} % HTTP version, {High, Low}
 ];
 
 behaviour_info(_) -> undefined.

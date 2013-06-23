@@ -12,7 +12,7 @@
     peer_ip/1, peer_port/1,
     headers/1, cookies/1,
     query_params/1, post_params/1, request_body/1,
-    socket/1, recv_from_socket/3
+    socket/1, recv_from_socket/3, protocol_version/1
 ]).
 
 
@@ -122,6 +122,12 @@ recv_from_socket(Length, Timeout, Req) ->
         _ -> exit(normal)
     end.
 
+protocol_version(Req) ->
+  case Req#mod.http_version of
+    "HTTP/0.9" -> {0, 9};
+    "HTTP/1.0" -> {1, 0};
+    "HTTP/1.1" -> {1, 1}
+  end.
 
 %%% PRIVATE FUNCTIONS %%%
 split_request_uri([], Path) -> {lists:reverse(Path), ""};

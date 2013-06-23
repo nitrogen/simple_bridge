@@ -28,6 +28,8 @@ uri() -> Mod:uri(Req).
 peer_ip() -> Mod:peer_ip(Req).
 peer_port() -> Mod:peer_port(Req).
 
+protocol_version() -> Mod:protocol_version(Req).
+
 headers() -> Mod:headers(Req).
 
 header(Header) ->
