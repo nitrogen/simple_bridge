@@ -7,7 +7,7 @@
     peer_ip/1, peer_port/1,
     headers/1, header/2, cookies/1,
     query_params/1, post_params/1, request_body/1,
-    socket/1, recv_from_socket/3
+    socket/1, recv_from_socket/3, protocol_version/1
 ]).
 
 init(Req) -> 
@@ -128,3 +128,6 @@ recv_from_socket(Length, Timeout, Req) ->
         _Other -> 
             exit(normal)
     end.
+
+protocol_version(Req) ->
+  Req:get(vsn).

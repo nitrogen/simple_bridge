@@ -20,7 +20,8 @@
 	  query_params/1,
 	  post_params/1,
 	  request_body/1,
-	  recv_from_socket/3
+	  recv_from_socket/3,
+	  protocol_version/1
 	 ]).
 
 init({Req, DocRoot}) ->
@@ -129,3 +130,12 @@ put_key(ReqKey, NewRequestCache) ->
     cowboy_request_server:set(ReqKey, NewRequestCache).
 
 new_key() -> {cowboy_bridge, erlang:make_ref()}.
+
+protocol_version(ReqKey) ->
+  {_RequestCache, Req} = get_key(ReqKey),
+  {Version, Req} = cowboy_req:version(Req),
+  case Version of
+    'HTTP/1.1' -> {1, 1};
+    'HTTP/1.0' -> {1, 0};
+    {H, L} -> {H, L}
+  end.
