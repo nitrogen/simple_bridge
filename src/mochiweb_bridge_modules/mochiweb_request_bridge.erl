@@ -162,4 +162,8 @@ recv_from_socket(Length, Timeout, Req) ->
     end.
 
 protocol_version(Req) ->
-    Req:get(version).
+    case Req:get(version) of
+        'HTTP/1.1' -> {1, 1};
+        'HTTP/1.0' -> {1, 0};
+        {H, L} -> {H, L}
+    end.
