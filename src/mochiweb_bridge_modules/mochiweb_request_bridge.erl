@@ -163,7 +163,7 @@ recv_from_socket(Length, Timeout, Req) ->
 
 protocol_version(Req) ->
     case Req:get(version) of
-      'HTTP/1.1' -> {1,1};
+      'HTTP/1.1' -> {1, 1};
       'HTTP/1.0' -> {0, 0};
       {H, L} -> {H, L}
     end.
