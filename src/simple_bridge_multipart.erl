@@ -80,7 +80,7 @@ parse_multipart(Req) ->
         {
             ok,
             [{Name, Value} || #part { name=Name, value=Value, filename=undefined } <- State1#state.parts],
-            [#uploaded_file {
+            [#sb_uploaded_file {
                 original_name=Filename,
                 temp_file=TempFile,
                 size=Size,

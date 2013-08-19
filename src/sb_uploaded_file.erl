@@ -12,7 +12,7 @@
 % Or in parameter module (assuming future version of Erlang still support it):
 %    File:original_name().
 %
--module(uploaded_file).
+-module(sb_uploaded_file).
 -include("simple_bridge.hrl").
 -compile({no_auto_import,[size/1]}).
 
@@ -22,10 +22,10 @@
     size/1,
     field_name/1]).
 
-original_name(#uploaded_file{original_name=N}) -> N.
+original_name(#sb_uploaded_file{original_name=N}) -> N.
 
-temp_file(#uploaded_file{temp_file=N}) -> N.
+temp_file(#sb_uploaded_file{temp_file=N}) -> N.
 
-size(#uploaded_file{size=S}) -> S.
+size(#sb_uploaded_file{size=S}) -> S.
 
-field_name(#uploaded_file{field_name=N}) -> N.
+field_name(#sb_uploaded_file{field_name=N}) -> N.
