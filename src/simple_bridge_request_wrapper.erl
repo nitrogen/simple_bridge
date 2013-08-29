@@ -51,6 +51,34 @@ cookie(Cookie) ->
             Cookies = Mod:cookies(Req),
             proplists:get_value(Cookie, Cookies)
     end.
+    
+
+param_group(Param) ->
+    param_group(Param, []).
+
+param_group(Param, DefaultValue) ->
+    case [V || {K, V} <- query_params(), K == Param] ++ [V || {K, V} <- post_params(), K == Param] of
+      [] -> DefaultValue;
+      L -> L
+    end.
+
+query_param_group(Param, DefaultValue) ->
+    case [V || {K, V} <- query_params(), K == Param] of
+      [] -> DefaultValue;
+      L -> L
+    end.
+
+query_param_group(Param) ->
+    query_param_group(Param, []).
+
+post_param_group(Param) ->
+    post_param_group(Param, []).
+
+post_param_group(Param, DefaultValue) ->
+  case [V || {K, V} <- post_params(), K == Param] of
+    [] -> DefaultValue;
+    L -> L
+  end.    
 
 query_params() -> Mod:query_params(Req).
 
