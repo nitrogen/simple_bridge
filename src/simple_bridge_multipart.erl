@@ -52,9 +52,10 @@ parse(Req) ->
     end.
 
 is_multipart_request(Req) ->
-    case Req:header(content_type) of
+    try Req:header(content_type) of
         "multipart/form-data" ++ _ -> true;
-        _ -> false
+        _                          -> false
+    catch _:_                      -> false
     end.
 
 parse_multipart(Req) -> 
