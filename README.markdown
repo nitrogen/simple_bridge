@@ -4,9 +4,9 @@ SimpleBridge takes the pain out of coding to multiple Erlang HTTP servers by
 creating a standardized interface. It currently supports Cowboy, Inets,
 Mochiweb, Webmachine, and Yaws.
 
-SimpleBridge is used in the
-[The Nitrogen Web Framework](http://nitrogenproject.com) and
-[ChicagoBoss](http://chicagoboss.org)
+SimpleBridge is used as the bridge to webservers for the two most popular
+Erlang web frameworks: [Nitrogen Web Framework](http://nitrogenproject.com)
+and [ChicagoBoss](http://chicagoboss.org)
 
 In a sense, it is similar to [EWGI](http://github.com/skarab/ewgi), except
 SimpleBridge has some key improvements/differences:
@@ -33,7 +33,7 @@ SimpleBridge has some key improvements/differences:
       construct a response.
 
 
-## Hello World Example<
+## Hello World Example
 
 ```erlang
 % SimpleBridge Hello World Example in Mochiweb
