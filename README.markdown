@@ -96,17 +96,29 @@ query parameters, post parameters, headers, and cookies of the request:
   * *Bridge:request_method()* - returns 'GET', 'POST', 'HEAD', etc.
   * *Bridge:path()* - returns the requested path and file.
   * *Bridge:peer_ip()* - returns the client's IP address in tuple format
-    (74.125.67.100 = {74, 125, 67, 100})
+    (74.125.67.100 = `{74, 125, 67, 100}`).
   * *Bridge:peer_port()* - returns the client's port.
-  * *Bridge:headers()* - returns a proplist of headers, [{header1, "Value1"},
-    {header2, "Value2"}, ...]
+  * *Bridge:headers()* - returns a proplist of headers, `{header1, "Value1"},
+    {header2, "Value2"}, ...]`.
   * *Bridge:header(Header)* - returns the value of a header.
-  * *Bridge:cookies()* - returns a proplist of cookies, [{"Cookie1", "Value1"},
-    {"Cookie2", "Value2"}, ...]
-  * *Bridge:query_params()* - returns a proplist of query params, [{"Query1",
-    "Value1"}, {"Query2", "Value2"}, ...]
-  * *Bridge:post_params()* - returns a proplist of post params, [{"Post1",
-    "Value1"}, {"Post2", "Value2"}, ...]
+  * *Bridge:cookies()* - returns a proplist of cookies, `[{"Cookie1", "Value1"},
+    {"Cookie2", "Value2"}, ...]`.
+  * *Bridge:query_params()* - returns a proplist of query params, `[{"Query1",
+    "Value1"}, {"Query2", "Value2"}, ...]`.
+  * *Bridge:query_param(Param)* - returns value of a query param named `Param`,
+    `undefined` if not found.
+  * *Bridge:query_param_group(Param)* - returns values of all query params
+    named `Param` as list, `["Value1", "Value2", ...]`,  `[]` if none found.
+  * *Bridge:post_params()* - returns a proplist of post params, `[{"Post1",
+    "Value1"}, {"Post2", "Value2"}, ...]`.
+  * *Bridge:post_param(Param)* - returns value of a post param named `Param`,
+    `undefined` if not found
+  * *Bridge:post_param_group(Param)* - returns values of all post params named
+    `Param` as list, `["Value1", "Value2", ...]`,  `[]` if none found
+  * *Bridge:param(Param)* - returns value of a query or post param named
+    `Param`, `undefined` if not found
+  * *Bridge:param_group(Param)* - returns values of all query and post params
+    named Param as list, `["Value1", "Value2", ...]`,  `[]` if none fund
   * *Bridge:post_files()* - returns a list of `#sb_uploaded_file` records,
     describing the files uploaded in a multipart post.
   * *Bridge:request_body()* - returns the request body that has been read so
