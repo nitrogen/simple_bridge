@@ -78,6 +78,12 @@ Once you have created the request bridge object (a parameterized module), it pro
 * *Bridge:query_params()* - returns a proplist of query params, [{"Query1", "Value1"}, {"Query2", "Value2"}, ...]
 * *Bridge:post_params()* - returns a proplist of post params, [{"Post1", "Value1"}, {"Post2", "Value2"}, ...]
 * *Bridge:post_files()* - returns a list of `#uploaded_file` records, describing the files uploaded in a multipart post.
+* *Bridge:query_param(Param)* - returns value of a query param Param, 'undefined' if not found
+* *Bridge:query_param_group(Param)* - returns values of all query params named Param as list, ["Value1", "Value2", ...],  [] if none found
+* *Bridge:post_param(Param)* - returns value of a post param Param, 'undefined' if not found
+* *Bridge:post_param_group(Param)* - returns values of all post params named Param as list, ["Value1", "Value2", ...],  [] if none found
+* *Bridge:param(Param)* - returns value of a query or post param Param, 'undefined' if not found
+* *Bridge:param_group(Param)* - returns values of all query and post params named Param as list, ["Value1", "Value2", ...],  [] if none fund
 * *Bridge:request_body()* - returns the request body that has been read so far, as a list.
 * *Bridge:error()* - returns an Erlang term describing any errors that happened while parsing a multipart post.
 
