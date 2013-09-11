@@ -117,7 +117,7 @@ find_deep_post_param([Index|Rest], Params) when is_list(Index) ->
 parse_deep_post_params([], Acc) ->
     Acc;
 parse_deep_post_params([{Key, Value}|Rest], Acc) ->
-    case re:run(Key, "^(\\w+)(?:\\[([\\w\\[\\]]+)\\])?$", [{capture, all_but_first, list}]) of
+    case re:run(Key, "^(\\w+)(?:\\[([\\w-\\[\\]]+)\\])?$", [{capture, all_but_first, list}]) of
         {match, [Key]} ->
             parse_deep_post_params(Rest, [{Key, Value}|Acc]);
         {match, [KeyName, Path]} ->
