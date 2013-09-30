@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
 %%% @author Mehmet Emin Tok
-%%% @copyright (c) 2013, Mehmet Emin Tok
+%%% @copyright (c) 2013, Synlay Technologies
 %%% See MIT-LICENSE for licensing information.
 %%%
 %%% @doc Handler for file uploads
@@ -21,7 +21,6 @@
     ,memory_file_handler/0
     ,temporary_file_handler/0
 ]).
--compile(export_all).
 
 
 % Override with -simple_bridge_scratch_dir Directory
