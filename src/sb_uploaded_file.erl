@@ -20,7 +20,8 @@
     original_name/1,
     temp_file/1,
     size/1,
-    field_name/1]).
+    field_name/1,
+    data/1]).
 
 original_name(#sb_uploaded_file{original_name=N}) -> N.
 
@@ -29,3 +30,5 @@ temp_file(#sb_uploaded_file{temp_file=N}) -> N.
 size(#sb_uploaded_file{size=S}) -> S.
 
 field_name(#sb_uploaded_file{field_name=N}) -> N.
+
+data(#sb_uploaded_file{data=D}) -> D.

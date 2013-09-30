@@ -6,7 +6,7 @@
 -record(cookie, { name, value, path="/", minutes_to_live=20 }).
 -record(header, { name, value }).
 -record(response, { statuscode=200, headers=[], cookies=[], data=[] }).
--record(sb_uploaded_file, { original_name, temp_file, size, field_name }).
+-record(sb_uploaded_file, { original_name, temp_file, size, field_name, data }).
 -record(request_cache, {request, docroot="", body=""}).
 -compile({parse_transform,pmod_pt}).
 
