@@ -1,0 +1,1 @@
+ignore=^\./deps ~$ \.sw.$ ^\./\. \.html$ \.beam$
