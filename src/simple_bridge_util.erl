@@ -2,6 +2,7 @@
 -module(simple_bridge_util).
 -export([
     atomize_header/1,
+    binarize_header/1,
     expires/2,
     b2l/1,
     has_header/2,
@@ -36,6 +37,30 @@ atomize_header(Header) when is_list(Header) ->
         end
     end,
     list_to_atom(lists:map(LowerUnderscore,Header)).
+
+binarize_header(Header) when is_binary(Header) ->
+    binarize_header(binary_to_list(Header));
+binarize_header(Header) when is_atom(Header) ->
+    binarize_header(atom_to_list(Header));
+binarize_header(Header) when is_list(Header) ->
+    list_to_binary(fix_header_caps(Header, capitalize)).
+
+%% @doc changes a header to always capitalize the first letter, and also any
+%% characters after dashes Example: <<"x-forwarded-for">> becomes
+%% <<"X-Forwarded-For">>.
+fix_header_caps([C|Rest], capitalize) when C>=$a,C=<$z ->
+    %% we are ordered to capitalize the next character, and the next character
+    %% happens to be lower case, so let's capitalize it
+    [C+32 | fix_header_caps(Rest, normal)];
+fix_header_caps([$-|Rest], _) ->
+    %% The next character is a dash, so we need to tell it to capitalize the
+    %% next character
+    [$-,fix_header_caps(Rest, capitalize)];
+fix_header_caps([C|Rest], _) ->
+    %% Either the character is non-lower-case already or we don't have to deal
+    %% with it anyway, so just move on.
+    [C|fix_header_caps(Rest, normal)];
+fix_header_caps([], _) -> [].
 
 
 %% Checks if `Header` exists as a key in `HeaderList`
