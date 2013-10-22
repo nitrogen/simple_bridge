@@ -3,7 +3,7 @@
 % Copyright (c) 2013 Jesse Gumm
 % See MIT-LICENSE for licensing information.
 
--module (simple_bridge_request_wrapper).
+-module (simple_bridge_wrapper).
 -include("simple_bridge.hrl").
 -define(PASSTHROUGH(FunctionName), FunctionName(Wrapper) -> (Wrapper#simple_bridge_wrapper.mod):FunctionName()).
 
@@ -56,6 +56,21 @@
 	insert_into/3
 ]).
 
+%% RESPONSE BRIDGE EXPORTS
+-export([
+	set_status_code/2,
+	set_header/3,
+	clear_headers/1,
+	set_cookie/3,
+	set_cookie/5,
+	clear_cookies/1,
+	set_response_data/2,
+	set_response_file/2,
+	build_response/1
+]).
+
+%% REQUEST WRAPPERS
+
 new(Mod, Req, IsMultiPart, PostParams, PostFiles, Error) ->
 	#simple_bridge_wrapper{
 		mod=Mod,
@@ -90,7 +105,6 @@ error(Wrapper) ->
 ?PASSTHROUGH(peer_ip).
 ?PASSTHROUGH(peer_port).
 ?PASSTHROUGH(protocol_version).
-?PASSTHROUGH(query_params).
 ?PASSTHROUGH(request_body).
 ?PASSTHROUGH(socket).
 
@@ -157,6 +171,8 @@ post_param_group(Param, DefaultValue, Wrapper) ->
 		[] -> DefaultValue;
 		L -> L
 	end.    
+
+?PASSTHROUGH(query_params).
 
 query_param(Param, Wrapper) ->
     query_param(Param, undefined, Wrapper).
@@ -243,3 +259,61 @@ insert_into(List, [ThisKey|Rest], Value) ->
             List ++ lists:reverse([insert_into(undefined, Rest, Value)|
                     lists:seq(0, N - erlang:length(List) - 1)])
     end.
+
+%% RESPONSE WRAPPERS
+
+set_status_code(StatusCode, Wrapper) ->
+	update_response(fun(Res) ->
+		Res#response{status_code=StatusCode}
+	end, Wrapper).
+
+set_header(Name, Value, Wrapper) ->
+	update_response(fun(Res) ->
+		Header = #header { name=Name, value=Value },
+		Headers = Res#response.headers,
+		Headers1 = [X || X <- Headers, X#header.name /= Name orelse X#header.name =:= "Set-Cookie"],
+		Headers2 = [Header|Headers1],
+		Res#response{headers=Headers2}
+	end, Wrapper).
+
+clear_headers(Wrapper) ->
+	update_response(fun(Res) ->
+		Res#response{headers=[]}
+	end, Wrapper).
+
+set_cookie(Name, Value, Wrapper) ->
+    set_cookie(Name, Value, "/", 20, Wrapper).
+
+set_cookie(Name, Value, Path, MinutesToLive, Wrapper) ->
+	update_response(fun(Res) ->
+		Cookie = #cookie { name=Name, value=Value, path=Path, minutes_to_live=MinutesToLive },
+		Cookies = Res#response.cookies,
+		Cookies1 = [X || X <- Cookies, X#cookie.name /= Name],
+		Cookies2 = [Cookie|Cookies1],
+		Res#response{cookies=Cookies2}
+	end, Wrapper).
+
+clear_cookies(Wrapper) ->
+	update_response(fun(Res) ->
+		Res#response{cookies=[]}
+	end, Wrapper).
+
+set_response_data(Data, Wrapper) ->
+	update_response(fun(Res) ->
+		Res#response{data={data, Data}}
+	end, Wrapper).
+
+set_response_file(Path, Wrapper) ->
+	update_response(fun(Res) ->
+		Res#response{data={file,Path}}
+	end, Wrapper).
+
+build_response(Wrapper) ->
+	Mod = Wrapper#simple_bridge_wrapper.mod,
+	Req = Wrapper#simple_bridge_wrapper.req,
+	Res = Wrapper#simple_bridge_wrapper.response,
+	Mod:build_response(Req,Res).
+
+update_response(Fun, Wrapper) ->
+	NewRes = Fun(Wrapper#simple_bridge_wrapper.response),
+	Wrapper#simple_bridge_wrapper{response=NewRes}.
