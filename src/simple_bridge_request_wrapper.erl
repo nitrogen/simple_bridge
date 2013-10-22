@@ -1,19 +1,102 @@
 % Simple Bridge
 % Copyright (c) 2008-2010 Rusty Klophaus
+% Copyright (c) 2013 Jesse Gumm
 % See MIT-LICENSE for licensing information.
 
--module (simple_bridge_request_wrapper, [Mod, Req, IsMultiPart, PostParams, PostFiles, Error]).
--compile(export_all).
--include_lib ("simple_bridge.hrl").
+-module (simple_bridge_request_wrapper).
+-include("simple_bridge.hrl").
+-define(PASSTHROUGH(FunctionName), FunctionName(Wrapper) -> (Wrapper#simple_bridge_wrapper.mod):FunctionName()).
 
-set_multipart(PostParams1, PostFiles1) ->
-    simple_bridge_request_wrapper:new(Mod, Req, true, PostParams1, PostFiles1, Error).
+%% REQUEST BRIDGE EXPORTS
+-export([
+	new/6,
+	set_multipart/3,
+	set_error/2,
+	protocol/1,
+	path/1,
+	uri/1,
+	peer_ip/1,
+	peer_port/1,
+	get_peername/1,
+	error/1,
+	socket/1,
+	protocol_version/1,
+	request_body/1,
+	request_method/1,
 
-set_error(Error1) ->
-    simple_bridge_request_wrapper:new(Mod, Req, true, PostParams, PostFiles, Error1).
+	headers/1,
+	header/2,
 
-protocol() -> Mod:protocol(Req).
-request_method() ->
+	cookies/1,
+	cookie/2,
+
+	query_params/1,
+	query_param/2,
+	query_param/3,
+
+	post_params/1,
+	post_param/2,
+	post_param/3,
+	post_param_group/2,
+	post_param_group/3,
+
+	param_group/2,
+	param_group/3,
+	query_param_group/2,
+	query_param_group/3,
+
+	param/2,
+	param/3,
+
+	deep_post_params/1,
+	deep_post_param/2,
+
+	post_files/1,
+	recv_from_socket/3,
+	insert_into/3
+]).
+
+new(Mod, Req, IsMultiPart, PostParams, PostFiles, Error) ->
+	#simple_bridge_wrapper{
+		mod=Mod,
+		req=Req,
+		is_multipart=IsMultiPart,
+		post_params=PostParams,
+		post_files=PostFiles,
+		error=Error
+	}.
+
+set_multipart(PostParams, PostFiles, Wrapper) ->
+	Wrapper#simple_bridge_wrapper{
+		is_multipart=true,
+		post_params=PostParams,
+		post_files=PostFiles
+	}.
+
+set_error(Error, Wrapper) ->
+	Wrapper#simple_bridge_wrapper{
+		error=Error
+	}.
+
+get_peername(Wrapper) ->
+	inet:peername(socket(Wrapper)).
+
+error(Wrapper) ->
+	Wrapper#simple_bridge_wrapper.error.
+
+?PASSTHROUGH(protocol).
+?PASSTHROUGH(path).
+?PASSTHROUGH(uri).
+?PASSTHROUGH(peer_ip).
+?PASSTHROUGH(peer_port).
+?PASSTHROUGH(protocol_version).
+?PASSTHROUGH(query_params).
+?PASSTHROUGH(request_body).
+?PASSTHROUGH(socket).
+
+request_method(Wrapper) ->
+	Mod = Wrapper#simple_bridge_wrapper.mod,
+	Req = Wrapper#simple_bridge_wrapper.req,
     case Mod:request_method(Req) of
         Method when is_binary(Method) ->
             list_to_atom(binary_to_list(Method));
@@ -22,17 +105,11 @@ request_method() ->
         Method when is_atom(Method) ->
             Method
     end.
-path() -> Mod:path(Req).
-uri() -> Mod:uri(Req).
 
-peer_ip() -> Mod:peer_ip(Req).
-peer_port() -> Mod:peer_port(Req).
-
-protocol_version() -> Mod:protocol_version(Req).
-
-headers() -> Mod:headers(Req).
-
-header(Header) ->
+?PASSTHROUGH(headers).
+header(Header, Wrapper) ->
+	Mod = Wrapper#simple_bridge_wrapper.mod,
+	Req = Wrapper#simple_bridge_wrapper.req,
     case erlang:function_exported(Mod, header, 2) of
         true ->
             Mod:header(Header, Req);
@@ -41,9 +118,10 @@ header(Header) ->
             proplists:get_value(Header, Headers)
     end.
 
-cookies() -> Mod:cookies(Req).
-
-cookie(Cookie) ->
+?PASSTHROUGH(cookies).
+cookie(Cookie, Wrapper) ->
+	Mod = Wrapper#simple_bridge_wrapper.mod,
+	Req = Wrapper#simple_bridge_wrapper.req,
     case erlang:function_exported(Mod, cookie, 2) of
         true ->
             Mod:cookie(Cookie, Req);
@@ -51,89 +129,81 @@ cookie(Cookie) ->
             Cookies = Mod:cookies(Req),
             proplists:get_value(Cookie, Cookies)
     end.
-    
 
-param_group(Param) ->
-    param_group(Param, []).
+param_group(Param, Wrapper) ->
+    param_group(Param, [], Wrapper).
 
-param_group(Param, DefaultValue) ->
-    case [V || {K, V} <- query_params(), K == Param] ++ [V || {K, V} <- post_params(), K == Param] of
-      [] -> DefaultValue;
-      L -> L
-    end.
+param_group(Param, DefaultValue, Wrapper) ->
+	case 	[V || {K, V} <- query_params(Wrapper), K == Param] 
+		 ++ [V || {K, V} <- post_params(Wrapper), K == Param] of
+		[] -> DefaultValue;
+		L -> L
+	end.
 
-query_param_group(Param, DefaultValue) ->
-    case [V || {K, V} <- query_params(), K == Param] of
-      [] -> DefaultValue;
-      L -> L
-    end.
+query_param_group(Param, DefaultValue, Wrapper) ->
+	case [V || {K, V} <- query_params(Wrapper), K == Param] of
+		[] -> DefaultValue;
+		L -> L
+	end.
 
-query_param_group(Param) ->
-    query_param_group(Param, []).
+query_param_group(Param, Wrapper) ->
+    query_param_group(Param, [], Wrapper).
 
-post_param_group(Param) ->
-    post_param_group(Param, []).
+post_param_group(Param, Wrapper) ->
+    post_param_group(Param, [], Wrapper).
 
-post_param_group(Param, DefaultValue) ->
-  case [V || {K, V} <- post_params(), K == Param] of
-    [] -> DefaultValue;
-    L -> L
-  end.    
+post_param_group(Param, DefaultValue, Wrapper) ->
+	case [V || {K, V} <- post_params(Wrapper), K == Param] of
+		[] -> DefaultValue;
+		L -> L
+	end.    
 
-query_params() -> Mod:query_params(Req).
+query_param(Param, Wrapper) ->
+    query_param(Param, undefined, Wrapper).
 
-query_param(Param) ->
-    query_param(Param, undefined).
+query_param(Param, DefaultValue, Wrapper) ->
+    proplists:get_value(Param, query_params(Wrapper), DefaultValue).
 
-query_param(Param, DefaultValue) ->
-    proplists:get_value(Param, query_params(), DefaultValue).
+post_params(Wrapper) ->
+	Mod = Wrapper#simple_bridge_wrapper.mod,
+	Req = Wrapper#simple_bridge_wrapper.req,
+	IsMultipart = Wrapper#simple_bridge_wrapper.is_multipart,
+	case {request_method(Wrapper), IsMultipart} of
+		{'POST', true}  -> Wrapper#simple_bridge_wrapper.post_params;
+		{'POST', false} -> Mod:post_params(Req);
+		{'PUT', false} -> Mod:post_params(Req);
+		_ -> []
+	end.
 
-post_params() ->
- case {request_method(), IsMultiPart} of
-        {'POST', true}  -> PostParams;
-        {'POST', false} -> Mod:post_params(Req);
-        {'PUT', false} -> Mod:post_params(Req);
-        _ -> []
-    end.
+post_param(Param, Wrapper) ->
+    post_param(Param, undefined, Wrapper).
 
-post_param(Param) ->
-    post_param(Param, undefined).
+post_param(Param, DefaultValue, Wrapper) ->
+    proplists:get_value(Param, post_params(Wrapper), DefaultValue).
 
-post_param(Param, DefaultValue) ->
-    proplists:get_value(Param, post_params(), DefaultValue).
+param(Param, Wrapper) ->
+    param(Param, undefined, Wrapper).
 
-param(Param) ->
-    param(Param, undefined).
+param(Param, DefaultValue, Wrapper) ->
+    post_param(Param, query_param(Param, DefaultValue, Wrapper)).
 
-param(Param, DefaultValue) ->
-    post_param(Param, query_param(Param, DefaultValue)).
+post_files(Wrapper) ->
+	Wrapper#simple_bridge_wrapper.post_files.
 
-post_files() -> PostFiles.
-
-request_body() -> Mod:request_body(Req).
-
-socket() ->
-    case erlang:function_exported(Mod, socket, 1) of
-        true -> Mod:socket(Req);
-        false -> throw({not_supported, Mod, socket})
-    end.
-
-get_peername() -> inet:peername(socket()).
-
-recv_from_socket(Length, Timeout) ->
+recv_from_socket(Length, Timeout, Wrapper) ->
+	Mod = Wrapper#simple_bridge_wrapper.mod,
+	Req = Wrapper#simple_bridge_wrapper.req,
     case erlang:function_exported(Mod, recv_from_socket, 3) of
         true ->  Mod:recv_from_socket(Length, Timeout, Req);
         false -> throw({not_supported, Mod, recv_from_socket})
     end.
 
-error() -> Error.
-
-deep_post_params() ->
-    Params = post_params(),
+deep_post_params(Wrapper) ->
+    Params = post_params(Wrapper),
     parse_deep_post_params(Params, []).
 
-deep_post_param(Path) ->
-    find_deep_post_param(Path, deep_post_params()).
+deep_post_param(Path, Wrapper) ->
+    find_deep_post_param(Path, deep_post_params(Wrapper)).
 
 find_deep_post_param([], Params) ->
     Params;
