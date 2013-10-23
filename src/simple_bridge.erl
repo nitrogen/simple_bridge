@@ -5,6 +5,7 @@
 -module (simple_bridge).
 -export ([
 	start/1,
+	make/2,
 	make/3
 ]).
 
@@ -29,15 +30,18 @@ start(BridgeType) ->
 	application:load(simple_bridge),
 	Sup:start_link().
 
+make(BridgeType, Req) ->
+	make(BridgeType, Req, []).
+
 -spec make(bridge_type(), Req :: any(), DocRoot :: string()) -> bridge().
 make(BridgeType, Req, _DocRoot) ->
 	Module = make_module(BridgeType),
-	make(Module, Req).
+	inner_make(Module, Req).
 	
 make_module(BridgeType) ->
 	list_to_atom(atom_to_list(BridgeType) ++ "_simple_bridge").
 
-make(Module, RequestData) ->
+inner_make(Module, RequestData) ->
     try
         make_nocatch(Module, RequestData)
     catch Type : Error ->

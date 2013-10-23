@@ -6,8 +6,9 @@
 		ws_info/2,
 		ws_terminate/2]).
 
-run(_Bridge) ->
-	{ok, "Hello World"}.
+run(Bridge) ->
+	Bridge2 = Bridge:set_response_data("Hello World!"),
+	Bridge2:build_response().
 
 ws_init(_Bridge) ->
 	io:format("Connection Established"),

@@ -12,7 +12,7 @@ out(Arg) ->
     io:format("Req"),
     Bridge = simple_bridge:make(yaws, Arg),
     Callout = simple_bridge_util:get_env(callout),
-    Upgrade = string:to_lower(Bridge:header(upgrade)),
+    Upgrade = simple_bridge_util:to_list(Bridge:header(upgrade)),
     case Upgrade of
         "websocket" ->
             %% Pass the Callout module and the Bridge as the initial State but

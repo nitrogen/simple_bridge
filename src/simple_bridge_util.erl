@@ -6,6 +6,7 @@
     binarize_header/1,
     expires/2,
     b2l/1,
+    to_list/1,
     has_header/2,
     has_any_header/2,
     ensure_header/3,
@@ -24,7 +25,8 @@
 %% ie. "X-Forwarded-For" -> x_forwarded_for
 
 get_env(Key) ->
-    application:get_env(simple_bridge, Key).
+    {ok, V} = application:get_env(simple_bridge, Key),
+    V.
 
 atomize_header(Header) when is_binary(Header) ->
     atomize_header(binary_to_list(Header));
@@ -181,3 +183,11 @@ make_expires_from_seconds(Seconds) ->
 -spec b2l(binary() | string()) -> string().
 b2l(B) when is_binary(B) -> binary_to_list(B);
 b2l(B) -> B.
+
+-spec to_list(any()) -> string().
+to_list(A) when is_atom(A) ->
+    atom_to_list(A);
+to_list(B) when is_binary(B) ->
+    b2l(B);
+to_list(L) when is_list(L) ->
+    L.
