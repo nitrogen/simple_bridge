@@ -9,10 +9,10 @@
 ]).
 
 out(Arg) ->
-    io:format("Req"),
     Bridge = simple_bridge:make(yaws, Arg),
     Callout = simple_bridge_util:get_env(callout),
-    Upgrade = simple_bridge_util:to_list(Bridge:header(upgrade)),
+    Upgrade = string:to_lower(simple_bridge_util:to_list(Bridge:header(<<"Upgrade">>))),
+    io:format("Upgrade Header: ~p~n", [Upgrade]),
     case Upgrade of
         "websocket" ->
             %% Pass the Callout module and the Bridge as the initial State but
@@ -27,11 +27,14 @@ init([_Arg, State={Callout, Bridge}]) ->
     Callout:ws_init(Bridge),
     {ok, State}.
 
-handle_message(Data, {Callout, Bridge}) ->
-    _Result = Callout:ws_message(Data, Bridge).
+handle_message(Data, State={Callout, Bridge}) ->
+    io:format("Message: ~p, Callout: ~p~n",[Data, Callout]),
+    Result = Callout:ws_message(Data, Bridge),
+    simple_bridge_util:massage_websocket_reply(Result, State).
 
-handle_info(Data, {Callout, Bridge}) ->
-    _Result = Callout:ws_info(Data, Bridge).
+handle_info(Data, State={Callout, Bridge}) ->
+    Result = Callout:ws_info(Data, Bridge),
+    simple_bridge_util:massage_websocket_reply(Result, State).
 
 terminate(Reason, {Callout, Bridge}) ->
-    ok = Callout:ws_close(Reason, Bridge).
+    ok = Callout:ws_terminate(Reason, Bridge).

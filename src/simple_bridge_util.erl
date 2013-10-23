@@ -14,7 +14,8 @@
     ensure_headers/2,
     default_static_expires_header/0,
     ensure_expires_header/1,
-    needs_expires_header/1
+    needs_expires_header/1,
+    massage_websocket_reply/2
 ]).
 
 -type header_key() :: string() | binary() | atom().
@@ -191,3 +192,18 @@ to_list(B) when is_binary(B) ->
     b2l(B);
 to_list(L) when is_list(L) ->
     L.
+
+massage_websocket_reply({reply, Text}, _State) when is_list(Text); is_binary(Text) ->
+    {reply, {binary, iolist_to_binary(Text)}};
+massage_websocket_reply({reply, {binary, Text}}, _State) ->
+    {reply, {binary, iolist_to_binary(Text)}};
+massage_websocket_reply({reply, {text, Text}}, _State) ->
+    {reply, {text, iolist_to_binary(Text)}}.
+%%massage_websocket_reply({close, StatusCode}) when is_integer(StatusCode) ->
+%%    {close, StatusCode};
+%%massage_websocket_reply({close, {StatusCode, Reason}}) ->
+%%    {close, {StatusCode, iolist_to_binary(Reason)}}.
+%%massage_websocket_reply({close, StatusCode, Reply}) when is_integer(StatusCode) ->
+%%    {close, StatusCode};
+%%massage_websocket_reply({close, {StatusCode, Reason}}) ->
+%%    {close, {StatusCode, iolist_to_binary(Reason)}};
