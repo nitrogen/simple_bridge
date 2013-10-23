@@ -1,5 +1,6 @@
 % vim: ts=4 sw=4 et
--module(simple_bridge_callback).
+-module(simple_bridge_callout).
+-include("simple_bridge.hrl").
 
 -type data()                ::  iolist().
 -type ws_data()             ::  {text, binary()} | {binary, binary()}.
@@ -7,8 +8,8 @@
 -type reason()              ::  any().
 -type full_reply()          ::  noreply
                                 | {error, reason()}
-                                | {reply, reply()},
-                                | {close, reason()},
+                                | {reply, reply()}
+                                | {close, reason()}
                                 | {close, reason(), reply()}.
 
 
@@ -17,8 +18,8 @@
 -callback ws_init(bridge())     -> ok 
                                  | {error, Reason :: any()}.
 
--callback ws_message(ws_data()) -> full_reply().
+-callback ws_message(ws_data(), bridge()) -> full_reply().
 
--callback ws_info(ws_data())    -> full_reply().
+-callback ws_info(ws_data(), bridge())    -> full_reply().
 
--callback ws_terminate(reason())-> ok.
+-callback ws_terminate(reason(), bridge())-> ok.

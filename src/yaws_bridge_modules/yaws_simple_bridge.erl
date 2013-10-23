@@ -3,7 +3,7 @@
 % Copyright (c) 2008-2010 Rusty Klophaus
 % See MIT-LICENSE for licensing information.
 
--module(yaws_request_bridge).
+-module(yaws_simple_bridge).
 -behaviour(simple_bridge).
 
 %% REQUEST EXPORTS
@@ -16,6 +16,11 @@
     query_params/1, post_params/1, request_body/1,
     socket/1, recv_from_socket/3, protocol_version/1
 ]).
+
+%% RESPONSE EXPORTS
+-export([
+        build_response/2
+       ]).
 
 %% REQUEST
 
@@ -130,7 +135,7 @@ protocol_version(Arg) ->
 
 build_response(_Arg, Res) ->
     % Get vars...
-    Code = Res#response.statuscode,
+    Code = Res#response.status_code,
 
     %% Assemble headers...
     Headers = assemble_headers(Res),

@@ -9,6 +9,7 @@
 ]).
 
 out(Arg) ->
+    io:format("Req"),
     Bridge = simple_bridge:make(yaws, Arg),
     Callout = simple_bridge_util:get_env(callout),
     Upgrade = string:to_lower(Bridge:header(upgrade)),

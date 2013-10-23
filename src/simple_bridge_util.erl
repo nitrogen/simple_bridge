@@ -1,6 +1,7 @@
 % vim: ts=4 sw=4 et
 -module(simple_bridge_util).
 -export([
+    get_env/1,
     atomize_header/1,
     binarize_header/1,
     expires/2,
@@ -21,6 +22,9 @@
 
 %% converts a Header to a lower-case, underscored version
 %% ie. "X-Forwarded-For" -> x_forwarded_for
+
+get_env(Key) ->
+    application:get_env(simple_bridge, Key).
 
 atomize_header(Header) when is_binary(Header) ->
     atomize_header(binary_to_list(Header));

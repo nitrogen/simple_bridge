@@ -13,3 +13,8 @@ test: clean
 	./rebar --config "rebar.test.config" get-deps
 	./rebar --config "rebar.test.config" compile
 	./rebar --config "rebar.test.config" skip_deps=true ct
+
+run:
+	erl -pa ebin/ -pa deps/*/ebin \
+		-config etc/yaws.config \
+		-config etc/simple_bridge.config

@@ -13,7 +13,7 @@ init({Req,DocRoot}) ->
 
 build_response({Req, DocRoot}, Res) ->
     % Some values...
-    Code = Res#response.statuscode,
+    Code = Res#response.status_code,
 
     %% Assemble headers...
     Headers = lists:flatten([

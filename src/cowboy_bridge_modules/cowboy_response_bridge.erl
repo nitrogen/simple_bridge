@@ -20,7 +20,7 @@ init(Req) ->
 build_response(ReqKey, Res) ->
     RequestCache = #request_cache{request = Req, docroot=DocRoot} = cowboy_request_server:get(ReqKey),
     % Some values...
-    Code = Res#response.statuscode,
+    Code = Res#response.status_code,
 
     %% assemble headers...
     Headers = lists:flatten([[{X#header.name, X#header.value} || X <- Res#response.headers]]),

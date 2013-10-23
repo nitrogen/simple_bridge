@@ -11,7 +11,7 @@ init(Req) ->
 	Req.
 
 build_response(Req, Res) ->	
-    ResponseCode = Res#response.statuscode,
+    ResponseCode = Res#response.status_code,
     case Res#response.data of
         {data, Data} ->
             Size = integer_to_list(httpd_util:flatlength(Data)),

@@ -12,7 +12,7 @@ init(Req) ->
     Req.
 
 build_response(Req, Res) -> 
-    Code = Res#response.statuscode,
+    Code = Res#response.status_code,
     case Res#response.data of
         {data, Body} ->
             Size = integer_to_list(httpd_util:flatlength(Body)),
