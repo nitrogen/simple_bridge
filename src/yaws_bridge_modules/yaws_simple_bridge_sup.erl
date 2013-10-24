@@ -21,7 +21,6 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-	io:format("Starting yaws~n"),
     application:start(yaws),
     {ok, { {one_for_one, 5, 10}, []} }.
 

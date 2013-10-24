@@ -3,10 +3,12 @@
 -export([
     get_env/1,
     atomize_header/1,
+    deatomize_header/1,
     binarize_header/1,
     expires/2,
     b2l/1,
     to_list/1,
+    to_binary/1,
     has_header/2,
     has_any_header/2,
     ensure_header/3,
@@ -44,6 +46,17 @@ atomize_header(Header) when is_list(Header) ->
         end
     end,
     list_to_atom(lists:map(LowerUnderscore,Header)).
+
+deatomize_header(B) when is_binary(B) ->
+    B;
+deatomize_header(Header) when is_atom(Header) ->
+    deatomize_header(atom_to_list(Header));
+deatomize_header([$_|T]) ->
+    [$-|deatomize_header(T)];
+deatomize_header([H|T]) ->
+    [H|deatomize_header(T)];
+deatomize_header([]) ->
+    [].
 
 binarize_header(Header) when is_binary(Header) ->
     binarize_header(binary_to_list(Header));
@@ -192,6 +205,12 @@ to_list(B) when is_binary(B) ->
     b2l(B);
 to_list(L) when is_list(L) ->
     L.
+
+-spec to_binary(iolist() | atom()) -> binary().
+to_binary(A) when is_atom(A) ->
+    list_to_binary(atom_to_list(A));
+to_binary(L) ->
+    iolist_to_binary(L).
 
 massage_websocket_reply({reply, Text}, _State) when is_list(Text); is_binary(Text) ->
     {reply, {binary, iolist_to_binary(Text)}};

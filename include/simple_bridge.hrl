@@ -6,7 +6,7 @@
 -record(cookie, { name, value, path="/", minutes_to_live=20 }).
 -record(header, { name, value }).
 -record(response, { status_code=200, headers=[], cookies=[], data=[] }).
--record(simple_bridge_wrapper, {mod, req, is_multipart, post_params, post_files, error, response=#response{}}).
+-record(simple_bridge_wrapper, {mod, req, is_multipart, post_params, post_files, error, headers=[], response=#response{}}).
 
 -type bridge()		:: #simple_bridge_wrapper{}.
 -type bridge_type()	:: cowboy | inets | mochiweb | webmachine | yaws | atom().

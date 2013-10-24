@@ -64,30 +64,30 @@ headers(Arg) ->
     
     %% Get the other headers and format them to fit the paradigm we're using above
     Others = yaws_api:headers_other(Headers),
-    Others2 = [{simple_bridge_util:binarize_header(Header),Value} || {http_header,_Num,Header,_,Value} <- Others],
+    Others2 = [{Header,Value} || {http_header,_Num,Header,_,Value} <- Others],
 
     [
-        {connection, yaws_api:headers_connection(Headers)},
-        {accept, yaws_api:headers_accept(Headers)},
-        {host, yaws_api:headers_host(Headers)},
-        {if_modified_since, yaws_api:headers_if_modified_since(Headers)},
-        {if_match, yaws_api:headers_if_match(Headers)},
-        {if_none_match, yaws_api:headers_if_none_match(Headers)},
-        {if_range, yaws_api:headers_if_range(Headers)},
-        {if_unmodified_since, yaws_api:headers_if_unmodified_since(Headers)},
-        {range, yaws_api:headers_range(Headers)},
-        {referer, yaws_api:headers_referer(Headers)},
-        {user_agent, yaws_api:headers_user_agent(Headers)},
-        {accept_ranges, yaws_api:headers_accept_ranges(Headers)},
-        {cookie, yaws_api:headers_cookie(Headers)},
-        {keep_alive, yaws_api:headers_keep_alive(Headers)},
-        {location, yaws_api:headers_location(Headers)},
-        {content_length, yaws_api:headers_content_length(Headers)},
-        {content_type, yaws_api:headers_content_type(Headers)},
-        {content_encoding, yaws_api:headers_content_encoding(Headers)},
-        {authorization, yaws_api:headers_authorization(Headers)},
-        {transfer_encoding, yaws_api:headers_transfer_encoding(Headers)},
-        {x_forwarded_for, yaws_api:headers_x_forwarded_for(Headers)} 
+        {<<"Connection">>, yaws_api:headers_connection(Headers)},
+        {<<"Accept">>, yaws_api:headers_accept(Headers)},
+        {<<"Host">>, yaws_api:headers_host(Headers)},
+        {<<"If-Modified-Since">>, yaws_api:headers_if_modified_since(Headers)},
+        {<<"If-Match">>, yaws_api:headers_if_match(Headers)},
+        {<<"If-None-Match">>, yaws_api:headers_if_none_match(Headers)},
+        {<<"If-Range">>, yaws_api:headers_if_range(Headers)},
+        {<<"If-Unmodified-Since">>, yaws_api:headers_if_unmodified_since(Headers)},
+        {<<"Range">>, yaws_api:headers_range(Headers)},
+        {<<"Referer">>, yaws_api:headers_referer(Headers)},
+        {<<"User-Agent">>, yaws_api:headers_user_agent(Headers)},
+        {<<"Accept-Ranges">>, yaws_api:headers_accept_ranges(Headers)},
+        {<<"Cookie">>, yaws_api:headers_cookie(Headers)},
+        {<<"Keep-Alive">>, yaws_api:headers_keep_alive(Headers)},
+        {<<"Location">>, yaws_api:headers_location(Headers)},
+        {<<"Content-Length">>, yaws_api:headers_content_length(Headers)},
+        {<<"Content-Type">>, yaws_api:headers_content_type(Headers)},
+        {<<"Content-Encoding">>, yaws_api:headers_content_encoding(Headers)},
+        {<<"Authorization">>, yaws_api:headers_authorization(Headers)},
+        {<<"Transfer-Encoding">>, yaws_api:headers_transfer_encoding(Headers)},
+        {<<"X-Forwarded-For">>, yaws_api:headers_x_forwarded_for(Headers)} 
         | Others2
     ].
 

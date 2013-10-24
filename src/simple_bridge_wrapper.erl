@@ -5,7 +5,9 @@
 
 -module (simple_bridge_wrapper).
 -include("simple_bridge.hrl").
--define(PASSTHROUGH(FunctionName), FunctionName(Wrapper) -> (Wrapper#simple_bridge_wrapper.mod):FunctionName()).
+-define(PASSTHROUGH(FunctionName),
+	FunctionName(Wrapper) -> 
+		(Wrapper#simple_bridge_wrapper.mod):FunctionName(Wrapper#simple_bridge_wrapper.req)).
 
 %% REQUEST BRIDGE EXPORTS
 -export([
@@ -72,14 +74,18 @@
 %% REQUEST WRAPPERS
 
 new(Mod, Req, IsMultiPart, PostParams, PostFiles, Error) ->
-	#simple_bridge_wrapper{
+	Bridge = #simple_bridge_wrapper{
 		mod=Mod,
 		req=Req,
 		is_multipart=IsMultiPart,
 		post_params=PostParams,
 		post_files=PostFiles,
 		error=Error
-	}.
+	},
+	Headers = pre_process_headers(Bridge:headers()),
+	Bridge#simple_bridge_wrapper{headers=Headers}.
+
+
 
 set_multipart(PostParams, PostFiles, Wrapper) ->
 	Wrapper#simple_bridge_wrapper{
@@ -120,17 +126,28 @@ request_method(Wrapper) ->
             Method
     end.
 
-?PASSTHROUGH(headers).
-header(Header, Wrapper) ->
+pre_process_headers(Headers) ->
+	[pre_process_header(Header) || Header <- Headers].
+
+pre_process_header({Key, Val}) ->
+	Key2 = simple_bridge_util:deatomize_header(Key),
+	Key3 = simple_bridge_util:binarize_header(Key2),
+	Val2 = simple_bridge_util:to_binary(Val),
+	{Key3, Val2}.
+
+headers(Wrapper) when Wrapper#simple_bridge_wrapper.headers =:= [] ->
 	Mod = Wrapper#simple_bridge_wrapper.mod,
 	Req = Wrapper#simple_bridge_wrapper.req,
-    case erlang:function_exported(Mod, header, 2) of
-        true ->
-            Mod:header(Header, Req);
-        false ->
-            Headers = Mod:headers(Req),
-            proplists:get_value(Header, Headers)
-    end.
+	[{K,V} || {K,V} <- Mod:headers(Req), V=/=undefined];
+headers(Wrapper) ->
+	Wrapper#simple_bridge_wrapper.headers.
+
+header(Header, Wrapper) ->
+	BinHeader = simple_bridge_util:binarize_header(Header),
+	case lists:keyfind(BinHeader, 1, Wrapper#simple_bridge_wrapper.headers) of
+		false -> undefined;
+		{_, Val} -> Val
+	end.
 
 ?PASSTHROUGH(cookies).
 cookie(Cookie, Wrapper) ->
