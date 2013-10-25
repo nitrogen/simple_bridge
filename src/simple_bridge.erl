@@ -32,11 +32,12 @@ start(BridgeType) ->
 	start(BridgeType, undefined).
 
 start(BridgeType, undefined) ->
-	{ok, Callout} = application:get_env(callout),
+	application:load(simple_bridge),
+	Callout = simple_bridge_util:get_env(callout),
 	start(BridgeType, Callout);
 start({supervisor, Supervisor}, Callout) ->
 	application:load(simple_bridge),
-	application:set_env(callout, Callout),
+	application:set_env(simple_bridge, callout, Callout),
 	Supervisor:start_link();
 start({backend, Backend}, Callout) ->
 	Supervisor = make_supervisor_module(Backend),

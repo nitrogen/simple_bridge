@@ -16,6 +16,7 @@
 %% ===================================================================
 
 start_link() ->
+    io:format("Calling super~n"),
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 %% ===================================================================
@@ -26,7 +27,6 @@ init([]) ->
     application:start(crypto),
     application:start(ranch),
     application:start(cowboy),
-
     {Address, Port} = simple_bridge_util:get_address_and_port(cowboy),
     Dispatch = generate_dispatch(),
 
@@ -53,8 +53,9 @@ generate_dispatch() ->
     case simple_bridge_util:get_env(cowboy_dispatch) of
         {ok, Dispatch} -> Dispatch;
         undefined ->
-            case simple_bridge_util:get(cowboy_dispatch_fun) of
-                {ok, {M,F}} -> M:F();
+            case simple_bridge_util:get_env(cowboy_dispatch_fun) of
+                {ok, {M,F}} ->
+                    M:F();
                 undefined ->
                     build_dispatch()
             end
@@ -64,7 +65,7 @@ generate_dispatch() ->
 %% generates dispatches from them
 build_dispatch() ->
     {DocRoot, StaticPaths}= simple_bridge_util:get_docroot_and_static_paths(cowboy),
-    io:format("Static Paths: ~p~nDocument Root for Static: ~p~n",
+    io:format("Static Paths: ~p~nDocument Root for Static: ~s~n",
               [StaticPaths, DocRoot]),
     build_dispatch(DocRoot, StaticPaths).
 

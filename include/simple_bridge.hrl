@@ -3,6 +3,9 @@
 -define(PRINT(Var), error_logger:info_msg("DEBUG: ~p:~p~n~p~n  ~p~n", [?MODULE, ?LINE, ??Var, Var])).
 -endif.
 
+-ifndef(simple_bridge_hrl).
+-define(simple_bridge_hrl, true).
+
 -record(cookie, { name, value, path="/", minutes_to_live=20 }).
 -record(header, { name, value }).
 -record(response, { status_code=200, headers=[], cookies=[], data=[] }).
@@ -28,3 +31,4 @@
 -define(DEFAULT_DOCROOT,"./priv/static").
 -define(DEFAULT_STATIC_PATHS, []).
 
+-endif.

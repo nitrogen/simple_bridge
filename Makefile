@@ -19,22 +19,22 @@ platform: clean
 	(./rebar --config "rebar.$(BACKEND).config" get-deps)
 	(./rebar --config "rebar.$(BACKEND).config" compile)
 
-run_cowboy: platform
+run_cowboy:
 	(make platform run BACKEND=cowboy)
 
-run_elli: platform
+run_elli:
 	(make platform run BACKEND=elli)
 
-run_inets: platform
+run_inets:
 	(make platform run BACKEND=inets)
 
-run_mochiweb: platform
+run_mochiweb:
 	(make platform run BACKEND=mochiweb)
 
-run_webmachine: platform
+run_webmachine:
 	(make platform run BACKEND=webmachine)
 
-run_yaws: platform
+run_yaws:
 	(make platform run BACKEND=yaws)
 
 run:

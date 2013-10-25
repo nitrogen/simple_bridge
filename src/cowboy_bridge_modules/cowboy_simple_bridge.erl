@@ -3,33 +3,52 @@
 % Copyright (c) 2012 Jesse Gumm
 % See MIT-LICENSE for licensing information.
 
--module (cowboy_request_bridge).
--behaviour (simple_bridge_request).
--include_lib ("simple_bridge.hrl").
+-module (cowboy_simple_bridge).
+-behaviour (simple_bridge).
+-include("simple_bridge.hrl").
 
--export ([
-	  init/1,
-	  protocol/1,
-	  request_method/1,
-	  path/1,
-	  uri/1,
-	  peer_ip/1,
-	  peer_port/1,
-	  headers/1,
-	  cookies/1,
-	  query_params/1,
-	  post_params/1,
-	  request_body/1,
-	  recv_from_socket/3,
-	  protocol_version/1
-	 ]).
+%% REQUEST EXPORTS
+
+-export([
+        init/1,
+        protocol/1,
+        request_method/1,
+        path/1,
+        uri/1,
+        peer_ip/1,
+        peer_port/1,
+        headers/1,
+        cookies/1,
+        query_params/1,
+        post_params/1,
+        request_body/1,
+        recv_from_socket/3,
+        protocol_version/1
+    ]).
+
+%% RESPONSE EXPORTS
+-export([
+        build_response/2
+    ]).
+
+new_key() ->
+    {cowboy_bridge, erlang:make_ref()}.
+
+get_key(ReqKey) ->
+    RequestCache = #request_cache{request = Req} = cowboy_request_server:get(ReqKey),
+    {RequestCache, Req}.
+
+put_key(ReqKey, NewRequestCache) ->
+    cowboy_request_server:set(ReqKey, NewRequestCache).
+
 
 init({Req, DocRoot}) ->
     ReqKey = new_key(),
     put_key(ReqKey, #request_cache{body = not_loaded, docroot=DocRoot, request = Req}),
     ReqKey.
 
-protocol(_ReqKey) -> undefined.
+protocol(_ReqKey) ->
+    undefined.
 
 request_method(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
@@ -61,40 +80,38 @@ peer_port(ReqKey) ->
 headers(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
     {Headers, Req} = cowboy_req:headers(Req),
-    [{simple_bridge_util:atomize_header(Header), ?B2L(Val)} || {Header, Val} <- Headers].
+    Headers.
 
 cookies(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
     {Cookies, NewReq} = cowboy_req:cookies(Req),
     put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
-    [{?B2L(K), ?B2L(V)} || {K, V} <- Cookies].
+    Cookies.
 
 query_params(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
     {QsVals, NewReq} = cowboy_req:qs_vals(Req),
     put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
-    [{?B2L(K), ?B2L(V)} || {K, V} <- QsVals].
+    QsVals.
 
 post_params(ReqKey) ->
-    Body = request_body(ReqKey, binary),
-    BodyQs = parse_qs(Body),
-    [{?B2L(K), ?B2L(V)} || {K, V} <- BodyQs].
+    {RequestCache, Req} = get_key(ReqKey),
+
+    {ok, BodyQs, NewReq} = cowboy_req:body_qs(200000, Req),
+    put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
+    BodyQs.
 
 request_body(ReqKey) ->
-    request_body(ReqKey, string).
-
-request_body(ReqKey, string) ->
-    ?B2L(request_body(ReqKey, binary));
-request_body(ReqKey, binary) ->
     {RequestCache, Req} = get_key(ReqKey),
      %% We cache the body here because we can't request the body twice in cowboy or it'll crash
     {Body, NewReq} =
-	case RequestCache#request_cache.body of
-	    not_loaded ->
-		{ok, B, R} = cowboy_req:body(Req),
-		{B, R};
-	    B -> {B, Req}
-	end,
+    case RequestCache#request_cache.body of
+        not_loaded ->
+            {ok, B, R} = cowboy_req:body(Req),
+            {B, R};
+        B ->
+            {B, Req}
+    end,
     put_key(ReqKey, RequestCache#request_cache{body = Body, request = NewReq}),
     Body.
 
@@ -103,60 +120,26 @@ recv_from_socket(_Length, _Timeout, ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
     case cowboy_req:stream_body(Req) of
         {ok, Data, NewReq} ->
-	    put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
+            put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
             Data;
         {done, NewReq} ->
-	    put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
+            put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
             <<"">>;
         {error, Reason} ->
             exit({error, Reason}) %% exit(normal) instead?
     end.
 
-%% parse_qs, borrowed from Cowboy by Loic Hugian :)
-parse_qs(<<>>) -> [];
-parse_qs(Qs) ->
-    URLDecode = fun cowboy_http:urldecode/1,
-    Tokens = binary:split(Qs, <<"&">>, [global, trim]),
-    [case binary:split(Token, <<"=">>) of
-        [Token] -> {URLDecode(Token), true};
-        [Name, Value] -> {URLDecode(Name), URLDecode(Value)}
-    end || Token <- Tokens].
-
-get_key(ReqKey) ->
-    RequestCache = #request_cache{request = Req} = cowboy_request_server:get(ReqKey),
-    {RequestCache, Req}.
-
-put_key(ReqKey, NewRequestCache) ->
-    cowboy_request_server:set(ReqKey, NewRequestCache).
-
-new_key() -> {cowboy_bridge, erlang:make_ref()}.
 
 protocol_version(ReqKey) ->
-  {_RequestCache, Req} = get_key(ReqKey),
-  {Version, Req} = cowboy_req:version(Req),
-  case Version of
-    'HTTP/1.1' -> {1, 1};
-    'HTTP/1.0' -> {1, 0};
-    {H, L} -> {H, L}
-  end.
-%% vim: ts=4 sw=4 et
-% Simple Bridge
-% Copyright (c) 2008-2012 Rusty Klophaus
-% See MIT-LICENSE for licensing information.
+    {_RequestCache, Req} = get_key(ReqKey),
+    {Version, Req} = cowboy_req:version(Req),
+    case Version of
+        'HTTP/1.1' -> {1, 1};
+        'HTTP/1.0' -> {1, 0};
+        {H, L} -> {H, L}
+    end.
 
--module (cowboy_response_bridge).
--behaviour (simple_bridge_response).
--include_lib ("simple_bridge.hrl").
--export ([build_response/2,init/1]).
-
-init(Request) when
-      is_tuple(Request),
-      element(1, Request) == simple_bridge_request_wrapper,
-      element(2, Request) == cowboy_request_bridge ->
-    element(3, Request); %% The third element of Request is the RequestKey from response_bridge
-init(Req) ->
-    %% Since cowboy request and response information are the same, this synchronizes it
-    cowboy_request_bridge:init(Req).
+%% RESPONSE
 
 build_response(ReqKey, Res) ->
     RequestCache = #request_cache{request = Req, docroot=DocRoot} = cowboy_request_server:get(ReqKey),
@@ -178,8 +161,9 @@ build_response(ReqKey, Res) ->
 
         {file, P} ->
             %% Note: that this entire {file, Path} section should be avoided
-            %% as much as possible, since this reads the entire file into
-            %% memory before sending.
+            %% as much as possible. The cowboy static handler is designed for
+            %% this task, but this is put here to help the programmer in the
+            %% case of a misconfiguration.
             %% 
             %% You want to make sure that cowboy.config is properly set
             %% up with paths so that the requests for static files are
@@ -211,18 +195,6 @@ build_response(ReqKey, Res) ->
             cowboy_request_server:set(ReqKey, RequestCache#request_cache{request = FinReq}),
             {ok, FinReq}
     end.
-
-%% generate_static_error(P) ->
-%%     error_logger:warning_msg("~p",[
-%%             {unrouted_static_file, [
-%%             {requested_file, P},
-%%             {description, "Simple Bridge through Cowboy is not set up to handle static files. Static Files should be handled by Cowboy through the routing table."},
-%%             {see_also, [
-%%                 "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/site/src/nitrogen_sup.erl",
-%%                 "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/etc/cowboy.config"
-%%             ]}
-%%         ]}
-%%     ]).
 
 get_mimetype(Path) ->
     [$. | Ext] = filename:extension(Path),

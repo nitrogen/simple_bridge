@@ -111,7 +111,7 @@ binarize_header(Header) when is_list(Header) ->
 fix_header_caps([C|Rest], capitalize) when C>=$a,C=<$z ->
     %% we are ordered to capitalize the next character, and the next character
     %% happens to be lower case, so let's capitalize it
-    [C+32 | fix_header_caps(Rest, normal)];
+    [C-32 | fix_header_caps(Rest, normal)];
 fix_header_caps([$-|Rest], _) ->
     %% The next character is a dash, so we need to tell it to capitalize the
     %% next character

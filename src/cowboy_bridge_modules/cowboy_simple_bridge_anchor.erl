@@ -12,27 +12,24 @@
     ]).
 
 init(_Transport, Req, _Opts) ->
-    Upgrade = simple_bridge_utils:to_lower(cowboy_req:header(<<"upgrade">>, Req)),
-    case Upgrade == <<"websocket">> of
+    {Upgrade, _} = cowboy_req:header(<<"upgrade">>, Req),
+    Upgrade2 = case Upgrade of
+        undefined -> undefined;
+        Other -> simple_bridge_util:binarize_header(Other)
+    end,
+
+    case Upgrade2 == <<"Websocket">> of
         true ->
             {upgrade, protocol, cowboy_websocket};
         false ->
-           %% Body = case lists:keyfind(body, 1 Opts) of
-           %%     false -> "http_handler";
-           %%     {_, B} -> B
-           %% end,
-           {ok, Req, []} %#state{headers=Headers, body=Body}}
+           {ok, Req, []}
    end.
 
-
 handle(Req, State) ->
-    {ok, DocRoot} = simple_bridge_util:get_env(simple_bridge, document_root),
-    {ok, Callout} = application:get_env(simple_bridge, callout),
+    DocRoot = simple_bridge_util:get_env(document_root),
+    Callout = simple_bridge_util:get_env(callout),
     Bridge = simple_bridge:make(cowboy, {Req, DocRoot}),
-    
     {ok, NewReq} = Callout:run(Bridge),
-
-    %% This will be returned back to cowboy
     {ok, NewReq, State}.
 
 terminate(_Reason, _Req, _State) ->
