@@ -26,8 +26,9 @@
 % Override with -simple_bridge_scratch_dir Directory
 -define (SCRATCH_DIR, "./scratch").
 
-% Override with -simple_bridge_max_memory_size SizeInMB
--define (MAX_MEMORY_SIZE, 3).
+% Override with -simple_bridge_max_file_in_memory_size SizeInMB
+% for backwards compatibility default is 0
+-define (MAX_MEMORY_SIZE, 0).
 
 % Override with -simple_bridge_max_file_size SizeInMB
 -define (MAX_FILE_SIZE, 100).
@@ -42,7 +43,7 @@
 %%
 %% Starts a new file with an optional File upload Handler
 %% and a FileName.
-%% When no File upload handler is given the "temporary_file"
+%% When no File upload handler is given the memory file
 %% handler is set as default.
 %%
 %% @end
@@ -157,7 +158,6 @@ handle_receive_data({memory, {FileName, DataState, CurrentSize}, Funs}, Data) ->
         true ->
             %% Transform current MemoryUploadHandler to FileUploadHandler
             %% when Data is too big
-            io:format("~p~n~p~n", [temporary_file_handler(), FileName]),
             NewFileHandler = new_file(temporary_file_handler(), FileName),
             receive_data(NewFileHandler, <<DataState/binary, Data/binary>>);
         false ->
@@ -206,7 +206,7 @@ get_max_file_size() ->
     Size * 1024 * 1024.
 
 get_max_memory_size() ->
-    Size = case init:get_argument(simple_bridge_max_memory_size) of
+    Size = case init:get_argument(simple_bridge_max_file_in_memory_size) of
                {ok, [[Value]]} -> list_to_integer(Value);
                _ -> ?MAX_MEMORY_SIZE
            end,
