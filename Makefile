@@ -14,23 +14,28 @@ test: clean
 	./rebar --config "rebar.test.config" compile
 	./rebar --config "rebar.test.config" skip_deps=true ct
 
-run_cowboy:
-	(make run BACKEND=cowboy)
+platform: clean
+	(escript rebar_deps/merge_deps.escript rebar.config rebar_deps/$(BACKEND).deps rebar.$(BACKEND).config)
+	(./rebar --config "rebar.$(BACKEND).config" get-deps)
+	(./rebar --config "rebar.$(BACKEND).config" compile)
 
-run_elli:
-	(make run BACKEND=elli)
+run_cowboy: platform
+	(make platform run BACKEND=cowboy)
 
-run_inets:
-	(make run BACKEND=inets)
+run_elli: platform
+	(make platform run BACKEND=elli)
 
-run_mochiweb:
-	(make run BACKEND=mochiweb)
+run_inets: platform
+	(make platform run BACKEND=inets)
 
-run_webmachine:
-	(make run BACKEND=webmachine)
+run_mochiweb: platform
+	(make platform run BACKEND=mochiweb)
 
-run_yaws:
-	(make run BACKEND=yaws)
+run_webmachine: platform
+	(make platform run BACKEND=webmachine)
+
+run_yaws: platform
+	(make platform run BACKEND=yaws)
 
 run:
 	erl -pa ebin/ -pa deps/*/ebin \

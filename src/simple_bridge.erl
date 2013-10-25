@@ -4,13 +4,14 @@
 
 -module (simple_bridge).
 -export ([
+	start/0,
 	start/1,
+	start/2,
 	make/2,
 	make/3
 ]).
 
 -include("simple_bridge.hrl").
-
 
 -callback init(bridge()) 						-> bridge().
 -callback protocol(bridge()) 					-> http | https | ws | wss | undefined.
@@ -22,23 +23,39 @@
 -callback post_params(bridge())					-> [{key(), value()}].
 -callback peer_ip(bridge())						-> ipv4() | ipv8().
 -callback protocol_version(bridge())			-> {integer(), integer()}.
--callback build_response(any(), #response{}) 	-> iolist().
+-callback build_response(any(), #response{}) 	-> any().
+
+start() ->
+	start(undefined).
 
 start(BridgeType) ->
-	Sup = list_to_atom(atom_to_list(BridgeType) ++ "_simple_bridge_sup"),
-	%% Let's just load it in case it hasn't been yet
+	start(BridgeType, undefined).
+
+start(BridgeType, undefined) ->
+	{ok, Callout} = application:get_env(callout),
+	start(BridgeType, Callout);
+start({supervisor, Supervisor}, Callout) ->
 	application:load(simple_bridge),
-	Sup:start_link().
+	application:set_env(callout, Callout),
+	Supervisor:start_link();
+start({backend, Backend}, Callout) ->
+	Supervisor = make_supervisor_module(Backend),
+	start({supervisor, Supervisor}, Callout);
+start(Backend, Callout) when is_atom(Backend) ->
+	start({backend, Backend}, Callout).
+
+make_supervisor_module(Backend) ->
+	list_to_atom(atom_to_list(Backend) ++ "_simple_bridge_sup").
+
 
 make(BridgeType, Req) ->
 	make(BridgeType, Req, []).
 
--spec make(bridge_type(), Req :: any(), DocRoot :: string()) -> bridge().
 make(BridgeType, Req, _DocRoot) ->
-	Module = make_module(BridgeType),
+	Module = make_bridge_module(BridgeType),
 	inner_make(Module, Req).
 	
-make_module(BridgeType) ->
+make_bridge_module(BridgeType) ->
 	list_to_atom(atom_to_list(BridgeType) ++ "_simple_bridge").
 
 inner_make(Module, RequestData) ->

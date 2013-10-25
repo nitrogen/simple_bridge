@@ -1,7 +1,11 @@
 % vim: ts=4 sw=4 et
 -module(simple_bridge_util).
+-include("simple_bridge.hrl").
 -export([
     get_env/1,
+    get_env/2,
+    get_address_and_port/1,
+    get_docroot_and_static_paths/1,
     atomize_header/1,
     deatomize_header/1,
     binarize_header/1,
@@ -28,8 +32,44 @@
 %% ie. "X-Forwarded-For" -> x_forwarded_for
 
 get_env(Key) ->
-    {ok, V} = application:get_env(simple_bridge, Key),
-    V.
+    get_env(Key, undefined).
+
+get_env([], Default) ->
+    Default;
+get_env([{App,Key}|AppKeys], Default) ->
+    case application:get_env(App,Key) of
+        {ok, V} -> V;
+        undefined -> get_env(AppKeys, Default)
+    end;
+get_env(Key, Default) when is_atom(Key) ->
+    get_env([{simple_bridge, Key}], Default).
+
+get_address_and_port(BackendApp) ->
+    Address =   simple_bridge_util:get_env([{simple_bridge,address},
+                                            {simple_bridge,bind_address},
+                                            {BackendApp, address},
+                                            {BackendApp,bind_address}],
+                                            ?DEFAULT_IP),
+
+    Port =      simple_bridge_util:get_env([{simple_bridge,port},
+                                            {simple_bridge,bind_port},
+                                            {BackendApp, port},
+                                            {BackendApp, bind_port}],
+                                            ?DEFAULT_PORT),
+    {Address, Port}.
+
+
+get_docroot_and_static_paths(BackendApp) ->
+    DocRoot =   simple_bridge_util:get_env([{simple_bridge,document_root},
+                                            {BackendApp, document_root}],
+                                            ?DEFAULT_DOCROOT),
+
+    StaticPaths=simple_bridge_util:get_env([{simple_bridge,static_paths},
+                                            {BackendApp, static_paths}],
+                                            ?DEFAULT_STATIC_PATHS),
+    {DocRoot, StaticPaths}.
+  
+
 
 atomize_header(Header) when is_binary(Header) ->
     atomize_header(binary_to_list(Header));
