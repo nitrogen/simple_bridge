@@ -50,10 +50,10 @@ init([]) ->
 %%    static_paths config values standard to simple_bridge to generate a
 %%    cowboy-specific dispatch table.
 generate_dispatch() ->
-    case simple_bridge_util:get_env(cowboy_dispatch) of
+    case application:get_env(simple_bridge, cowboy_dispatch) of
         {ok, Dispatch} -> Dispatch;
         undefined ->
-            case simple_bridge_util:get_env(cowboy_dispatch_fun) of
+            case application:get_env(simple_bridge, cowboy_dispatch_fun) of
                 {ok, {M,F}} ->
                     M:F();
                 undefined ->

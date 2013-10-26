@@ -28,22 +28,35 @@
 start() ->
 	start(undefined).
 
-start(BridgeType) ->
-	start(BridgeType, undefined).
+start(Backend) ->
+	start(Backend, undefined).
 
-start(BridgeType, undefined) ->
-	application:load(simple_bridge),
-	Callout = simple_bridge_util:get_env(callout),
-	start(BridgeType, Callout);
-start({supervisor, Supervisor}, Callout) ->
-	application:load(simple_bridge),
-	application:set_env(simple_bridge, callout, Callout),
-	Supervisor:start_link();
-start({backend, Backend}, Callout) ->
-	Supervisor = make_supervisor_module(Backend),
-	start({supervisor, Supervisor}, Callout);
+
 start(Backend, Callout) when is_atom(Backend) ->
-	start({backend, Backend}, Callout).
+	application:load(simple_bridge),
+	Callout2 = case Callout of
+		undefined ->
+			simple_bridge_util:get_env(callout);
+		_ ->
+			application:set_env(simple_bridge, callout, Callout),
+			Callout
+	end,
+	Backend2 = case Backend of
+		undefined ->
+			simple_bridge_util:get_env(backend);
+		_ ->
+			application:set_env(simple_bridge, backend, Backend),
+			Backend
+	end,
+
+	case {Callout2, Backend2} of
+		{undefined, _} -> throw("No backend defined for simple_bridge.");
+		{_, undefined} -> io:format("*** Warning: No callout module defined for simple_bridge. If this intentional,~n*** if you are using a custom dispatch table, for example), then this message~n*** can be safely ignored.");
+		{_,_} -> ok
+	end,
+
+	Supervisor = make_supervisor_module(Backend2),
+	Supervisor:start_link().
 
 make_supervisor_module(Backend) ->
 	list_to_atom(atom_to_list(Backend) ++ "_simple_bridge_sup").

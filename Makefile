@@ -41,4 +41,5 @@ run:
 	erl -pa ebin/ -pa deps/*/ebin \
 		-config etc/$(BACKEND).config \
 		-config etc/simple_bridge.config \
-		-eval "simple_bridge:start($(BACKEND))"
+		-simple_bridge backend $(BACKEND) \
+		-eval "application:start(simple_bridge)"

@@ -3,7 +3,7 @@
 % See MIT-LICENSE for licensing information.
 
 -module (simple_bridge_multipart).
--include_lib ("simple_bridge.hrl").
+-include("simple_bridge.hrl").
 -export ([parse/1]).
 
 % Alas, so many Erlang HTTP Servers, and so little parsing of Multipart forms.

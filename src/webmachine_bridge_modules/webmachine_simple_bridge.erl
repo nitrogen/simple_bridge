@@ -1,15 +1,88 @@
-%% vim: ts=4 sw=4 et
-%% Simple Bridge
-%% Copyright (c) 2008-2010 Rusty Klophaus
-%% See MIT-LICENSE for licensing information.
+% Simple Bridge
+% Copyright (c) 2008-2010 Rusty Klophaus
+% Copyright (c) 2013 Jesse Gumm
+% See MIT-LICENSE for licensing information.
 
--module (webmachine_response_bridge).
--behaviour (simple_bridge_response).
--include_lib ("simple_bridge.hrl").
--export ([build_response/2,init/1]).
+-module (webmachine_simple_bridge).
+-behaviour (simple_bridge).
+-include ("simple_bridge.hrl").
 
-init(Req) ->
+-export ([
+		init/1,
+		protocol/1,
+		request_method/1, 
+		path/1, 
+		uri/1,
+		peer_ip/1, 
+		peer_port/1,
+		headers/1, 
+		cookies/1,
+		query_params/1, 
+		post_params/1, 
+		request_body/1,
+		socket/1,
+		recv_from_socket/3,
+		protocol_version/1
+	]).
+
+-export([
+		build_response/2
+	]).
+
+init(Req) -> 
     Req.
+
+protocol(_Req) -> undefined.
+
+request_method(Req) -> 
+    wrq:method(Req).
+
+path(Req) -> 
+    wrq:path(Req).
+
+uri(Req) -> 
+    wrq:raw_path(Req).
+
+peer_ip(Req) ->
+    {ok, Address} = inet_parse:address(wrq:peer(Req)),
+    Address.
+
+peer_port(Req) ->
+    wrq:port(Req).
+
+headers(Req) ->
+	Mochiheaders = wrq:req_headers(Req),
+	mochiweb_headers:to_list(Mochiheaders).
+
+cookies(Req) ->
+    wrq:req_cookie(Req).
+
+query_params(Req) ->
+    Value = wrq:req_qs(Req),
+    Value.
+
+post_params(Req) ->
+    Body = wrq:req_body(Req),
+    Value = mochiweb_util:parse_qs(Body),
+    Value.
+
+request_body(Req) ->
+    wrq:req_body(Req).
+
+socket(Req) ->
+    {Socket, _} = Req:socket(),
+    Socket.
+
+recv_from_socket(Length, Timeout, Req) ->
+    Socket = socket(Req),
+    case gen_tcp:recv(Socket, Length, Timeout) of
+        {ok, Data} -> Data;
+        _ -> exit(normal)
+    end.
+
+
+protocol_version(Req) ->
+  wrq:version(Req).
 
 build_response(Req, Res) -> 
     Code = Res#response.status_code,
@@ -36,8 +109,8 @@ build_response(Req, Res) ->
                 {requested_file, Path},
                 {description, "Simple Bridge for Webmachine is not set up to handle static files. Static files should be handled by Webmachine through the dispatch table."},
                 {see_also, [
-                    "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/webmachine/site/src/nitrogen_sup.erl#L46",
-                    "https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/webmachine/etc/webmachine.config"
+                    "https://github.com/nitrogen/simple_bridge/blob/master/src/webmachine/webmachine_simple_bridge_sup.erl",
+                    "https://github.com/nitrogen/simple_bridge/blob/master/etc/webmachine.config"
                 ]}
             ]})
             
