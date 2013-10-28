@@ -24,7 +24,8 @@
     default_static_expires_header/0,
     ensure_expires_header/1,
     needs_expires_header/1,
-    massage_websocket_reply/2
+    massage_websocket_reply/2,
+    parse_ip/1
 ]).
 
 -type header_key() :: string() | binary() | atom().
@@ -286,3 +287,91 @@ massage_websocket_reply({reply, {text, Text}}, _State) ->
 %%    {close, StatusCode};
 %%massage_websocket_reply({close, {StatusCode, Reason}}) ->
 %%    {close, {StatusCode, iolist_to_binary(Reason)}};
+
+
+%% This is borrowed from Nitrogen
+parse_ip(IP = {_,_,_,_}) ->
+    IP;
+parse_ip(IP = {_,_,_,_,_,_,_,_}) ->
+    IP;
+parse_ip(Binary) when is_binary(Binary) ->
+    parse_ip(binary_to_list(Binary));
+parse_ip(String) ->
+    case parse_address(String) of
+        {ok, IP} -> IP;
+        {error, _} -> undefined
+    end.
+
+%% This should just be inet:parse_address, but because it's so new, older
+%% versions of erlang fail on it
+parse_address(String) ->
+    case parse_ipv4(String) of
+        {error, einval} -> parse_ipv6(String);
+        {ok, IP} -> {ok, IP}
+    end.
+   
+parse_ipv4(String) ->
+    try
+        Parts = [_,_,_,_] = re:split(String,"\\.",[{return,list}]),
+        IP = list_to_tuple([list_to_integer(Part) || Part <- Parts]),
+        {ok, IP}
+    catch
+        _:_ -> {error, einval}
+    end.
+
+parse_ipv6(String) ->
+    case parse_ipv6_split_shortened(String) of
+        {ok, IP} -> {ok, IP};
+        {error, einval} -> parse_ipv6_full(String)
+    end.
+
+parse_ipv6_full(String) ->
+    try
+        Parts = [_,_,_,_,_,_,_,_] = parse_ipv6_chunk_of_parts(String),
+        IP = list_to_tuple(Parts),
+        {ok, IP}
+    catch
+        _:_ -> {error, einval}
+    end.
+
+parse_ipv6_split_shortened(String) ->
+    try
+        [Front,Back] = re:split(String,"::",[{return ,list}]),
+        ParsedFront = parse_ipv6_chunk_of_parts(Front),
+        ParsedBack = parse_ipv6_chunk_of_parts(Back),
+        NumZeroBlocks = 8 - length(ParsedFront) - length(ParsedBack),
+        FinalIPList = ParsedFront ++ lists:duplicate(NumZeroBlocks, 0) ++ ParsedBack,
+        {ok, list_to_tuple(FinalIPList)}
+    catch
+        _:_  -> {error, einval}
+    end.
+
+parse_ipv6_chunk_of_parts(String) ->
+    Parts = re:split(String, ":", [{return,list}]),
+    [parse_ipv6_part(Part) || Part <- Parts].
+
+parse_ipv6_part("") -> 0;
+parse_ipv6_part(List) ->
+    parse_ipv6_digits(string:to_lower(lists:reverse(List)),1).
+
+parse_ipv6_digits([], _) -> 0;
+parse_ipv6_digits([H | T], Multiplier) ->
+    Num = case H of
+        $0 -> 0;
+        $1 -> 1;
+        $2 -> 2;
+        $3 -> 3;
+        $4 -> 4;
+        $5 -> 5;
+        $6 -> 6;
+        $7 -> 7;
+        $8 -> 8;
+        $9 -> 9;
+        $a -> 10;
+        $b -> 11;
+        $c -> 12;
+        $d -> 13;
+        $e -> 14;
+        $f -> 15
+    end,
+    Num * Multiplier + parse_ipv6_digits(T, Multiplier*16).
