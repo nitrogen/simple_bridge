@@ -33,9 +33,10 @@ init([]) ->
                                                 {mochiweb, server_name}
                                             ], simple_bridge_mochiweb),
 
-    DocRoot = simple_bridge_util:get_docroot(mochiweb),
+    {DocRoot, StaticPaths} = simple_bridge_util:get_docroot_and_static_paths(mochiweb),
 
-    io:format("Starting Mochiweb Server (~s) on ~s:~p, root: '~s'~n", [ServerName, Address, Port, DocRoot]),
+    io:format("Starting Mochiweb Server on ~s:~p~n", [Address, Port]),
+    io:format("Static Paths: ~p~nDocument Root for Static: ~s~n", [StaticPaths, DocRoot]),
 
     % Start Mochiweb...
     Options = [

@@ -6,6 +6,7 @@
     get_env/2,
     get_address_and_port/1,
     get_docroot/1,
+    get_static_paths/1,
     get_docroot_and_static_paths/1,
     atomize_header/1,
     deatomize_header/1,
@@ -64,14 +65,15 @@ get_docroot(BackendApp) ->
                                 {BackendApp, document_root}],
                                 ?DEFAULT_DOCROOT).
 
+get_static_paths(BackendApp) ->
+    simple_bridge_util:get_env([{simple_bridge,static_paths},
+                                {BackendApp, static_paths}],
+                                ?DEFAULT_STATIC_PATHS).
+
 get_docroot_and_static_paths(BackendApp) ->
     DocRoot = get_docroot(BackendApp),
-    StaticPaths=simple_bridge_util:get_env([{simple_bridge,static_paths},
-                                            {BackendApp, static_paths}],
-                                            ?DEFAULT_STATIC_PATHS),
+    StaticPaths = get_static_paths(BackendApp),
     {DocRoot, StaticPaths}.
-  
-
 
 atomize_header(Header) when is_binary(Header) ->
     atomize_header(binary_to_list(Header));
