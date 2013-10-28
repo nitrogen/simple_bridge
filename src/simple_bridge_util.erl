@@ -11,6 +11,7 @@
     atomize_header/1,
     deatomize_header/1,
     binarize_header/1,
+    is_static_path/2,
     expires/2,
     b2l/1,
     to_list/1,
@@ -74,6 +75,21 @@ get_docroot_and_static_paths(BackendApp) ->
     DocRoot = get_docroot(BackendApp),
     StaticPaths = get_static_paths(BackendApp),
     {DocRoot, StaticPaths}.
+
+is_static_path(Backend, URI) ->
+    StaticPaths = get_static_paths(Backend),
+    lists:any(fun(StaticPath) ->
+        StaticPathLength = length(StaticPath),
+        case lists:sublist(URI, StaticPathLength) of
+            StaticPath -> true;
+            _ ->
+                case lists:sublist(URI, StaticPathLength+1) of
+                    "/" ++ StaticPath -> true;
+                    _ -> false
+                end
+         end
+    end, StaticPaths).
+
 
 atomize_header(Header) when is_binary(Header) ->
     atomize_header(binary_to_list(Header));

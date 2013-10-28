@@ -9,11 +9,8 @@
 loop(Req) ->
     try
         Bridge = simple_bridge:make(mochiweb, Req),
-        StaticPaths = simple_bridge_util:get_static_paths(mochiweb),
         URI = Bridge:uri(),
-        IsStatic = lists:any(fun(StaticPath) ->
-                                is_static_path(StaticPath, URI)
-                             end, StaticPaths),
+        IsStatic = simple_bridge_util:is_static_path(mochiweb, URI),
         case IsStatic of
             true ->
                 Bridge2 = Bridge:set_response_file(URI),
@@ -24,16 +21,4 @@ loop(Req) ->
         end
     catch
         T:E -> error_logger:error_msg("Error: ~p:~p~nStacktrace: ~p~n",[T, E, erlang:get_stacktrace()])
-    end.
-
-%% If URI Starts with the contents of StaticPath, then it is static
-is_static_path(StaticPath, URI) ->
-    StaticPathLength = length(StaticPath),
-    case lists:sublist(URI, StaticPathLength) of
-        StaticPath -> true;
-        _ ->
-            case lists:sublist(URI, StaticPathLength+1) of
-                "/" ++ StaticPath -> true;
-                _ -> false
-            end
     end.

@@ -2,18 +2,31 @@
 % Copyright (c) 2008-2010 Rusty Klophaus
 % See MIT-LICENSE for licensing information.
 
--module (inets_request_bridge).
--behaviour (simple_bridge_request).
--include_lib ("httpd_r12b5.hrl").
--include_lib ("simple_bridge.hrl").
+-module (inets_simple_bridge).
+-behaviour (simple_bridge).
+-include("simple_bridge.hrl").
+-include_lib("inets/include/httpd.hrl").
 -export ([
-    init/1,
-    protocol/1, request_method/1, path/1, uri/1,
-    peer_ip/1, peer_port/1,
-    headers/1, cookies/1,
-    query_params/1, post_params/1, request_body/1,
-    socket/1, recv_from_socket/3, protocol_version/1
-]).
+		init/1,
+		protocol/1,
+		request_method/1,
+		path/1,
+		uri/1,
+		peer_ip/1,
+		peer_port/1,
+		headers/1,
+		cookies/1,
+		query_params/1,
+		post_params/1,
+		request_body/1,
+		socket/1,
+		recv_from_socket/3,
+		protocol_version/1
+	]).
+
+-export([
+		build_response/2
+	]).
 
 
 init(Req) -> 
@@ -134,3 +147,63 @@ split_request_uri([], Path) -> {lists:reverse(Path), ""};
 split_request_uri([$?|QueryString], Path) -> {lists:reverse(Path), QueryString};
 split_request_uri([H|T], Path) -> split_request_uri(T,[H|Path]).
 
+build_response(Req, Res) ->	
+    ResponseCode = Res#response.status_code,
+    case Res#response.data of
+        {data, Data} ->
+            Size = integer_to_list(httpd_util:flatlength(Data)),
+
+            % Assemble headers...
+            Headers = lists:flatten([
+                {code, ResponseCode},
+                {content_length, Size},
+                [{massage(X#header.name), X#header.value} || X <- Res#response.headers],
+                [create_cookie_header(X) || X <- Res#response.cookies]
+            ]),		
+
+            % Send the inets response...
+            {break,[
+                {response, {response, Headers, Data}}
+            ]};
+
+        {file, _Path} ->
+            mod_get:do(Req)
+    end.
+
+create_cookie_header(Cookie) ->
+    SecondsToLive = Cookie#cookie.minutes_to_live * 60,
+    Expire = to_cookie_expire(SecondsToLive),
+    Name = Cookie#cookie.name,
+    Value = Cookie#cookie.value,
+    Path = Cookie#cookie.path,
+    {"Set-Cookie", io_lib:format("~s=~s; Path=~s; Expires=~s", [Name, Value, Path, Expire])}.
+
+to_cookie_expire(SecondsToLive) ->
+    Seconds = calendar:datetime_to_gregorian_seconds(calendar:local_time()),
+    DateTime = calendar:gregorian_seconds_to_datetime(Seconds + SecondsToLive),
+    httpd_util:rfc1123_date(DateTime).
+
+
+%% Inets wants some headers as lowercase atoms, so we
+%% need to do some special massage here.
+%% TODO: This needs to be reworked. We shouldn't be making atoms from every request
+massage(Header) ->
+    X = list_to_atom(
+          binary_to_list(
+            list_to_binary(
+              re:replace(string:to_lower(a2l(Header)),"-","_")))),
+
+    case lists:member(X, special_headers()) of
+        true  -> X;
+        false -> Header
+    end.
+
+special_headers() ->
+    [accept_ranges , allow , cache_control , content_MD5 , content_encoding , 
+     content_language , content_length , content_location , content_range , 
+     content_type , date , etag , expires , last_modified , location , 
+     pragma , retry_after , server , trailer , transfer_encoding].
+
+a2l(A) when is_atom(A) -> atom_to_list(A);
+a2l(L) when is_list(L) -> L.
+    
