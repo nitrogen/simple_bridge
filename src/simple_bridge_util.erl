@@ -5,6 +5,7 @@
     get_env/1,
     get_env/2,
     get_address_and_port/1,
+    get_docroot/1,
     get_docroot_and_static_paths/1,
     atomize_header/1,
     deatomize_header/1,
@@ -58,12 +59,13 @@ get_address_and_port(BackendApp) ->
                                             ?DEFAULT_PORT),
     {Address, Port}.
 
+get_docroot(BackendApp) ->
+    simple_bridge_util:get_env([{simple_bridge,document_root},
+                                {BackendApp, document_root}],
+                                ?DEFAULT_DOCROOT).
 
 get_docroot_and_static_paths(BackendApp) ->
-    DocRoot =   simple_bridge_util:get_env([{simple_bridge,document_root},
-                                            {BackendApp, document_root}],
-                                            ?DEFAULT_DOCROOT),
-
+    DocRoot = get_docroot(BackendApp),
     StaticPaths=simple_bridge_util:get_env([{simple_bridge,static_paths},
                                             {BackendApp, static_paths}],
                                             ?DEFAULT_STATIC_PATHS),

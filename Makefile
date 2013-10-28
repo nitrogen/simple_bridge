@@ -6,8 +6,11 @@ get-deps:
 compile: get-deps
 	./rebar compile
 
-clean:
+clean: clean-deps
 	./rebar clean
+
+clean-deps:
+	rm -fr deps/*
 
 test: clean
 	./rebar --config "rebar.test.config" get-deps

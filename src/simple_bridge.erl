@@ -81,16 +81,16 @@ inner_make(Module, RequestData) ->
     end.
 
 make_nocatch(Module, RequestData) -> 
-    RequestData1 = Module:init(RequestData),
- 	   Bridge = simple_bridge_wrapper:new(Module, RequestData1, false, [], [], none),
-    case simple_bridge_multipart:parse(Bridge) of
-        {ok, Params, Files} -> 
-            Bridge:set_multipart(Params, Files);
-        {ok, not_multipart} -> 
-            Bridge;
-        {error, Error} -> 
-            Bridge:set_error(Error);
-        Other -> 
-            throw({unexpected, Other})
-    end.
+	RequestData1 = Module:init(RequestData),
+	Bridge = simple_bridge_wrapper:new(Module, RequestData1, false, [], [], none),
+	case simple_bridge_multipart:parse(Bridge) of
+		{ok, Params, Files} -> 
+			Bridge:set_multipart(Params, Files);
+		{ok, not_multipart} -> 
+			Bridge;
+		{error, Error} -> 
+			Bridge:set_error(Error);
+		Other -> 
+			throw({unexpected, Other})
+	end.
 
