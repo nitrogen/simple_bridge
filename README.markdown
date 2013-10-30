@@ -139,10 +139,18 @@ application's modules.  The safer and more portable approach is to use the
   * *UploadedFile:original_name()* - The original name of the file from the
     user's system
   * *UploadedFile:temp_file()* - The temporary name for the file as it's stored
-    on the server.
+    on the server. Returns `undefined` if file is kept in memory.
   * *UploadedFile:size()* - The size of the file in bytes
   * *UploadedFile:field_name()* - The name of the HTML `<input type=file>`
     element from the page.
+  * *UploadedFile:data()* - The entire data of uploaded file. Returns `undefined`
+    if file is stored as temporary file on disk.
+
+By default uploaded files are always stored in temporary file *UploadedFile:temp_file()*.
+If you want to keep the uploaded files in memory (*UploadedFile:data()*)
+instead of on disk, set the max memory size for uploaded files by adding the
+VM runtime argument `-simple_bridge_max_file_in_memory_size SizeInMB`.
+Uploaded files larger than `SizeInMB` are still stored in temporary files.
 
 ### What modules are involved in a request bridge?
 

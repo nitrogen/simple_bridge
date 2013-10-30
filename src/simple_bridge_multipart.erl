@@ -17,14 +17,8 @@
 -define(CHUNKSIZE, 8 * 1024).
 -define(IDLE_TIMEOUT, 30000).
 
-% Override with -simple_bridge_scratch_dir Directory
--define (SCRATCH_DIR, "./scratch").
-
 % Override with -simple_bridge_max_post_size SizeInMB
 -define (MAX_POST_SIZE, 100).
-
-% Override with -simple_bridge_max_file_size SizeInMB
--define (MAX_FILE_SIZE, ?MAX_POST_SIZE).
 
 -record (state, {
     req,          % The simplebridge request object.
@@ -36,7 +30,7 @@
 
 -record (part, {
     name,         % The name of the form element that created this part
-    value=[],     % The value of the part, as a string, or {'file', Tempfile} if it's a file
+    value=[],     % The value of the part, as a string, or {'file', FileUploadHandler} if it's a file
     filename,     % The name of the posted file
     mime_type,    % The mime type of the file
     size=0,       % The size of the part's value
@@ -58,7 +52,7 @@ is_multipart_request(Req) ->
     catch _:_                      -> false
     end.
 
-parse_multipart(Req) -> 
+parse_multipart(Req) ->
     try
         % Get the boundary...
         {_K, _V, Props} = parse_header(Req:header(content_type)),
@@ -75,7 +69,7 @@ parse_multipart(Req) ->
         Data = to_binary(Req:request_body()),
 
         % Create the state...
-        State = #state { req = Req, boundary = Boundary, length=Length, bytes_read = size(Data), parts = [] },	
+        State = #state { req = Req, boundary = Boundary, length=Length, bytes_read = size(Data), parts = [] },
         State1 = read_boundary(Data, State),
         % Respond with {ok, Params, Files}.
         {
@@ -83,16 +77,15 @@ parse_multipart(Req) ->
             [{Name, Value} || #part { name=Name, value=Value, filename=undefined } <- State1#state.parts],
             [#sb_uploaded_file {
                 original_name=Filename,
-                temp_file=TempFile,
+                temp_file=sb_file_upload_handler:get_tempfile(FileUploadHandler),
+                data=sb_file_upload_handler:get_data(FileUploadHandler),
                 size=Size,
                 field_name=Name
-            } || #part { filename=Filename, value={file, TempFile}, size=Size, name=Name } <- State1#state.parts]
-    }
-    catch 
+            } || #part { filename=Filename, value={file, FileUploadHandler}, size=Size, name=Name } <- State1#state.parts]
+        }
+    catch
         throw : post_too_big -> {error, post_too_big};
-        throw : {file_too_big, FileName} -> {error, {file_too_big, FileName}};
-        Type : Message ->
-            {error, Type, Message}
+        throw : {file_too_big, FileName} -> {error, {file_too_big, FileName}}
     end.
 
 % Not yet in a part. Read the POST headers to get content boundary and length.
@@ -120,15 +113,15 @@ read_part_header(Data, Part, State = #state { boundary=Boundary }) ->
 
 update_part_with_header({"content-disposition", "form-data", Params}, Part) ->
     Part1 = case proplists:get_value("name", Params) of
-        undefined -> Part;
-        Name -> Part#part { name=Name }
-    end,
+                undefined -> Part;
+                Name -> Part#part { name=Name }
+            end,
     case proplists:get_value("filename", Params) of
         undefined -> Part1;
-        Filename -> 
-            Part1#part { 
+        Filename ->
+            Part1#part {
                 filename=Filename,
-                value = {file, get_tempfilename()}
+                value = {file, sb_file_upload_handler:new_file(Filename)}
             }
     end;
 update_part_with_header(_, Part) -> Part.
@@ -139,7 +132,7 @@ update_part_with_header(_, Part) -> Part.
 read_part_value(Data, Part, State = #state { boundary=Boundary }) ->
     {Line, Data1, Part1, State1} = get_next_line(Data, Part, State),
     case interpret_line(Line, Boundary) of
-        start_next_part -> 
+        start_next_part ->
             % Finalize the write, then start the next part.
             State2 = update_state_with_part(Part1, State1),
             read_part_header(Data1, #part {}, State2);
@@ -147,35 +140,25 @@ read_part_value(Data, Part, State = #state { boundary=Boundary }) ->
             % Write the line, then continue...	
             Part2 = update_part_with_value(Line, true, Part1),
             read_part_value(Data1, Part2, State1);
-        eof -> 
+        eof ->
             update_state_with_part(Part1, State1)
     end.
 
-update_part_with_value(Data, IsLine, Part = #part { filename=FileName, value={file, TempFile}, size=Size, needs_rn=NeedsRN }) ->
+update_part_with_value(Data, IsLine, Part = #part { value={file, FileUploadHandler}, size=Size, needs_rn=NeedsRN }) ->
     {Prefix, NewSize} = get_prefix_and_newsize(NeedsRN, Size, Data),
 
-    % Throw exception if the uploaded file is getting too big.
-    case NewSize > get_max_file_size() of
-        true ->
-            file:delete(TempFile),
-            throw({file_too_big, FileName});
-        false -> 
-            continue
-    end,
+    NewFileState = sb_file_upload_handler:receive_data(FileUploadHandler, <<(list_to_binary(Prefix))/binary, Data/binary>>),
 
-    % Write to the file...
-    ok = filelib:ensure_dir(TempFile),
-    {ok, FD} = file:open(TempFile, [append, raw]),
-    ok = file:write(FD, Prefix),
-    ok = file:write(FD, Data),
-    ok = file:close(FD),
-    Part#part { size=NewSize, needs_rn=IsLine };	
+    Part#part { size=NewSize, needs_rn=IsLine, value={file, NewFileState} };
 
 update_part_with_value(Data, IsLine, Part = #part { value=Value, size=Size, needs_rn=NeedsRN }) ->
     {Prefix, NewSize} = get_prefix_and_newsize(NeedsRN, Size, Data),
     NewValue = Value ++ Prefix ++ binary_to_list(Data),
     Part#part { value=NewValue, size=NewSize, needs_rn=IsLine }.
 
+update_state_with_part(Part = #part { value={file, FileUploadHandler}}, State = #state { parts=Parts }) ->
+    CompletedFileUploadHandler = sb_file_upload_handler:complete_file(FileUploadHandler),
+    State#state { parts=[Part#part{ value={file, CompletedFileUploadHandler}}|Parts] };
 update_state_with_part(Part, State = #state { parts=Parts }) ->
     State#state { parts=[Part|Parts] }.
 
@@ -199,9 +182,9 @@ get_next_line(Data, Acc, Part, State) when Data == undefined orelse Data == <<>>
     % We don't want Acc to grow too big, so if we have more than ?CHUNKSIZE 
     % data already read, then flush it to the current part.
     {Acc1, Part1} = case Part /= undefined andalso size(Acc) > ?CHUNKSIZE of
-        true -> {<<>>, update_part_with_value(Acc, false, Part)};
-        false -> {Acc, Part}
-    end,
+                        true -> {<<>>, update_part_with_value(Acc, false, Part)};
+                        false -> {Acc, Part}
+                    end,
     % it into a part.
     get_next_line(Data1, Acc1, Part1, State1).
 
@@ -218,13 +201,13 @@ read_chunk(State = #state { req=Req, length=Length, bytes_read=BytesRead }) ->
 
     {Data, State#state { bytes_read=NewBytesRead }}.
 
-interpret_line(Line, Boundary) -> 
-    if 
+interpret_line(Line, Boundary) ->
+    if
         Line == <<"--", Boundary/binary, "--">> -> eof;
         Line == <<"--", Boundary/binary>> -> start_next_part;
         Line == <<>>   -> start_value;
         true             -> continue
-    end. 
+    end.
 
 
 parse_header(B) when is_binary(B) -> parse_header(binary_to_list(B));
@@ -238,32 +221,17 @@ parse_header(String) ->
 parse_keyvalue(Char, S) ->
     % If Char not found, then use an empty value...
     {Key, Value} = case string:chr(S, Char) of
-        0   -> {S, ""};
-        Pos -> {string:substr(S, 1, Pos - 1), string:substr(S, Pos + 1)}
-    end,
-    {string:to_lower(string:strip(Key)), 
+                       0   -> {S, ""};
+                       Pos -> {string:substr(S, 1, Pos - 1), string:substr(S, Pos + 1)}
+                   end,
+    {string:to_lower(string:strip(Key)),
         unquote_header(string:strip(Value))}.
 
-get_tempfilename() ->
-    Dir = case init:get_argument(simple_bridge_scratch_dir) of
-        {ok, [[Value]]} -> Value;
-        _ -> ?SCRATCH_DIR
-    end,
-    Parts = [integer_to_list(X) || X <- binary_to_list(erlang:md5(term_to_binary(erlang:now())))],
-    filename:join([Dir, string:join(Parts, "-")]).
-
-get_max_post_size() -> 
+get_max_post_size() ->
     Size = case init:get_argument(simple_bridge_max_post_size) of
-        {ok, [[Value]]} -> list_to_integer(Value);
-        _ -> ?MAX_POST_SIZE
-    end,
-    Size * 1024 * 1024.
-
-get_max_file_size() ->
-    Size = case init:get_argument(simple_bridge_max_file_size) of
-        {ok, [[Value]]} -> list_to_integer(Value);
-        _ -> ?MAX_FILE_SIZE
-    end,
+               {ok, [[Value]]} -> list_to_integer(Value);
+               _ -> ?MAX_POST_SIZE
+           end,
     Size * 1024 * 1024.
 
 

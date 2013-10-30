@@ -8,6 +8,7 @@
 
 -record(cookie, { name, value, path="/", minutes_to_live=20 }).
 -record(header, { name, value }).
+<<<<<<< HEAD
 -record(response, { status_code=200, headers=[], cookies=[], data=[] }).
 
 %% sbw = (S)imple (B)ridge (W)rapper
@@ -22,7 +23,8 @@
 -type ipv4()		:: {integer(), integer(), integer(), integer()}.
 -type ipv8()		:: {integer(), integer(), integer(), integer(), integer(), integer(), integer(), integer()}.
 
--record(sb_uploaded_file, { original_name, temp_file, size, field_name }).
+-record(response, { statuscode=200, headers=[], cookies=[], data=[] }).
+-record(sb_uploaded_file, { original_name, temp_file, size, field_name, data }).
 -record(request_cache, {request, docroot="", body=""}).
 
 -define(B2L(B), simple_bridge_util:b2l(B)).
