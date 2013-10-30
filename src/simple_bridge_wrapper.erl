@@ -68,7 +68,15 @@
 	clear_cookies/1,
 	set_response_data/2,
 	set_response_file/2,
-	build_response/1
+	build_response/1,
+
+	%% retained for backwards compatibility
+	status_code/2,
+	header/3,
+	cookie/3,
+	cookie/5,
+	data/2,
+	file/2
 ]).
 
 %% REQUEST WRAPPERS
@@ -334,3 +342,23 @@ build_response(Wrapper) ->
 update_response(Fun, Wrapper) ->
 	NewRes = Fun(Wrapper#simple_bridge_wrapper.response),
 	Wrapper#simple_bridge_wrapper{response=NewRes}.
+
+
+%% Backwards compatible calls below
+status_code(StatusCode, Wrapper) ->
+	set_status_code(StatusCode, Wrapper).
+
+header(Name, Value, Wrapper) ->
+	set_header(Name, Value, Wrapper).
+
+cookie(Name, Value, Wrapper) ->
+	set_cookie(Name, Value, Wrapper).
+
+cookie(Name, Value, Path, MinutesToLive, Wrapper) ->
+	set_cookie(Name, Value, Path, MinutesToLive, Wrapper).
+
+data(Data, Wrapper) ->
+	set_response_data(Data, Wrapper).
+
+file(File, Wrapper) ->
+	set_response_file(File, Wrapper).
