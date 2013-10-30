@@ -9,11 +9,11 @@
 loop(Req) ->
     try
         Bridge = simple_bridge:make(mochiweb, Req),
-        URI = Bridge:uri(),
-        IsStatic = simple_bridge_util:is_static_path(mochiweb, URI),
+        ReqPath = Bridge:path(),
+        IsStatic = simple_bridge_util:is_static_path(mochiweb, ReqPath),
         case IsStatic of
             true ->
-                Bridge2 = Bridge:set_response_file(URI),
+                Bridge2 = Bridge:set_response_file(ReqPath),
                 Bridge2:build_response();
             false ->
                 Callout = simple_bridge_util:get_env(callout),

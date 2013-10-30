@@ -1,3 +1,4 @@
+% vim: ts=4 sw=4 et
 % Simple Bridge
 % Copyright (c) 2008-2010 Rusty Klophaus
 % See MIT-LICENSE for licensing information.
@@ -46,17 +47,18 @@ parse(Req) ->
     end.
 
 is_multipart_request(Req) ->
+    io:format("Content-Type: ~p~n",[Req:header(content_type)]),
     try Req:header(content_type) of
-        "multipart/form-data" ++ _ -> true;
-        _                          -> false
-    catch _:_                      -> false
+        <<"multipart/form-data",_/binary>>  -> true;
+        _                                   -> false
+    catch _:_                               -> false
     end.
 
 parse_multipart(Req) ->
     try
         % Get the boundary...
         {_K, _V, Props} = parse_header(Req:header(content_type)),
-        Length = list_to_integer(Req:header(content_length)),
+        Length = to_integer(Req:header(content_length)),
         Boundary = to_binary(proplists:get_value("boundary", Props)),
 
         % Throw exception if the post is getting too big.
@@ -137,7 +139,7 @@ read_part_value(Data, Part, State = #state { boundary=Boundary }) ->
             State2 = update_state_with_part(Part1, State1),
             read_part_header(Data1, #part {}, State2);
         A when A == start_value orelse A == continue ->
-            % Write the line, then continue...	
+            % Write the line, then continue...  
             Part2 = update_part_with_value(Line, true, Part1),
             read_part_value(Data1, Part2, State1);
         eof ->
@@ -173,7 +175,7 @@ get_prefix_and_newsize(NeedsRN, Size, Data) ->
 % Return the next line of input from the post, reading
 % more data if necessary.
 % get_next_line(Data, State) -> {Line, RemainingData, NewState}.
-get_next_line(Data, Part, State)	-> get_next_line(Data, <<>>, Part, State).
+get_next_line(Data, Part, State)    -> get_next_line(Data, <<>>, Part, State).
 get_next_line(<<?NEWLINE, Data/binary>>, Acc, Part, State) -> {<<Acc/binary>>, Data, Part, State};
 get_next_line(<<C, Data/binary>>, Acc, Part, State) -> get_next_line(Data, <<Acc/binary, C>>, Part, State);
 get_next_line(Data, Acc, Part, State) when Data == undefined orelse Data == <<>> ->
@@ -248,3 +250,7 @@ to_binary(A) when is_atom(A) -> to_binary(atom_to_list(A));
 to_binary(B) when is_binary(B) -> B;
 to_binary(I) when is_integer(I) -> to_binary(integer_to_list(I));
 to_binary(L) when is_list(L) -> list_to_binary(L).
+
+to_integer(L) when is_list(L) -> list_to_integer(L);
+to_integer(B) when is_binary(B) -> to_integer(binary_to_list(B));
+to_integer(I) when is_integer(I) -> I.
