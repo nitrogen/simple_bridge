@@ -122,26 +122,28 @@ deatomize_header([]) ->
 binarize_header(Header) when is_binary(Header) ->
     binarize_header(binary_to_list(Header));
 binarize_header(Header) when is_atom(Header) ->
-    binarize_header(atom_to_list(Header));
+    list_to_binary(fix_header_caps(atom_to_list(Header), capitalize, underscores));
 binarize_header(Header) when is_list(Header) ->
-    list_to_binary(fix_header_caps(Header, capitalize)).
+    list_to_binary(fix_header_caps(Header, capitalize, no_underscores)).
 
 %% @doc changes a header to always capitalize the first letter, and also any
 %% characters after dashes Example: <<"x-forwarded-for">> becomes
 %% <<"X-Forwarded-For">>.
-fix_header_caps([C|Rest], capitalize) when C>=$a,C=<$z ->
+fix_header_caps([C|Rest], capitalize, Underscores) when C>=$a,C=<$z ->
     %% we are ordered to capitalize the next character, and the next character
     %% happens to be lower case, so let's capitalize it
-    [C-32 | fix_header_caps(Rest, normal)];
-fix_header_caps([$-|Rest], _) ->
+    [C-32 | fix_header_caps(Rest, normal, Underscores)];
+fix_header_caps([$-|Rest], _, Underscores) ->
     %% The next character is a dash, so we need to tell it to capitalize the
     %% next character
-    [$-,fix_header_caps(Rest, capitalize)];
-fix_header_caps([C|Rest], _) ->
+    [$-,fix_header_caps(Rest, capitalize, Underscores)];
+fix_header_caps([$_|Rest], _, underscores) ->
+    [$-,fix_header_caps(Rest, capitalize, underscores)];
+fix_header_caps([C|Rest], _, Underscores) ->
     %% Either the character is non-lower-case already or we don't have to deal
     %% with it anyway, so just move on.
-    [C|fix_header_caps(Rest, normal)];
-fix_header_caps([], _) -> [].
+    [C|fix_header_caps(Rest, normal, Underscores)];
+fix_header_caps([], _, _) -> [].
 
 
 %% Checks if `Header` exists as a key in `HeaderList`
