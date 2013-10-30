@@ -85,7 +85,6 @@ make_nocatch(Module, RequestData) ->
 	Bridge = sbw:new(Module, RequestData1, false, [], [], none),
 	case simple_bridge_multipart:parse(Bridge) of
 		{ok, Params, Files} -> 
-			io:format("Multipart: ~p,~p~n",[Params, Files]),
 			Bridge:set_multipart(Params, Files);
 		{ok, not_multipart} -> 
 			Bridge;

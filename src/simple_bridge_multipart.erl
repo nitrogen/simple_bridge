@@ -47,7 +47,6 @@ parse(Req) ->
     end.
 
 is_multipart_request(Req) ->
-    io:format("Content-Type: ~p~n",[Req:header(content_type)]),
     try Req:header(content_type) of
         <<"multipart/form-data",_/binary>>  -> true;
         _                                   -> false
