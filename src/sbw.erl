@@ -3,11 +3,11 @@
 % Copyright (c) 2013 Jesse Gumm
 % See MIT-LICENSE for licensing information.
 
--module (simple_bridge_wrapper).
+-module (sbw).
 -include("simple_bridge.hrl").
 -define(PASSTHROUGH(FunctionName),
 	FunctionName(Wrapper) -> 
-		(Wrapper#simple_bridge_wrapper.mod):FunctionName(Wrapper#simple_bridge_wrapper.req)).
+		(Wrapper#sbw.mod):FunctionName(Wrapper#sbw.req)).
 
 %% REQUEST BRIDGE EXPORTS
 -export([
@@ -82,7 +82,7 @@
 %% REQUEST WRAPPERS
 
 new(Mod, Req, IsMultiPart, PostParams, PostFiles, Error) ->
-	Bridge = #simple_bridge_wrapper{
+	Bridge = #sbw{
 		mod=Mod,
 		req=Req,
 		is_multipart=IsMultiPart,
@@ -91,19 +91,19 @@ new(Mod, Req, IsMultiPart, PostParams, PostFiles, Error) ->
 		error=Error
 	},
 	Headers = pre_process_headers(Bridge:headers()),
-	Bridge#simple_bridge_wrapper{headers=Headers}.
+	Bridge#sbw{headers=Headers}.
 
 
 
 set_multipart(PostParams, PostFiles, Wrapper) ->
-	Wrapper#simple_bridge_wrapper{
+	Wrapper#sbw{
 		is_multipart=true,
 		post_params=PostParams,
 		post_files=PostFiles
 	}.
 
 set_error(Error, Wrapper) ->
-	Wrapper#simple_bridge_wrapper{
+	Wrapper#sbw{
 		error=Error
 	}.
 
@@ -111,7 +111,7 @@ get_peername(Wrapper) ->
 	inet:peername(socket(Wrapper)).
 
 error(Wrapper) ->
-	Wrapper#simple_bridge_wrapper.error.
+	Wrapper#sbw.error.
 
 ?PASSTHROUGH(protocol).
 ?PASSTHROUGH(path).
@@ -123,8 +123,8 @@ error(Wrapper) ->
 ?PASSTHROUGH(socket).
 
 request_method(Wrapper) ->
-	Mod = Wrapper#simple_bridge_wrapper.mod,
-	Req = Wrapper#simple_bridge_wrapper.req,
+	Mod = Wrapper#sbw.mod,
+	Req = Wrapper#sbw.req,
     case Mod:request_method(Req) of
         Method when is_binary(Method) ->
             list_to_atom(binary_to_list(Method));
@@ -143,24 +143,24 @@ pre_process_header({Key, Val}) ->
 	Val2 = simple_bridge_util:to_binary(Val),
 	{Key3, Val2}.
 
-headers(Wrapper) when Wrapper#simple_bridge_wrapper.headers =:= [] ->
-	Mod = Wrapper#simple_bridge_wrapper.mod,
-	Req = Wrapper#simple_bridge_wrapper.req,
+headers(Wrapper) when Wrapper#sbw.headers =:= [] ->
+	Mod = Wrapper#sbw.mod,
+	Req = Wrapper#sbw.req,
 	[{K,V} || {K,V} <- Mod:headers(Req), V=/=undefined];
 headers(Wrapper) ->
-	Wrapper#simple_bridge_wrapper.headers.
+	Wrapper#sbw.headers.
 
 header(Header, Wrapper) ->
 	BinHeader = simple_bridge_util:binarize_header(Header),
-	case lists:keyfind(BinHeader, 1, Wrapper#simple_bridge_wrapper.headers) of
+	case lists:keyfind(BinHeader, 1, Wrapper#sbw.headers) of
 		false -> undefined;
 		{_, Val} -> Val
 	end.
 
 ?PASSTHROUGH(cookies).
 cookie(Cookie, Wrapper) ->
-	Mod = Wrapper#simple_bridge_wrapper.mod,
-	Req = Wrapper#simple_bridge_wrapper.req,
+	Mod = Wrapper#sbw.mod,
+	Req = Wrapper#sbw.req,
     case erlang:function_exported(Mod, cookie, 2) of
         true ->
             Mod:cookie(Cookie, Req);
@@ -206,11 +206,11 @@ query_param(Param, DefaultValue, Wrapper) ->
     proplists:get_value(Param, query_params(Wrapper), DefaultValue).
 
 post_params(Wrapper) ->
-	Mod = Wrapper#simple_bridge_wrapper.mod,
-	Req = Wrapper#simple_bridge_wrapper.req,
-	IsMultipart = Wrapper#simple_bridge_wrapper.is_multipart,
+	Mod = Wrapper#sbw.mod,
+	Req = Wrapper#sbw.req,
+	IsMultipart = Wrapper#sbw.is_multipart,
 	case {request_method(Wrapper), IsMultipart} of
-		{'POST', true}  -> Wrapper#simple_bridge_wrapper.post_params;
+		{'POST', true}  -> Wrapper#sbw.post_params;
 		{'POST', false} -> Mod:post_params(Req);
 		{'PUT', false} -> Mod:post_params(Req);
 		_ -> []
@@ -229,11 +229,11 @@ param(Param, DefaultValue, Wrapper) ->
     post_param(Param, query_param(Param, DefaultValue, Wrapper)).
 
 post_files(Wrapper) ->
-	Wrapper#simple_bridge_wrapper.post_files.
+	Wrapper#sbw.post_files.
 
 recv_from_socket(Length, Timeout, Wrapper) ->
-	Mod = Wrapper#simple_bridge_wrapper.mod,
-	Req = Wrapper#simple_bridge_wrapper.req,
+	Mod = Wrapper#sbw.mod,
+	Req = Wrapper#sbw.req,
     case erlang:function_exported(Mod, recv_from_socket, 3) of
         true ->  Mod:recv_from_socket(Length, Timeout, Req);
         false -> throw({not_supported, Mod, recv_from_socket})
@@ -334,14 +334,14 @@ set_response_file(Path, Wrapper) ->
 	end, Wrapper).
 
 build_response(Wrapper) ->
-	Mod = Wrapper#simple_bridge_wrapper.mod,
-	Req = Wrapper#simple_bridge_wrapper.req,
-	Res = Wrapper#simple_bridge_wrapper.response,
+	Mod = Wrapper#sbw.mod,
+	Req = Wrapper#sbw.req,
+	Res = Wrapper#sbw.response,
 	Mod:build_response(Req,Res).
 
 update_response(Fun, Wrapper) ->
-	NewRes = Fun(Wrapper#simple_bridge_wrapper.response),
-	Wrapper#simple_bridge_wrapper{response=NewRes}.
+	NewRes = Fun(Wrapper#sbw.response),
+	Wrapper#sbw{response=NewRes}.
 
 
 %% Backwards compatible calls below
