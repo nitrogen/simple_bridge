@@ -11,11 +11,10 @@ and [ChicagoBoss](http://chicagoboss.org)
 In a sense, it is similar to [EWGI](http://github.com/skarab/ewgi), except
 SimpleBridge has some key improvements/differences:
 
-  + **Smaller code base** - SimpleBridge is 870 lines, compared to 1,974 lines
-    for EWGI. This is because SimpleBridge uses the underlying HTTP server's
-    built in parsing functions as much as possible.
-  + **Easily extended** - Takes about 150 lines to add support for a new HTTP
+  + **Easily extended** - Takes about 200 lines to add support for a new HTTP
     server, vs. ~350 for EWGI.
+  + **Websockets** - SimpleBridge provides a single interface for handling
+    websockets.
   + **MultiPart File Uploads** - SimpleBridge has better support for HTTP
     POSTS, including support for multipart file uploads, with size limits and
     handle-able errors.
@@ -26,25 +25,24 @@ SimpleBridge has some key improvements/differences:
   + **No Middleware Components** - SimpleBridge does not explicitly support
     EWGI's concept of "middleware components". (Though you could probably fake
     it, haven't tried.)
-  + SimpleBridge is split into two parts: 
-    + A *Request Bridge* is a parameterized module that allows you to see
-      information about the incoming request.
-    + A *Response Bridge* is a parameterized module that allows you to
-      construct a response.
 
+  + SimpleBridge is split into three parts:
+	+ A Bridge module to allows you to see information about the incoming
+	  request and construct a response.
+	+ A Default Supervisor that starts the underlying server with universal.
+	+ A Default anchor module that interfaces the web server with a a universal
+	  callout module behaviour.
 
 ## Hello World Example
 
 ```erlang
-% SimpleBridge Hello World Example in Mochiweb
+% SimpleBridge Hello World Example
 
-start(_, _) ->
-    Options = [{ip, "127.0.0.1"}, {port, 8000}],
-    Loop = fun loop/1,
-    mochiweb_http:start([{name, mochiweb_example_app}, {loop, Loop} | Options]).
+start() ->
+	CalloutMod = ?MODULE,
+	simple_bridge:start(mochiweb, CalloutMod).
 
-loop(Req) ->
-    Request = simple_bridge:make_request(mochiweb_request_bridge, {Req, "./wwwroot"}),
+run(Bridge) ->
     HTML = [
         "<h1>Hello, World!</h1>",
         io_lib:format("METHOD: ~p~n<br><br>", [Request:request_method()]),
@@ -52,16 +50,19 @@ loop(Req) ->
         io_lib:format("HEADERS: ~p~n<br><br>", [Request:headers()]),
         io_lib:format("QUERY PARAMETERS: ~p~n<br><br>", [Request:query_params()])       
     ],
-
-    Response = simple_bridge:make_response(mochiweb_response_bridge, {Req, "./wwwroot"}),       
-    Response1 = Response:status_code(200),
-    Response2 = Response1:header("Content-Type", "text/html"),
-    Response3 = Response2:data(HTML),
-    Response3:build_response().
+	Bridge2 = Response:set_status_code(200),
+	Bridge3 = Response:set_header("Content-Type", "text/html"),
+    Bridge4 = Response2:set_response_data(HTML),
+    Bridge4:build_response().
 ```
 
+## The Callout Module
 
-## Request Bridges
+A Callout module is a standard module that SimpleBridge will call out to when a request is made, both standard HTTP requests, and websocket frames.  A Callout module is expected to export the following functions:
+
+ + `run(Bridge)` - Bridge will be an initialized instance of a SimpleBridge object, and the last step of the run will be the return value of `BridgeX:build_response()`
+ + `ws_init(Bridge)` - 
+
 
 ### How do I make a request bridge?
 

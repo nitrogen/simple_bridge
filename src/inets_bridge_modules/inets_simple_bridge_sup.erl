@@ -33,7 +33,14 @@ init([]) ->
                 _ -> ok
             end
     end,
-    application:start(inets),
+
+    case application:start(inets) of
+        ok -> ok;
+        {error, {already_started, inets}} ->
+            {ok, SrvConfig} = application:get_env(inets, services),
+            Httpd = proplists:get_value(httpd, SrvConfig),
+            {ok, _Pid} = inets:start(httpd, Httpd)
+    end,
     {ok, { {one_for_one, 5, 10}, []} }.
 
 build_config() ->
