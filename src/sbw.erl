@@ -28,6 +28,7 @@
 
 	headers/1,
 	header/2,
+	header_lower/2,
 
 	cookies/1,
 	cookie/2,
@@ -154,8 +155,17 @@ header(Header, Wrapper) ->
 	BinHeader = simple_bridge_util:binarize_header(Header),
 	case lists:keyfind(BinHeader, 1, Wrapper#sbw.headers) of
 		false -> undefined;
-		{_, Val} -> Val
+		{_, Val} ->
+			if	is_list(Header);
+				is_atom(Header)   -> binary_to_list(Val);
+				is_binary(Header) -> Val
+			end
 	end.
+
+header_lower(Header, Wrapper) when is_atom(Header); is_list(Header) ->
+	string:to_lower(header(Header, Wrapper));
+header_lower(Header, Wrapper) when is_binary(Header) ->
+	list_to_binary(string:to_lower(binary_to_list(header(Header, Wrapper)))).
 
 ?PASSTHROUGH(cookies).
 cookie(Cookie, Wrapper) ->

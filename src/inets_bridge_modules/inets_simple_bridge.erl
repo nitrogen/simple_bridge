@@ -73,30 +73,7 @@ peer_port(Req) ->
     Port.
 
 headers(Req) ->
-    Headers = Req#mod.parsed_header,
-    F = fun(Header) -> proplists:get_value(Header, Headers) end,
-    Headers1 = [
-        {connection, F("connection")},
-        {accept, F("accept")},
-        {host, F("host")},
-        {if_modified_since, F("if-modified-since")},
-        {if_match, F("if-match")},
-        {if_none_match, F("if-range")},
-        {if_unmodified_since, F("if-unmodified-since")},
-        {range, F("range")},
-        {referer, F("referer")},
-        {user_agent, F("user-agent")},
-        {accept_ranges, F("accept-ranges")},
-        {cookie, F("cookie")},
-        {keep_alive, F("keep-alive")},
-        {location, F("location")},
-        {content_length, F("content-length")},
-        {content_type, F("content-type")},
-        {content_encoding, F("content-encoding")},
-        {authorization, F("authorization")},
-        {transfer_encoding, F("transfer-encoding")}
-    ],
-    [{K, V} || {K, V} <- Headers1, V /= undefined].
+    Req#mod.parsed_header.
 
 cookies(Req) ->
     Headers = headers(Req),
@@ -186,13 +163,8 @@ to_cookie_expire(SecondsToLive) ->
 
 %% Inets wants some headers as lowercase atoms, so we
 %% need to do some special massage here.
-%% TODO: This needs to be reworked. We shouldn't be making atoms from every request
 massage(Header) ->
-    X = list_to_atom(
-          binary_to_list(
-            list_to_binary(
-              re:replace(string:to_lower(a2l(Header)),"-","_")))),
-
+    X = simple_bridge_utils:atomize_header(Header),
     case lists:member(X, special_headers()) of
         true  -> X;
         false -> Header
@@ -205,5 +177,6 @@ special_headers() ->
      pragma , retry_after , server , trailer , transfer_encoding].
 
 a2l(A) when is_atom(A) -> atom_to_list(A);
+a2l(B) when is_binary(B) -> binary_to_list(B);
 a2l(L) when is_list(L) -> L.
     

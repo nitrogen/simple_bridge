@@ -7,7 +7,7 @@ compile: get-deps
 	./rebar compile
 
 clean: clean-deps
-	./rebar clean
+	./rebar --config "rebar.$(BACKEND).config" clean
 
 clean-deps:
 	rm -fr deps/*
