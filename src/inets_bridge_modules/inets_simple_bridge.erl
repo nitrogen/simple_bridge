@@ -175,8 +175,3 @@ special_headers() ->
      content_language , content_length , content_location , content_range , 
      content_type , date , etag , expires , last_modified , location , 
      pragma , retry_after , server , trailer , transfer_encoding].
-
-a2l(A) when is_atom(A) -> atom_to_list(A);
-a2l(B) when is_binary(B) -> binary_to_list(B);
-a2l(L) when is_list(L) -> L.
-    

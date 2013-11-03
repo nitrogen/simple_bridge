@@ -11,10 +11,10 @@ do(Req) ->
 				Bridge2:build_response();
 			false ->
 				Callout = simple_bridge_util:get_env(callout),
-				case simple_bridge_websocket:is_upgrade_request(Bridge) of
-					true ->
-						simple_bridge_websocket:hijack(Bridge, Callout);
-					false ->
+				case simple_bridge_websocket:attempt_hijacking(Bridge, Callout) of
+					{hijacked, Bridge2} ->
+						Bridge2:build_response();
+					spared ->
 						Callout:run(Bridge)
 				end
 		end
