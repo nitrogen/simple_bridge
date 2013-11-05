@@ -13,6 +13,7 @@ do(Req) ->
 				Callout = simple_bridge_util:get_env(callout),
 				case simple_bridge_websocket:attempt_hijacking(Bridge, Callout) of
 					{hijacked, closed} ->
+						io:format("Result of Closing Socket: ~p",[gen_tcp:close(Bridge:socket())]),
 						exit(normal);
 					{hijacked, Bridge2} ->
 						Bridge2:build_response();
@@ -21,5 +22,6 @@ do(Req) ->
 				end
 		end
 	catch
+		exit:normal -> exit(normal);
 		T:E -> error_logger:error_msg("~p:~p~nStacktrace: ~p~n",[T,E,erlang:get_stacktrace()])
 	end.
