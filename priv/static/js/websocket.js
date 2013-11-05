@@ -42,7 +42,7 @@ function sendTxt() {
 	if(websocket.readyState == websocket.OPEN){
 		txt = $("#send_txt").val();
 		websocket.send(txt);
-		showScreen('sending: ' + txt); 
+		showScreen('SENDING: ' + txt); 
 	} else {
 		showScreen('websocket is not connected'); 
 	};
@@ -59,7 +59,7 @@ function onClose(evt) {
 };  
 
 function onMessage(evt) { 
-	showScreen('<span style="color: blue;">RESPONSE: ' + evt.data+ '</span>'); 
+	showScreen('<span style="color: blue;">RECEIVED: ' + evt.data+ '</span>'); 
 };  
 
 function onError(evt) {

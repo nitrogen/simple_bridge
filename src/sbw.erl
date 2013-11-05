@@ -153,7 +153,6 @@ headers(Wrapper) ->
 
 header(Header, Wrapper) ->
 	BinHeader = simple_bridge_util:binarize_header(Header),
-	error_logger:
 	case lists:keyfind(BinHeader, 1, Wrapper#sbw.headers) of
 		false -> undefined;
 		{_, Val} ->

@@ -89,16 +89,22 @@ websocket_loop(Socket, Bridge, Callout, PartialData) ->
         {tcp, Socket, Data} ->
             Frames = parse_packet_into_frames(Data, PartialData#partial_data.data),
             PendingFrames = PartialData#partial_data.message_frames,
-            {PendingFrames2, RemainderData} = process_frames(Frames, Socket, Bridge, Callout, PendingFrames),
-            inet:setopts(Socket, [{active, once}]),
-            websocket_loop(Socket, Bridge, Callout, #partial_data{data=RemainderData, message_frames=PendingFrames2});
+            case process_frames(Frames, Socket, Bridge, Callout, PendingFrames) of
+                {PendingFrames2, RemainderData} ->
+                    inet:setopts(Socket, [{active, once}]),
+                    websocket_loop(Socket, Bridge, Callout, #partial_data{data=RemainderData, message_frames=PendingFrames2});
+                closed -> closed
+            end;
         {tcp_closed, Socket} ->
             closed;
         Msg ->
-            ok
-            %do_something()
+            Reply = Callout:ws_info(Msg, Bridge),
+            send(Socket, Reply),
+            websocket_loop(Socket, Bridge, Callout, PartialData)
     end.
 
+send(_, noreply) ->
+    do_nothing;
 send(Socket, {ping, Data}) ->
     send_frame(Socket, #frame{opcode=?WS_PING, data=Data});
 send(Socket, {pong, Data}) ->
@@ -146,6 +152,7 @@ encode_frame(#frame{
         %% masked=Masked, mask_key=Mask,
         data=Data}) ->
     BinData = iolist_to_binary(Data),
+    io:format("Sending Byte Size: ~p",[byte_size(BinData)]),
     {PayloadLen, ExtLen, ExtBitSize} = case byte_size(BinData) of
         L when L < 126   -> {L, 0, 0};
         L when L < 65536 -> {126, L, 16};
@@ -194,14 +201,15 @@ process_frames([_F = #frame{opcode=?WS_PONG}|Rest], Socket, Bridge, Callout, Pen
     %% do nothing?
     process_frames(Rest, Socket, Bridge, Callout, PendingFrames);
 
-process_frames([#frame{opcode=?WS_PING, data=Data}|Rest], Socket, Bridge, Callout, PendingFrames) ->
+process_frames([#frame{opcode=?WS_PING, data=Data, fin=1}|Rest], Socket, Bridge, Callout, PendingFrames) ->
     send(Socket, {pong, Data}),
     process_frames(Rest, Socket, Bridge, Callout, PendingFrames);
 
 process_frames([_F = #frame{opcode=?WS_CLOSE}|_Rest], Socket, Bridge, Callout, _PendingFrames) ->
     send(Socket, close),
-    Callout:ws_terminate(Bridge),
-    inet:close(Socket).
+    Callout:ws_terminate(closed, Bridge),
+    inet:close(Socket),
+    closed.
     
 defragment_data(Frames) ->
     iolist_to_binary([F#frame.data || F <- Frames]).
@@ -234,11 +242,11 @@ parse_packet_into_frames(Data, F=#frame{}) ->
 -spec parse_frame(binary()) -> [#frame{} | binary()].
 parse_frame(<<>>) -> [<<>>];
     %FRAME:   FIN    RSV1  RSV2  RSV3  OPCODE  MASKED          PAYLOAD_LEN                   EXT_PAYLOAD_LEN  MASK _KEY  PAYLOAD
-parse_frame(<<Fin:1, R1:1, R2:1, R3:1, Op:4,   ?WS_MASKED:1,   PayloadLen:7,                                  Mask:32,   Data/binary>>) when PayloadLen < ?WS_EXTENDED_PAYLOAD_16BIT ->
-    ?DO_FRAMES(Mask);
 parse_frame(<<Fin:1, R1:1, R2:1, R3:1, Op:4,   ?WS_MASKED:1,   ?WS_EXTENDED_PAYLOAD_16BIT:7, PayloadLen:16,   Mask:32,   Data/binary>>) ->
     ?DO_FRAMES(Mask);
 parse_frame(<<Fin:1, R1:1, R2:1, R3:1, Op:4,   ?WS_MASKED:1,   ?WS_EXTENDED_PAYLOAD_64BIT:7, PayloadLen:64,   Mask:32,   Data/binary>>) ->
+    ?DO_FRAMES(Mask);
+parse_frame(<<Fin:1, R1:1, R2:1, R3:1, Op:4,   ?WS_MASKED:1,   PayloadLen:7,                                  Mask:32,   Data/binary>>) ->
     ?DO_FRAMES(Mask);
 parse_frame(<<_:8,                             ?WS_UNMASKED:1, _/binary>>) ->
     throw({unmasked_packet_received_from_client});
@@ -247,8 +255,9 @@ parse_frame(Data) ->
 
 do_frames(Fin, R1, R2, R3, Op, PayloadLen, Mask, Data) ->
     F = #frame{fin=Fin, rsv1=R1, rsv2=R2, rsv3=R3, opcode=Op, masked=1, payload_len=PayloadLen, mask_key=Mask, data = <<>>},
-    error_logger:info_msg("applying mask: ~p to ~p~n",[Mask, Data]),
+    error_logger:info_msg("Receoved Payload Len: ~p~n",[PayloadLen]),
     Unmasked = apply_mask(Mask, Data),
+    io:format("Length of data after mask application: ~p~n",[byte_size(Unmasked)]),
     append_frame_data_and_parse_remainder(F, Unmasked).
 
 append_frame_data_and_parse_remainder(F = #frame{payload_len=PayloadLen, data=CurrentPayload}, Data) ->
@@ -256,10 +265,13 @@ append_frame_data_and_parse_remainder(F = #frame{payload_len=PayloadLen, data=Cu
     Length = byte_size(FullData),
     if
         Length =:= PayloadLen ->
+            io:format("Completed Frame~n"),
             [F#frame{data=FullData}, <<>>];
         Length < PayloadLen ->
+            io:format("Incomplete Frame ~p < ~p~n",[Length, PayloadLen]),
             [F#frame{data=FullData}];
-        Length > PayloadLen ->
+        Length > PayloadLen  ->
+            io:format("More than one frame, ~p > ~p~n",[Length, PayloadLen]),
             %% Since the length of the received data is longer than the required payload length, break off the part we want for our frame
             FrameData = binary:part(FullData, 0, PayloadLen),
 
@@ -274,6 +286,6 @@ apply_mask(M, <<D:32,Rest/binary>>)
 apply_mask(M, Rest)
         when byte_size(Rest) < 4
         andalso is_integer(M)            -> apply_mask(<<M:32>>, Rest);
-apply_mask(<<M:8,_/binary>>,   <<D:8>> ) -> <<(D bxor M)>>;
-apply_mask(<<M:16,_/binary>>,  <<D:16>>) -> <<(D bxor M)>>;
-apply_mask(<<M:24,_/binary>>,  <<D:24>>) -> <<(D bxor M)>>.
+apply_mask(<<M:8,_/binary>>,   <<D:8>> ) -> <<(D bxor M):8>>;
+apply_mask(<<M:16,_/binary>>,  <<D:16>>) -> <<(D bxor M):16>>;
+apply_mask(<<M:24,_/binary>>,  <<D:24>>) -> <<(D bxor M):24>>.
