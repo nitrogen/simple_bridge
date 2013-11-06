@@ -32,7 +32,8 @@
 init(Req) -> 
     Req.
 
-protocol(_Req) -> undefined.
+protocol(Req) ->
+	wrq:scheme(Req).
 
 request_method(Req) -> 
     wrq:method(Req).
@@ -70,8 +71,17 @@ request_body(Req) ->
     wrq:req_body(Req).
 
 socket(Req) ->
-    {Socket, _} = Req:socket(),
-    Socket.
+	%% 7th element of wm_reqdata record is wm_state, which contains another
+	%% record, but which can be interacted with through
+	%% webmachine_request:socket
+	%% 
+	%% If this suddenly starts breaking, then we need to verify the record
+	%% structure of wm_reqdata.hrl
+	%%
+	%% https://github.com/basho/webmachine/blob/master/include/wm_reqdata.hrl
+	ReqState = element(7, Req), 
+	{Socket, _} = webmachine_request:socket(ReqState),
+	Socket.
 
 recv_from_socket(Length, Timeout, Req) ->
     Socket = socket(Req),
@@ -79,7 +89,6 @@ recv_from_socket(Length, Timeout, Req) ->
         {ok, Data} -> Data;
         _ -> exit(normal)
     end.
-
 
 protocol_version(Req) ->
   wrq:version(Req).

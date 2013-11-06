@@ -42,15 +42,18 @@ attempt_hijacking(Bridge, Callout) ->
     UpgradeHeader = sbw:header_lower(upgrade, Bridge),
     ConnectionHeader = sbw:header_lower(connection, Bridge),
     WSVersionHead = sbw:header("Sec-WebSocket-Version", Bridge),
-
+    
+    io:format("~p:~p:~p:~p~n",[ProtocolVersion, UpgradeHeader, ConnectionHeader, WSVersionHead]),
     if
         ProtocolVersion     =:= {1,1},
         UpgradeHeader       =:= "websocket",
         ConnectionHeader    =:= "upgrade",
         WSVersionHead       =/= undefined ->
+            io:format("Passed checks, Attempting to hijack~n"),
             WSVersions = re:split(WSVersionHead, "[, ]+]", [{return, list}]),
             HijackedBridge = case lists:member(?WS_VERSION, WSVersions) of
                 true ->
+                    io:format("Version Check passed. Hijacking~n"),
                     hijack(Bridge, Callout);
                 false ->
                     hijack_request_fail(Bridge)
@@ -73,6 +76,8 @@ prepare_response_key(WSKey) ->
     base64:encode(Sha).
 
 hijack(Bridge, Callout) ->
+    try
+    io:format("Hijacking~n"),
     WSKey = sbw:header("Sec-Websocket-Key", Bridge),
     ResponseKey = prepare_response_key(WSKey),
     Socket = sbw:socket(Bridge),
@@ -84,7 +89,9 @@ hijack(Bridge, Callout) ->
         false -> do_nothing
     end,
     inet:setopts(Socket, [{active, once}]),
-    websocket_loop(Socket, Bridge, Callout, #partial_data{}).
+    websocket_loop(Socket, Bridge, Callout, #partial_data{})
+    catch E:T -> error_logger:error_msg("~p:~p~n~p",[E,T,erlang:get_stacktrace()])
+    end.
     
 send_handshake_response(Socket, ResponseKey) ->
     Handshake = [

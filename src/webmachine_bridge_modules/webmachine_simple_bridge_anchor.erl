@@ -35,4 +35,8 @@ process_post(Req, Callout) ->
 
 do_bridge(Callout, Req) ->
 	Bridge = simple_bridge:make(webmachine, Req),
-    Callout:run(Bridge).
+	case simple_bridge_websocket:attempt_hijacking(Bridge, Callout) of
+		{hijacked, closed} -> gen_tcp:close(Bridge:socket());
+		{hijacked, Bridge2} -> Bridge2:build_response();
+		spared -> Callout:run(Bridge)
+	end.
