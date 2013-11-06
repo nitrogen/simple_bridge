@@ -9,8 +9,7 @@
 -type full_reply()          ::  noreply
                                 | {error, reason()}
                                 | {reply, reply()}
-                                | {close, reason()}
-                                | {close, reason(), reply()}.
+                                | {close, reason()}.
 
 
 -callback run(bridge())         -> {ok, Data :: data()}.

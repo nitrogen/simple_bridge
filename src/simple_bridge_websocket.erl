@@ -76,6 +76,8 @@ hijack(Bridge, Callout) ->
     WSKey = sbw:header("Sec-Websocket-Key", Bridge),
     ResponseKey = prepare_response_key(WSKey),
     Socket = sbw:socket(Bridge),
+    io:format("Socket Options: ~p~n",[inet:getopts(Socket,[buffer, packet])]),
+    inet:setopts(Socket, [{buffer,65535}]),
     send_handshake_response(Socket, ResponseKey),
     case erlang:function_exported(Callout, ws_init, 1) of
         true -> ok = Callout:ws_init(Bridge);
@@ -139,7 +141,7 @@ send(Socket, {ping, Data}) ->
 send(Socket, {pong, Data}) ->
     send_frame(Socket, #frame{opcode=?WS_PONG, data=Data});
 send(Socket, close) ->
-    send_frame(Socket, #frame{opcode=?WS_CLOSE});
+    send(Socket, {close, 1000});
 send(Socket, {close, ReasonCode}) ->
     ReasonBody = <<ReasonCode:16>>,
     send_frame(Socket, #frame{opcode=?WS_CLOSE, data=ReasonBody});
@@ -173,9 +175,11 @@ send_fragments_rest(Socket, [{_,Data}|T]) ->
     
 
 send_frame(Socket, F) ->
-    BinFrame = encode_frame(F),
-    error_logger:info_msg("Sending to ~p: ~p bytes~n", [Socket, byte_size(BinFrame)]),
-    gen_tcp:send(Socket, BinFrame).
+    {EncodeTime, BinFrame} = timer:tc(fun() -> encode_frame(F) end),
+    io:format("Time to encode frame of ~p bytes: ~p ms~n",[byte_size(BinFrame), EncodeTime div 1000]),
+    {SendTime, _} = timer:tc(fun() -> gen_tcp:send(Socket, BinFrame) end),
+    io:format("Time to send ~p bytes: ~p~n",[byte_size(BinFrame), SendTime div 1000]).
+    
 
 encode_frame(#frame{
         fin=Fin, rsv=RSV, opcode=Opcode,
@@ -285,7 +289,7 @@ type(?WS_TEXT) -> text.
             %io:format("We have a complete frame: ~p > ~p~n",[byte_size(Data), PayloadLen]),
             do_frames(Fin,RSV,Op,PayloadLen,Mask,Data);
         ?else ->
-            %io:format("Received: ~p of ~p~n", [byte_size(Data), PayloadLen]),
+            %%io:format("Received: ~p of ~p~n", [byte_size(Data), PayloadLen]),
             [Raw]
     end).
 
@@ -312,7 +316,7 @@ parse_frame(Raw = <<Fin:1, RSV:3, Op:4,   ?WS_MASKED:1,   PayloadLen:7,         
 parse_frame(<<_:8,                        ?WS_UNMASKED:1, _/binary>>) ->
     close_with_purpose(1002, unmasked_packet_received_from_client);
 parse_frame(Data) ->
-    %io:format("Unable to parse frame of size ~p~n",[byte_size(Data)]),
+    io:format("Unable to parse frame of size ~p~n",[byte_size(Data)]),
     [Data]. %% not enough data to parse the frame, so just return the data, and we'll try after we get more data
 
 do_frames(Fin, RSV, Op, PayloadLen, Mask, Data) ->

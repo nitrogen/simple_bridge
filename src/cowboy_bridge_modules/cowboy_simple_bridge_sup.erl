@@ -16,7 +16,6 @@
 %% ===================================================================
 
 start_link() ->
-    io:format("Calling super~n"),
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 %% ===================================================================
@@ -28,11 +27,12 @@ init([]) ->
     application:start(ranch),
     application:start(cowboy),
     {Address, Port} = simple_bridge_util:get_address_and_port(cowboy),
-    Dispatch = generate_dispatch(),
 
     io:format("Starting Cowboy Server on ~s:~p~n",
               [Address, Port]),
 
+    Dispatch = generate_dispatch(),
+    io:format("Using Cowboy Dispatch Table: ~p~n",[Dispatch]),
     {ok, _} = cowboy:start_http(http, 100, [{port, Port}], [
         {env, [{dispatch, Dispatch}]},
         {max_keepalive, 50}
@@ -64,7 +64,7 @@ generate_dispatch() ->
 %% @doc Gets the environment variables document_root and static_paths, and
 %% generates dispatches from them
 build_dispatch() ->
-    {DocRoot, StaticPaths}= simple_bridge_util:get_docroot_and_static_paths(cowboy),
+    {DocRoot, StaticPaths} = simple_bridge_util:get_docroot_and_static_paths(cowboy),
     io:format("Static Paths: ~p~nDocument Root for Static: ~s~n",
               [StaticPaths, DocRoot]),
     build_dispatch(DocRoot, StaticPaths).

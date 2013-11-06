@@ -18,7 +18,7 @@ init(_Transport, Req, _Opts) ->
         Other -> simple_bridge_util:binarize_header(Other)
     end,
 
-    case Upgrade2 == <<"Websocket">> of
+    case Upgrade2 == <<"websocket">> of
         true ->
             {upgrade, protocol, cowboy_websocket};
         false ->
@@ -41,15 +41,30 @@ websocket_init(_Transport, Req, _Opts) ->
     ok = Callout:ws_init(Bridge),
     {ok, Req, {Bridge, Callout}}.
 
+websocket_handle({ping, _Data}, Req, State) ->
+    %% We don't need to pong, cowboy does that automatically. So just carry on!
+    {ok, Req, State};
+websocket_handle({pong, _}, Req, State) ->
+    {ok, Req, State};
 websocket_handle(Data, Req, State={Bridge, Callout}) ->
     Result = Callout:ws_message(Data, Bridge),
-    {reply, ReplyData} = simple_bridge_util:massage_websocket_reply(Result, State),
-    {reply, ReplyData, Req, State}.
+    Reply = massage_reply(Result, Req, State),
+    Reply.
 
 websocket_info(Data, Req, State={Bridge, Callout}) ->
     Result = Callout:ws_info(Data, Bridge),
-    {reply, ReplyData} = simple_bridge_util:massage_websocket_reply(Result, State),
-    {reply, ReplyData, Req, State}.
+    Reply = massage_reply(Result, Req, State),
+    Reply.
 
 websocket_terminate(Reason, _Req, {Bridge, Callout}) ->
     ok = Callout:ws_terminate(Reason, Bridge).
+
+massage_reply({reply, {Type, Data}}, Req, State)
+        when Type==binary orelse Type==text ->
+    {reply, {Type, iolist_to_binary(Data)}, Req, State};
+massage_reply({reply, List}, Req, State) ->
+    {reply, List, Req, State};
+massage_reply(noreply, Req, State) ->
+    {ok, Req, State};
+massage_reply(close, Req, State) ->
+    {shutdown, Req, State}.

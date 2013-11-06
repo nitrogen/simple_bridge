@@ -23,7 +23,6 @@ ws_message({text, Data}, _Bridge) ->
     %Reply = io_lib:format("~s", [Data]),
     {reply, {text, Data}};
 ws_message({binary, Data}, _Bridge) ->
-    %Reply = io_lib:format("~s", [Data]),
     {reply, {binary, Data}}.
 
 ws_info(Data, _Bridge) ->
