@@ -266,8 +266,23 @@ process_frames([#frame{opcode=?WS_PING, data=Data, fin=1}|Rest], Socket, Bridge,
     send(Socket, {pong, Data}),
     process_frames(Rest, Socket, Bridge, Callout, PendingFrames);
 
-process_frames([_F = #frame{opcode=?WS_CLOSE}|_Rest], Socket, Bridge, Callout, _PendingFrames) ->
-    send(Socket, close),
+process_frames([_F = #frame{opcode=?WS_CLOSE, data=Data}|_Rest], Socket, Bridge, Callout, _PendingFrames) ->
+    StatusCode = case Data of
+        <<_:8>> ->
+            1002;
+        <<ReasonCode:16,Text/binary>> ->
+            case is_valid_close_code(ReasonCode) of
+                true ->
+                    case is_utf8(Text) of
+                        true -> ReasonCode;
+                        false -> 1007
+                    end;
+                false -> 1002
+            end;
+        _ -> 1000
+    end,
+            
+    send(Socket, {close, StatusCode}),
     Callout:ws_terminate(closed, Bridge),
     inet:close(Socket),
     closed;
@@ -279,6 +294,9 @@ process_frames([F|_], _Socket, _Bridge, _Callout, _PendingFrames) ->
 defragment_data(Frames) ->
     iolist_to_binary([F#frame.data || F <- Frames]).
 
+is_valid_close_code(Code) ->
+    (Code >= 3000 andalso Code < 5000)
+        orelse lists:member(Code, [1000, 1001, 1002, 1003, 1007, 1008, 1009, 1010, 1011]).
 
 type(?WS_BINARY) -> binary;
 type(?WS_TEXT) -> text.
