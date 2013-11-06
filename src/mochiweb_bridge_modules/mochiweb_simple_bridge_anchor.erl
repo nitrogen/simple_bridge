@@ -5,7 +5,7 @@
     ]).
 
 %% We catch this because if it fails otherwise, Mochiweb just silently handles
-%% it, apparently, and we'd rather see the error. So print it to the console.
+%% it, and we'd rather see the error. So print it to the console.
 loop(Req) ->
     try
         Bridge = simple_bridge:make(mochiweb, Req),
@@ -19,7 +19,8 @@ loop(Req) ->
                 Callout = simple_bridge_util:get_env(callout),
                 case simple_bridge_websocket:attempt_hijacking(Bridge, Callout) of
                     {hijacked, closed} ->
-                        gen_tcp:close(Bridge:socket());
+                        gen_tcp:close(Bridge:socket()),
+                        exit(normal);
                     {hijacked, Bridge2} ->
                         Bridge2:build_response();
                     spared ->
