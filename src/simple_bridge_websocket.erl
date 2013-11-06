@@ -73,7 +73,6 @@ prepare_response_key(WSKey) ->
     base64:encode(Sha).
 
 hijack(Bridge, Callout) ->
-    try
     WSKey = sbw:header("Sec-Websocket-Key", Bridge),
     ResponseKey = prepare_response_key(WSKey),
     Socket = sbw:socket(Bridge),
@@ -84,9 +83,7 @@ hijack(Bridge, Callout) ->
         false -> do_nothing
     end,
     inet:setopts(Socket, [{active, once}]),
-    websocket_loop(Socket, Bridge, Callout, #partial_data{})
-    catch E:T -> error_logger:error_msg("~p:~p~n~p",[E,T,erlang:get_stacktrace()])
-    end.
+    websocket_loop(Socket, Bridge, Callout, #partial_data{}).
     
 send_handshake_response(Socket, ResponseKey) ->
     Handshake = [
