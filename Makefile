@@ -21,6 +21,7 @@ platform: clean
 	(escript rebar_deps/merge_deps.escript rebar.config rebar_deps/$(BACKEND).deps rebar.$(BACKEND).config)
 	(./rebar --config "rebar.$(BACKEND).config" get-deps)
 	(./rebar --config "rebar.$(BACKEND).config" compile)
+	(rm -f rebar.$(BACKEND).config)
 
 run_cowboy:
 	(make platform run BACKEND=cowboy)
