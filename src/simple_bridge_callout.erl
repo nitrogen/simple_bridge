@@ -5,17 +5,18 @@
 -type data()                ::  iolist().
 -type ws_data()             ::  {text, binary()} | {binary, binary()}.
 -type reply()               ::  ws_data() | [ws_data()].
--type reason()              ::  any().
+-type reason()              ::  integer().
 -type full_reply()          ::  noreply
-                                | {error, reason()}
                                 | {reply, reply()}
+                                | close
                                 | {close, reason()}.
 
 
--callback run(bridge())         -> {ok, Data :: data()}.
+-callback run(bridge())         -> {ok, data()}.
 
 -callback ws_init(bridge())     -> ok 
-                                 | {error, Reason :: any()}.
+                                 | close
+                                 | {close, reason()}.
 
 -callback ws_message(ws_data(), bridge()) -> full_reply().
 

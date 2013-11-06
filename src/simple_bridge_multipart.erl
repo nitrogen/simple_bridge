@@ -13,12 +13,10 @@
 % Large portions of this file are from mochiweb_multipart.erl
 % Copyright 2007 Mochi Media, Inc., written by Bob Ippolito <bob@mochimedia.com>.
 
-% Replace with http://bitbucket.org/justin/webmachine/src/tip/src/webmachine_multipart.erl
-
 -define(CHUNKSIZE, 8 * 1024).
 -define(IDLE_TIMEOUT, 30000).
 
-% Override with -simple_bridge_max_post_size SizeInMB
+% Override with simple_bridge configuration {max_post_size, SizeInMB}
 -define (MAX_POST_SIZE, 100).
 
 -record (state, {
@@ -47,17 +45,17 @@ parse(Req) ->
     end.
 
 is_multipart_request(Req) ->
-    try Req:header(content_type) of
-        <<"multipart/form-data",_/binary>>  -> true;
-        _                                   -> false
-    catch _:_                               -> false
+    try sbw:header_lower(content_type, Req) of
+        "multipart/form-data" ++ _  -> true;
+        _                           -> false
+    catch _:_                       -> false
     end.
 
 parse_multipart(Req) ->
     try
         % Get the boundary...
-        {_K, _V, Props} = parse_header(Req:header(content_type)),
-        Length = to_integer(Req:header(content_length)),
+        {_K, _V, Props} = parse_header(sbw:header(content_type, Req)),
+        Length = to_integer(sbw:header(content_length, Req)),
         Boundary = to_binary(proplists:get_value("boundary", Props)),
 
         % Throw exception if the post is getting too big.
@@ -67,7 +65,7 @@ parse_multipart(Req) ->
         end,
 
         % Get whatever the underlying server has already read...
-        Data = to_binary(Req:request_body()),
+        Data = to_binary(sbw:request_body(Req)),
 
         % Create the state...
         State = #state { req = Req, boundary = Boundary, length=Length, bytes_read = size(Data), parts = [] },
@@ -191,7 +189,7 @@ get_next_line(Data, Acc, Part, State) when Data == undefined orelse Data == <<>>
 
 read_chunk(State = #state { req=Req, length=Length, bytes_read=BytesRead }) ->
     BytesToRead = lists:min([Length - BytesRead, ?CHUNKSIZE]),
-    Data = Req:recv_from_socket(BytesToRead, ?IDLE_TIMEOUT),
+    Data = sbw:recv_from_socket(BytesToRead, ?IDLE_TIMEOUT, Req),
     NewBytesRead = BytesRead + size(Data),
 
     % Throw exception if the post is getting too big...
@@ -229,11 +227,7 @@ parse_keyvalue(Char, S) ->
         unquote_header(string:strip(Value))}.
 
 get_max_post_size() ->
-    Size = case init:get_argument(simple_bridge_max_post_size) of
-               {ok, [[Value]]} -> list_to_integer(Value);
-               _ -> ?MAX_POST_SIZE
-           end,
-    Size * 1024 * 1024.
+    simple_bridge_util:get_max_post_size(?MAX_POST_SIZE).
 
 
 % unquote_header borrowed from Mochiweb.

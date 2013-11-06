@@ -23,14 +23,14 @@
 ]).
 
 
-% Override with -simple_bridge_scratch_dir Directory
+% Override with config variable {scratch_dir, Directory}
 -define (SCRATCH_DIR, "./scratch").
 
-% Override with -simple_bridge_max_file_in_memory_size SizeInMB
+% Override with config var {max_file_in_memory_size, SizeInMB}
 % for backwards compatibility default is 0
 -define (MAX_MEMORY_SIZE, 0).
 
-% Override with -simple_bridge_max_file_size SizeInMB
+% Override with config var {max_file_size, SizeInMB}
 -define (MAX_FILE_SIZE, 100).
 
 
@@ -190,24 +190,13 @@ handle_get_data({memory, {_FileName, DataState, _CurrentSize}, _}) -> DataState.
 handle_complete_file(State) -> State.
 
 get_tempfilename() ->
-    Dir = case init:get_argument(simple_bridge_scratch_dir) of
-              {ok, [[Value]]} -> Value;
-              _ -> ?SCRATCH_DIR
-          end,
+	Dir = simple_bridge_util:get_scratch_dir(?SCRATCH_DIR),
     Parts = [integer_to_list(X) || X <- binary_to_list(erlang:md5(term_to_binary(erlang:now())))],
     filename:join([Dir, string:join(Parts, "-")]).
 
 
 get_max_file_size() ->
-    Size = case init:get_argument(simple_bridge_max_file_size) of
-               {ok, [[Value]]} -> list_to_integer(Value);
-               _ -> ?MAX_FILE_SIZE
-           end,
-    Size * 1024 * 1024.
+	simple_bridge_util:get_max_file_size(?MAX_FILE_SIZE).
 
 get_max_memory_size() ->
-    Size = case init:get_argument(simple_bridge_max_file_in_memory_size) of
-               {ok, [[Value]]} -> list_to_integer(Value);
-               _ -> ?MAX_MEMORY_SIZE
-           end,
-    Size * 1024 * 1024.
+	simple_bridge_util:get_max_file_in_memory_size(?MAX_MEMORY_SIZE).

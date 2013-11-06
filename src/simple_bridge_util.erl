@@ -8,6 +8,10 @@
     get_docroot/1,
     get_static_paths/1,
     get_docroot_and_static_paths/1,
+    get_max_post_size/1,
+    get_max_file_size/1,
+    get_max_file_in_memory_size/1,
+    get_scratch_dir/1,
     atomize_header/1,
     deatomize_header/1,
     binarize_header/1,
@@ -39,6 +43,11 @@ get_env(Key) ->
 
 get_env([], Default) ->
     Default;
+get_env([{'INIT-ARG', Key}|AppKeys], Default) ->
+    case init:get_argument(Key) of
+        {ok, [[Value]]} -> Value;
+        _ -> undefined
+    end;
 get_env([{App,Key}|AppKeys], Default) ->
     case application:get_env(App,Key) of
         {ok, V} -> V;
@@ -48,33 +57,59 @@ get_env(Key, Default) when is_atom(Key) ->
     get_env([{simple_bridge, Key}], Default).
 
 get_address_and_port(BackendApp) ->
-    Address =   simple_bridge_util:get_env([{simple_bridge,address},
-                                            {simple_bridge,bind_address},
-                                            {BackendApp, address},
-                                            {BackendApp,bind_address}],
-                                            ?DEFAULT_IP),
+    Address = get_env([{simple_bridge,address},
+                       {simple_bridge,bind_address},
+                       {BackendApp, address},
+                       {BackendApp,bind_address}],
+                       ?DEFAULT_IP),
 
-    Port =      simple_bridge_util:get_env([{simple_bridge,port},
-                                            {simple_bridge,bind_port},
-                                            {BackendApp, port},
-                                            {BackendApp, bind_port}],
-                                            ?DEFAULT_PORT),
+    Port =    get_env([{simple_bridge,port},
+                       {simple_bridge,bind_port},
+                       {BackendApp, port},
+                       {BackendApp, bind_port}],
+                       ?DEFAULT_PORT),
     {Address, Port}.
 
 get_docroot(BackendApp) ->
-    simple_bridge_util:get_env([{simple_bridge,document_root},
-                                {BackendApp, document_root}],
-                                ?DEFAULT_DOCROOT).
+    get_env([{simple_bridge,document_root},
+             {BackendApp, document_root}],
+             ?DEFAULT_DOCROOT).
 
 get_static_paths(BackendApp) ->
-    simple_bridge_util:get_env([{simple_bridge,static_paths},
-                                {BackendApp, static_paths}],
-                                ?DEFAULT_STATIC_PATHS).
+    get_env([{simple_bridge,static_paths},
+             {BackendApp, static_paths}],
+             ?DEFAULT_STATIC_PATHS).
 
 get_docroot_and_static_paths(BackendApp) ->
     DocRoot = get_docroot(BackendApp),
     StaticPaths = get_static_paths(BackendApp),
     {DocRoot, StaticPaths}.
+
+get_env_or_init(ConfigVar, InitVar, Default) ->
+    case get_env([{simple_bridge, ConfigVar},
+                  {'INIT-ARG', InitVar}]) of
+        undefined -> Default;
+        Other -> Other
+    end.
+
+get_scratch_dir(Default) ->
+    get_env_or_init(scratch_dir, simple_bridge_scratch_dir, Default).
+
+get_max_size(ConfigVar, InitVar, Default) ->
+    Size = case get_env_or_init(ConfigVar, InitVar, Default) of
+        L when is_list(L) -> list_to_integer(L);
+        I when is_integer(I); is_float(I) -> I
+    end,
+    Size * 1024 * 1024.
+
+get_max_post_size(Default) ->
+    get_max_size(max_post_size, simple_bridge_max_post_size, Default).
+
+get_max_file_size(Default) ->
+    get_max_size(max_file_size, simple_bridge_max_file_size, Default).
+
+get_max_file_in_memory_size(Default) ->
+    get_max_size(max_file_in_memory_size, simple_bridge_max_file_in_memory_size, Default).
 
 is_static_path(Backend, URI) ->
     StaticPaths = get_static_paths(Backend),
