@@ -19,7 +19,7 @@ loop(Req) ->
                 Callout = simple_bridge_util:get_env(callout),
                 case simple_bridge_websocket:attempt_hijacking(Bridge, Callout) of
                     {hijacked, closed} ->
-                        io:format("Result of Closing Socket: ~p",[gen_tcp:close(Bridge:socket())]);
+                        gen_tcp:close(Bridge:socket());
                     {hijacked, Bridge2} ->
                         Bridge2:build_response();
                     spared ->

@@ -43,17 +43,14 @@ attempt_hijacking(Bridge, Callout) ->
     ConnectionHeader = sbw:header_lower(connection, Bridge),
     WSVersionHead = sbw:header("Sec-WebSocket-Version", Bridge),
     
-    io:format("~p:~p:~p:~p~n",[ProtocolVersion, UpgradeHeader, ConnectionHeader, WSVersionHead]),
     if
         ProtocolVersion     =:= {1,1},
         UpgradeHeader       =:= "websocket",
         ConnectionHeader    =:= "upgrade",
         WSVersionHead       =/= undefined ->
-            io:format("Passed checks, Attempting to hijack~n"),
             WSVersions = re:split(WSVersionHead, "[, ]+]", [{return, list}]),
             HijackedBridge = case lists:member(?WS_VERSION, WSVersions) of
                 true ->
-                    io:format("Version Check passed. Hijacking~n"),
                     hijack(Bridge, Callout);
                 false ->
                     hijack_request_fail(Bridge)
@@ -77,11 +74,9 @@ prepare_response_key(WSKey) ->
 
 hijack(Bridge, Callout) ->
     try
-    io:format("Hijacking~n"),
     WSKey = sbw:header("Sec-Websocket-Key", Bridge),
     ResponseKey = prepare_response_key(WSKey),
     Socket = sbw:socket(Bridge),
-    io:format("Socket Options: ~p~n",[inet:getopts(Socket,[buffer, packet])]),
     inet:setopts(Socket, [{buffer,65535}]),
     send_handshake_response(Socket, ResponseKey),
     case erlang:function_exported(Callout, ws_init, 1) of
@@ -101,7 +96,6 @@ send_handshake_response(Socket, ResponseKey) ->
                  <<"Sec-WebSocket-Accept: ">>,ResponseKey,<<"\r\n">>,
                  <<"\r\n">>
                 ],
-    error_logger:info_msg("Handshake: ~s~n", [Handshake]),
     gen_tcp:send(Socket, Handshake).
 
 
@@ -110,13 +104,11 @@ websocket_loop(Socket, Bridge, Callout, PartialData) ->
         receive 
             {tcp, Socket, Data} ->
                 AttemptPacket = <<(PartialData#partial_data.data)/binary, Data/binary>>,
-                %io:format("Assembled Packet Size: ~p (~p)~n",[byte_size(AttemptPacket), binary:part(AttemptPacket, 0, 2)]),
                 Frames = parse_frame(AttemptPacket),
                 
                 PendingFrames = PartialData#partial_data.message_frames,
                 case process_frames(Frames, Socket, Bridge, Callout, PendingFrames) of
                     {PendingFrames2, RemainderData} ->
-                        %io:format("Processed: Pending Frames: ~p || Extra Bytes: ~p~n", [length(PendingFrames2), byte_size(RemainderData)]),
                         inet:setopts(Socket, [{active, once}]),
                         websocket_loop(Socket, Bridge, Callout, #partial_data{data=RemainderData, message_frames=PendingFrames2});
                     closed -> closed
@@ -132,7 +124,6 @@ websocket_loop(Socket, Bridge, Callout, PartialData) ->
         exit:{websocket, ReasonCode, Reason} ->
             send(Socket, {close, ReasonCode}),
             gen_tcp:close(Socket),
-            error_logger:info_msg("Closing Websocket For: ~p~n",[Reason]),
             %% cascade the error up
             exit(normal)
     end.
@@ -182,10 +173,8 @@ send_fragments_rest(Socket, [{_,Data}|T]) ->
     
 
 send_frame(Socket, F) ->
-    {EncodeTime, BinFrame} = timer:tc(fun() -> encode_frame(F) end),
-    io:format("Time to encode frame of ~p bytes: ~p ms~n",[byte_size(BinFrame), EncodeTime div 1000]),
-    {SendTime, _} = timer:tc(fun() -> gen_tcp:send(Socket, BinFrame) end),
-    io:format("Time to send ~p bytes: ~p~n",[byte_size(BinFrame), SendTime div 1000]).
+    BinFrame = encode_frame(F),
+    gen_tcp:send(Socket, BinFrame).
     
 
 encode_frame(#frame{
@@ -195,7 +184,6 @@ encode_frame(#frame{
         %% masked=Masked, mask_key=Mask,
         data=Data}) ->
     BinData = iolist_to_binary(Data),
-    io:format("Sending Byte Size: ~p",[byte_size(BinData)]),
     {PayloadLen, ExtLen, ExtBitSize} = case byte_size(BinData) of
         L when L < 126   -> {L, 0, 0};
         L when L < 65536 -> {126, L, 16};
@@ -217,7 +205,6 @@ process_frames([], _Socket, _Bridge, _Callout, PendingFrames) ->
 
 %% Done processing frames, and we have some left-over binary data
 process_frames([Bin], _Socket, _Bridge, _Callout, PendingFrames) when is_binary(Bin) ->
-    %io:format("Current Accumulated Binary size: ~p~n",[byte_size(Bin)]),
     {PendingFrames, Bin};
 
 %% Handling erroneous Frams:
@@ -311,10 +298,8 @@ type(?WS_TEXT) -> text.
 -define(DO_FRAMES(Mask),
     if 
         byte_size(Data) >= PayloadLen ->
-            %io:format("We have a complete frame: ~p > ~p~n",[byte_size(Data), PayloadLen]),
             do_frames(Fin,RSV,Op,PayloadLen,Mask,Data);
         ?else ->
-            %%io:format("Received: ~p of ~p~n", [byte_size(Data), PayloadLen]),
             [Raw]
     end).
 
@@ -341,12 +326,10 @@ parse_frame(Raw = <<Fin:1, RSV:3, Op:4,   ?WS_MASKED:1,   PayloadLen:7,         
 parse_frame(<<_:8,                        ?WS_UNMASKED:1, _/binary>>) ->
     close_with_purpose(1002, unmasked_packet_received_from_client);
 parse_frame(Data) ->
-    io:format("Unable to parse frame of size ~p~n",[byte_size(Data)]),
     [Data]. %% not enough data to parse the frame, so just return the data, and we'll try after we get more data
 
 do_frames(Fin, RSV, Op, PayloadLen, Mask, Data) ->
     F = #frame{fin=Fin, rsv=RSV, opcode=Op, masked=1, payload_len=PayloadLen, mask_key=Mask, data = <<>>},
-    %io:format("Frame payload length: ~p~n",[PayloadLen]),
     append_frame_data_and_parse_remainder(F, Data).
 
 append_frame_data_and_parse_remainder(F = #frame{payload_len=PayloadLen, mask_key=Mask, data=CurrentPayload}, Data) ->
@@ -354,17 +337,18 @@ append_frame_data_and_parse_remainder(F = #frame{payload_len=PayloadLen, mask_ke
     Length = byte_size(FullData),
     if
         Length =:= PayloadLen ->
-            %io:format("Completed Frame~n"),
             Unmasked = apply_mask(Mask, FullData),
             [F#frame{data=Unmasked}, <<>>];
 
         Length > PayloadLen  ->
-            %% Since the length of the received data is longer than the required payload length, break off the part we want for our frame
-            %io:format("More than one frame, ~p > ~p~n",[Length, PayloadLen]),
+            %% Since the length of the received data is longer than the
+            %% required payload length, break off the part we want for our
+            %% frame
             FrameData = binary:part(FullData, 0, PayloadLen),
             Unmasked = apply_mask(Mask, FrameData),
 
-            %% Then let's break off the remainder of the binary, we're going to try parsing this, too
+            %% Then let's break off the remainder of the binary, we're going to
+            %% try parsing this, too
             RemainingData = binary:part(Data, PayloadLen, Length-PayloadLen),
             [F#frame{data=Unmasked} | parse_frame(RemainingData)]
     end.
@@ -373,7 +357,6 @@ apply_mask(<<Mask:32>>, Data) ->
     apply_mask(Mask, Data);
 apply_mask(Mask, Data) ->
     {Time, Unmasked} = timer:tc(fun apply_mask/3, [Mask, Data,<<>>]),
-    io:format("Time to apply mask to ~p bytes: ~p ms~n",[byte_size(Data), Time div 1000]),
     Unmasked.
 
 apply_mask(_, <<>>, Acc) ->
