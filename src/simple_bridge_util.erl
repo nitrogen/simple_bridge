@@ -24,7 +24,6 @@
     default_static_expires_header/0,
     ensure_expires_header/1,
     needs_expires_header/1,
-    massage_websocket_reply/2,
     parse_ip/1
 ]).
 
@@ -257,20 +256,6 @@ to_binary(A) when is_atom(A) ->
 to_binary(L) ->
     iolist_to_binary(L).
 
-massage_websocket_reply({reply, Text}, _State) when is_list(Text); is_binary(Text) ->
-    {reply, {binary, iolist_to_binary(Text)}};
-massage_websocket_reply({reply, {binary, Text}}, _State) ->
-    {reply, {binary, iolist_to_binary(Text)}};
-massage_websocket_reply({reply, {text, Text}}, _State) ->
-    {reply, {text, iolist_to_binary(Text)}}.
-%%massage_websocket_reply({close, StatusCode}) when is_integer(StatusCode) ->
-%%    {close, StatusCode};
-%%massage_websocket_reply({close, {StatusCode, Reason}}) ->
-%%    {close, {StatusCode, iolist_to_binary(Reason)}}.
-%%massage_websocket_reply({close, StatusCode, Reply}) when is_integer(StatusCode) ->
-%%    {close, StatusCode};
-%%massage_websocket_reply({close, {StatusCode, Reason}}) ->
-%%    {close, {StatusCode, iolist_to_binary(Reason)}};
 
 
 %% This is borrowed from Nitrogen

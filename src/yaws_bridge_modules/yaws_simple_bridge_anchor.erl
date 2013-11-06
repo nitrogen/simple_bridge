@@ -26,13 +26,26 @@ init([_Arg, State={Callout, Bridge}]) ->
     Callout:ws_init(Bridge),
     {ok, State}.
 
+handle_message({close, Status, Reason}, State) ->
+    {close, {Status, Reason}, State};
+
 handle_message(Data, State={Callout, Bridge}) ->
     Result = Callout:ws_message(Data, Bridge),
-    simple_bridge_util:massage_websocket_reply(Result, State).
+    Reply = massage_reply(Result, State),
+    Reply.
 
 handle_info(Data, State={Callout, Bridge}) ->
     Result = Callout:ws_info(Data, Bridge),
-    simple_bridge_util:massage_websocket_reply(Result, State).
+    Reply = massage_reply(Result, State),
+    Reply.
 
 terminate(Reason, {Callout, Bridge}) ->
     ok = Callout:ws_terminate(Reason, Bridge).
+
+massage_reply(noreply, State) ->
+    {noreply, State};
+massage_reply({reply, {Type, Data}}, State)
+        when Type==binary; Type==text ->
+    {reply, {Type, iolist_to_binary(Data)}, State};
+massage_reply(close, State) ->
+    {close, 1000, State}.
