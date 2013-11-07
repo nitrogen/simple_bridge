@@ -133,7 +133,23 @@ request_method(Wrapper) ->
             list_to_atom(Method);
         Method when is_atom(Method) ->
             Method
+     end.
+
+
+recv_from_socket(Length, Timeout, Wrapper) ->
+	Mod = Wrapper#sbw.mod,
+	Req = Wrapper#sbw.req,
+    case erlang:function_exported(Mod, recv_from_socket, 3) of
+        true ->  Mod:recv_from_socket(Length, Timeout, Req);
+        false -> throw({not_supported, Mod, recv_from_socket})
     end.
+
+%% FILES
+
+post_files(Wrapper) ->
+	Wrapper#sbw.post_files.
+
+%% REQUEST HEADERS
 
 pre_process_headers(Headers) ->
 	[pre_process_header(Header) || Header <- Headers].
@@ -172,7 +188,10 @@ header_lower(Header, Wrapper) ->
 			string:to_lower(Other)
 	end.
 
+%% REQUEST COOKIES
+
 ?PASSTHROUGH(cookies).
+
 cookie(Cookie, Wrapper) ->
 	Mod = Wrapper#sbw.mod,
 	Req = Wrapper#sbw.req,
@@ -183,6 +202,8 @@ cookie(Cookie, Wrapper) ->
             Cookies = Mod:cookies(Req),
             proplists:get_value(Cookie, Cookies)
     end.
+
+%% PARAM GROUPS
 
 param_group(Param, Wrapper) ->
     param_group(Param, [], Wrapper).
@@ -212,6 +233,8 @@ post_param_group(Param, DefaultValue, Wrapper) ->
 		L -> L
 	end.    
 
+%% QUERY PARAMS
+
 ?PASSTHROUGH(query_params).
 
 query_param(Param, Wrapper) ->
@@ -219,6 +242,8 @@ query_param(Param, Wrapper) ->
 
 query_param(Param, DefaultValue, Wrapper) ->
     proplists:get_value(Param, query_params(Wrapper), DefaultValue).
+
+%% POST PARAMS
 
 post_params(Wrapper) ->
 	Mod = Wrapper#sbw.mod,
@@ -237,22 +262,16 @@ post_param(Param, Wrapper) ->
 post_param(Param, DefaultValue, Wrapper) ->
     proplists:get_value(Param, post_params(Wrapper), DefaultValue).
 
+%% AGNOSTIC PARAMS
+
 param(Param, Wrapper) ->
     param(Param, undefined, Wrapper).
 
 param(Param, DefaultValue, Wrapper) ->
     post_param(Param, query_param(Param, DefaultValue, Wrapper)).
 
-post_files(Wrapper) ->
-	Wrapper#sbw.post_files.
 
-recv_from_socket(Length, Timeout, Wrapper) ->
-	Mod = Wrapper#sbw.mod,
-	Req = Wrapper#sbw.req,
-    case erlang:function_exported(Mod, recv_from_socket, 3) of
-        true ->  Mod:recv_from_socket(Length, Timeout, Req);
-        false -> throw({not_supported, Mod, recv_from_socket})
-    end.
+%% DEEP PARAM STUFF
 
 deep_post_params(Wrapper) ->
     Params = post_params(Wrapper),
@@ -359,7 +378,8 @@ update_response(Fun, Wrapper) ->
 	Wrapper#sbw{response=NewRes}.
 
 
-%% Backwards compatible calls below
+%% DEPRECATED RESPONSE WRAPPERS
+
 status_code(StatusCode, Wrapper) ->
 	set_status_code(StatusCode, Wrapper).
 
