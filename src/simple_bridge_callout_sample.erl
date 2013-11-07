@@ -85,5 +85,5 @@ connection_info(Bridge) ->
     ].
 
 draw_connection_info(Field, Bridge) ->
-    io_lib:format("<tr><td>~p</td><td><pre>~p</pre></td></tr>",[Field, Bridge:Field()]).
+    io_lib:format("<tr><td>~p</td><td><pre>~p</pre></td></tr>",[Field, sbw:Field(Bridge)]).
 

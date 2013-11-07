@@ -22,6 +22,7 @@
         query_params/1,
         post_params/1,
         request_body/1,
+        socket/1,
         recv_from_socket/3,
         protocol_version/1
     ]).
@@ -114,6 +115,9 @@ request_body(ReqKey) ->
     end,
     put_key(ReqKey, RequestCache#request_cache{body = Body, request = NewReq}),
     Body.
+
+socket(_ReqKey) ->
+    undefined.
 
 %% TODO: Cowboy's stream_body doesn't support customizable Length and Timeout
 recv_from_socket(_Length, _Timeout, ReqKey) ->
