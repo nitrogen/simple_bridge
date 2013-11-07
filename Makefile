@@ -43,7 +43,6 @@ run_yaws:
 
 run:
 	erl -pa ebin/ -pa deps/*/ebin \
-		-config etc/$(BACKEND).config \
 		-config etc/simple_bridge.config \
 		-simple_bridge backend $(BACKEND) \
 		-eval "application:start(simple_bridge)"
