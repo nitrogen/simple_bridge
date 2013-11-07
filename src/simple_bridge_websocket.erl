@@ -44,7 +44,7 @@ attempt_hijacking(Bridge, Callout) ->
     WSVersionHead = sbw:header("Sec-WebSocket-Version", Bridge),
     
     if
-        ProtocolVersion     =:= {1,1},
+        ProtocolVersion     >= {1,1},
         UpgradeHeader       =:= "websocket",
         ConnectionHeader    =:= "upgrade",
         WSVersionHead       =/= undefined ->
