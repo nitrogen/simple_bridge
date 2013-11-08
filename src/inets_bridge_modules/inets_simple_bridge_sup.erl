@@ -57,7 +57,7 @@ build_config() ->
         {server_root, "."},
         {document_root, DocRoot},
         {error_log, "./log/inets.log"},
-        {modules, [inets_simple_bridge_anchor]},
+        {modules, [simple_bridge_util:get_anchor_module(inets)]},
         {mime_types, build_mimetypes()}
     ]},
 

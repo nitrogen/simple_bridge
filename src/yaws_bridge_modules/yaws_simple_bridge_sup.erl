@@ -38,8 +38,9 @@ start_embedded_yaws() ->
     {Address, Port} = simple_bridge_util:get_address_and_port(yaws),
     RealAddress = simple_bridge_util:parse_ip(Address),
     Servername = simple_bridge_util:to_list(simple_bridge_util:get_server_name(yaws)),
+    Anchor = simple_bridge_util:get_anchor_module(yaws),
     ExcludePaths = [filename:split(P) || P <- StaticPaths],
-    Appmods = [{"/", yaws_simple_bridge_anchor, ExcludePaths}],
+    Appmods = [{"/", Anchor, ExcludePaths}],
 
     SConf = [
         {servername, Servername ++ ":" ++ integer_to_list(Port)},

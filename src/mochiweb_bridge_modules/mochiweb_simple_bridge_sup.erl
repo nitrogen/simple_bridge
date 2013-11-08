@@ -27,13 +27,11 @@ init([]) ->
 
     {Address, Port} = simple_bridge_util:get_address_and_port(mochiweb),
 
-
-    ServerName = simple_bridge_util:get_env([
-                                                {simple_bridge, server_name},
-                                                {mochiweb, server_name}
-                                            ], simple_bridge_mochiweb),
+    ServerName = simple_bridge_util:get_server_name(mochiweb),
 
     {DocRoot, StaticPaths} = simple_bridge_util:get_docroot_and_static_paths(mochiweb),
+
+    Anchor = simple_bridge_util:get_anchor_module(mochiweb),
 
     io:format("Starting Mochiweb Server on ~s:~p~n", [Address, Port]),
     io:format("Static Paths: ~p~nDocument Root for Static: ~s~n", [StaticPaths, DocRoot]),
@@ -43,7 +41,7 @@ init([]) ->
         {name, ServerName},
         {ip, Address}, 
         {port, Port},
-        {loop, fun mochiweb_simple_bridge_anchor:loop/1}
+        {loop, fun Anchor:loop/1}
     ],
     mochiweb_http:start(Options),
 

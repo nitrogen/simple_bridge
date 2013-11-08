@@ -4,6 +4,7 @@
 -export([
     get_env/1,
     get_env/2,
+    get_anchor_module/1,
     get_server_name/1,
     get_address_and_port/1,
     get_docroot/1,
@@ -56,6 +57,11 @@ get_env([{App,Key}|AppKeys], Default) ->
     end;
 get_env(Key, Default) when is_atom(Key) ->
     get_env([{simple_bridge, Key}], Default).
+
+get_anchor_module(BackendApp) ->
+    get_env([{simple_bridge, anchor},
+             {BackendApp, anchor}],
+            list_to_atom(atom_to_list(BackendApp) ++ "_simple_bridge_anchor")).
 
 get_server_name(BackendApp) ->
     get_env([{simple_bridge, server_name},

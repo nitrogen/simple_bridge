@@ -85,7 +85,7 @@ build_dispatch(DocRoot, StaticPaths) ->
         %% {["path","to","module1",'*'], HandlerModule1, InitialState1}
         %% {["path","to","module2",'*'], HandlerModule2, InitialState2}
         %% {["path","to","module3",'*'], HandlerModule3, InitialState3}
-        {['*'], webmachine_simple_bridge_anchor, Callout}
+        {['*'], simple_bridge_util:get_anchor_module(webmachine), Callout}
     ].
 
 join_path(Root,Path) when is_binary(Root) orelse is_binary(Path) ->

@@ -82,7 +82,7 @@ build_dispatch(DocRoot,StaticPaths) ->
     end,StaticPaths),
 
     %% HandlerModule will end up calling HandlerModule:handle(Req,HandlerOpts)
-    HandlerModule = cowboy_simple_bridge_anchor,
+    HandlerModule = simple_bridge_util:get_anchor_module(cowboy),
     HandlerOpts = [],
 
     %% Start Cowboy...
