@@ -47,7 +47,7 @@ get_env([], Default) ->
 get_env([{'INIT-ARG', Key}|AppKeys], Default) ->
     case init:get_argument(Key) of
         {ok, [[Value]]} -> Value;
-        _ -> undefined
+        _ -> get_env(AppKeys, Default)
     end;
 get_env([{App,Key}|AppKeys], Default) ->
     case application:get_env(App,Key) of
