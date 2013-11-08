@@ -8,32 +8,32 @@
 -include ("simple_bridge.hrl").
 
 -export ([
-		init/1,
-		protocol/1,
-		request_method/1, 
-		path/1, 
-		uri/1,
-		peer_ip/1, 
-		peer_port/1,
-		headers/1, 
-		cookies/1,
-		query_params/1, 
-		post_params/1, 
-		request_body/1,
-		socket/1,
-		recv_from_socket/3,
-		protocol_version/1
-	]).
+        init/1,
+        protocol/1,
+        request_method/1, 
+        path/1, 
+        uri/1,
+        peer_ip/1, 
+        peer_port/1,
+        headers/1, 
+        cookies/1,
+        query_params/1, 
+        post_params/1, 
+        request_body/1,
+        socket/1,
+        recv_from_socket/3,
+        protocol_version/1
+    ]).
 
 -export([
-		build_response/2
-	]).
+        build_response/2
+    ]).
 
 init(Req) -> 
     Req.
 
 protocol(Req) ->
-	wrq:scheme(Req).
+    wrq:scheme(Req).
 
 request_method(Req) -> 
     wrq:method(Req).
@@ -52,8 +52,8 @@ peer_port(Req) ->
     wrq:port(Req).
 
 headers(Req) ->
-	Mochiheaders = wrq:req_headers(Req),
-	mochiweb_headers:to_list(Mochiheaders).
+    Mochiheaders = wrq:req_headers(Req),
+    mochiweb_headers:to_list(Mochiheaders).
 
 cookies(Req) ->
     wrq:req_cookie(Req).
@@ -71,17 +71,20 @@ request_body(Req) ->
     wrq:req_body(Req).
 
 socket(Req) ->
-	%% 7th element of wm_reqdata record is wm_state, which contains another
-	%% record, but which can be interacted with through
-	%% webmachine_request:socket
-	%% 
-	%% If this suddenly starts breaking, then we need to verify the record
-	%% structure of wm_reqdata.hrl
-	%%
-	%% https://github.com/basho/webmachine/blob/master/include/wm_reqdata.hrl
-	ReqState = element(7, Req), 
-	{Socket, _} = webmachine_request:socket(ReqState),
-	Socket.
+    %% If https://github.com/basho/webmachine/pull/175 is accepted, change to:
+    %% wrq:socket(Req).
+
+    %% 7th element of wm_reqdata record is wm_state, which contains another
+    %% record, but which can be interacted with through
+    %% webmachine_request:socket
+    %% 
+    %% If this suddenly starts breaking, then we need to verify the record
+    %% structure of wm_reqdata.hrl
+    %%
+    %% https://github.com/basho/webmachine/blob/master/include/wm_reqdata.hrl
+    ReqState = element(7, Req), 
+    {Socket, _} = webmachine_request:socket(ReqState),
+    Socket.
 
 recv_from_socket(Length, Timeout, Req) ->
     Socket = socket(Req),
