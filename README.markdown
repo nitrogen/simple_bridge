@@ -306,6 +306,28 @@ future code, as they are deprecated.
   * *sbw:data/2* - equivilant to `sbw:set_response_data/2`
   * *sbw:file/2* - equivilant to `sbw:set_response_file/2`
 
+## Configuration Options
+
+The configuration optiosn found in `etc/simple_bridge.config` are all full
+documented within the config file itself.  Feel free to copy it to your project
+and use it as a base.
+
+## TODO
+
+#### Version 2.0 TODO
+
+* Fix the `simple_bridge:ensure_header` stuff to use binaries and require less
+  conversion.
+* Add Typespecs
+* Ensure that internally, `sbw:function` is used everywhere instead of
+  `Bridge:function`.
+* Test with dialyzer after being converted to `sbw:function`
+* Re-implement test suite
+
+#### Beyond 2.0
+
+* Support compression in websockets?
+
 ## Questions or Comments
 
 We can be found on:
