@@ -221,10 +221,10 @@ response bridge in your application. A single bridge will do, pig.)
   * **sbw:error(Bridge)** - returns an Erlang term describing any errors that
     happened while parsing a multipart post.
 
-*(+)* Return Values will be a proplist of binaries. Keys are normalized to
+**(+)** Return Values will be a proplist of binaries. Keys are normalized to
 lower-case binaries.
 
-*(++)* Return type will be dependent on the provided Key (`Cookie`, `Header`,
+**(++)** Return type will be dependent on the provided Key (`Cookie`, `Header`,
 `Param`, etc).  If the Key is a binary, the return type will be binary. If Key
 is an atom or a string (list), the return type will be a string.
 
@@ -247,19 +247,19 @@ As with the Bridge module above, all `sb_uploaded_file` objects can be reference
 
 `sb_uploaded_file` exports the following functions:
 
-  * *sb_uploaded_file:original_name(UploadedFile)* - The original name of the file from the
+  * **sb_uploaded_file:original_name(UploadedFile)** - The original name of the file from the
     user's system
-  * *sb_uploaded_file:temp_file(UploadedFile)* - The temporary name for the file as it's stored
+  * **sb_uploaded_file:temp_file(UploadedFile)** - The temporary name for the file as it's stored
     on the server. Returns `undefined` if file is kept in memory.
-  * *sb_uploaded_file:size(UploadedFile)* - The size of the file in bytes
-  * *sb_uploaded_file:field_name(UploadedFile)* - The name of the HTML `<input type=file>`
+  * **sb_uploaded_file:size(UploadedFile)** - The size of the file in bytes
+  * **sb_uploaded_file:field_name(UploadedFile)** - The name of the HTML `<input type=file>`
     element from the page.
-  * *sb_uploaded_file:data(UploadedFile)* - The entire data of uploaded file. Returns `undefined`
+  * **sb_uploaded_file:data(UploadedFile)** - The entire data of uploaded file. Returns `undefined`
     if file is stored as temporary file on disk.
 
 By default uploaded files are always stored in temporary file
-*sb_uploaded_file:temp_file(UploadedFile)*.  If you want to keep the uploaded
-files in memory (*sb_uploaded_file:data(UploadedFile)*) instead of on disk, set
+`sb_uploaded_file:temp_file(UploadedFile)`.  If you want to keep the uploaded
+files in memory (`sb_uploaded_file:data(UploadedFile)`) instead of on disk, set
 the max memory size for uploaded files by setting the `simple_bridge`
 configuration variable `{max_file_in_memory_size, SizeinMB}`.  Uploaded files
 larger than `SizeInMB` are still stored in temporary files.
@@ -291,34 +291,34 @@ Erlang calling syntax or use the P-mod style:
 
 The Bridge modules export the following functions:
 
-  * *sbw:set_status_code(Code, Bridge)* - set the HTTP status code. (200, 404, etc.)
-  * *sbw:set_header(Name, Value, Bridge)* - set an HTTP header.
-  * *sbw:clear_headers(Bridge)* - clear all previously set headers.
-  * *sbw:set_cookie(Name, Value, Bridge)* - set a cookie for path "/" with expiration in
+  * **sbw:set_status_code(Code, Bridge)** - set the HTTP status code. (200, 404, etc.)
+  * **sbw:set_header(Name, Value, Bridge)** - set an HTTP header.
+  * **sbw:clear_headers(Bridge)** - clear all previously set headers.
+  * **sbw:set_cookie(Name, Value, Bridge)** - set a cookie for path "/" with expiration in
     20 minutes.
-  * *sbw:set_cookie(Name, Value, Path, Exp, Bridge)* - Set a cookie. Exp is an integer
+  * **sbw:set_cookie(Name, Value, Path, Exp, Bridge)** - Set a cookie. Exp is an integer
     in minutes.
-  * *sbw:clear_cookies(Bridge)* - clear all previously set cookies.
-  * *sbw:set_response_data(Data, Bridge)* - set the data to return in the response. Usually HTML
+  * **sbw:clear_cookies(Bridge)** - clear all previously set cookies.
+  * **sbw:set_response_data(Data, Bridge)** - set the data to return in the response. Usually HTML
     goes here.
-  * *sbw:set_response_file(File, Bridge)* - Send a static file to the browser.
+  * **sbw:set_response_file(File, Bridge)** - Send a static file to the browser.
 
 
 Finally, you build the response to send to your HTTP server with the
 build_response/0 function.
 
-  * *sbw:build_response(Bridge)* - Create a response tuple that you can hand
+  * **sbw:build_response(Bridge)** - Create a response tuple that you can hand
     off to your HTTP server.
 
 **DEPRECATION NOTICE:** For backwards compatibility with SimpleBridge Version
 1, the following functions are also exported. Please refrain from using them in
 future code, as they are deprecated.
 
-  * *sbw:status_code/2* - equivilant to `sbw:set_status_code/2`.
-  * *sbw:header/3* - equivilant to `sbw:set_header/3`
-  * *sbw:cookie/3,5* - equivilant to `sbw:set_cookie/3/5`
-  * *sbw:data/2* - equivilant to `sbw:set_response_data/2`
-  * *sbw:file/2* - equivilant to `sbw:set_response_file/2`
+  * **sbw:status_code/2** - equivilant to `sbw:set_status_code/2`.
+  * **sbw:header/3** - equivilant to `sbw:set_header/3`
+  * **sbw:cookie/3,5** - equivilant to `sbw:set_cookie/3/5`
+  * **sbw:data/2** - equivilant to `sbw:set_response_data/2`
+  * **sbw:file/2** - equivilant to `sbw:set_response_file/2`
 
 ## Configuration Options
 
