@@ -104,10 +104,16 @@ make_nocatch(Module, RequestData) ->
 %% please use application:start(simple_bridge),
 %%            simple_bridge:start/0-2, or
 %%            simple_bridge:make/2-3
+make_request(Module, {Req = {mochiweb_request, _}, Docroot}) ->
+	application:set_env(simple_bridge, document_root, Docroot),
+	make_request(Module, Req);
 make_request(Module, Req) ->
 	FixedModule = fix_old_modules(Module),
 	inner_make(FixedModule, Req).
 
+make_response(Module, {Req = {mochiweb_request, _}, Docroot}) ->
+	application:set_env(simple_bridge, document_root, Docroot),
+	make_response(Module, Req);
 make_response(Module, Req) ->
 	FixedModule = fix_old_modules(Module),
 	inner_make(FixedModule, Req).
