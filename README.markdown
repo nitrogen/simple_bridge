@@ -144,8 +144,8 @@ module is expected to export the following functions:
       will be verified to be valid UTF8 Unicode.
     + Return Values:
       + `noreply` - No reply will be made.
-	  + `{reply, {Type, Data}}` - `Type` can be `text` or `binary` and `Data`
-	    can be a binary, list, or iolist.
+      + `{reply, {Type, Data}}` - `Type` can be `text` or `binary` and `Data`
+        can be a binary, list, or iolist.
       + `{reply, [{Type, Data}]}` - Reply with a list of `{Type, Data}` pairs
         as a single message broken into several frames.
       + `close` - Kill the connection (will provide the Websocket Error code 1000)
@@ -156,7 +156,8 @@ module is expected to export the following functions:
     message (that is, a message was sent from an Erlang process).
     + `Message` can be any term
     + Return values are exactly the same as `ws_message`
-  + `ws_terminate(ReasonCode, Bridge)` - The websocket is shutting down with `ReasonCode`.
+  + `ws_terminate(ReasonCode, Bridge)` - The websocket is shutting down with
+    `ReasonCode`.
     + Return Value: `ok`
 
 Notice that each of the call above passes in a `Bridge` object. This object
@@ -181,38 +182,51 @@ response bridge in your application. A single bridge will do, pig.)
 
 ### Request Bridge Interface
 
-  * *sbw:request_method(Bridge)* - returns 'GET', 'POST', 'HEAD', etc.
-  * *sbw:path(Bridge)* - returns the requested path and file.
-  * *sbw:peer_ip(Bridge)* - returns the client's IP address in tuple format
+  * **sbw:request_method(Bridge)** - returns atom 'GET', 'POST', 'HEAD', etc.
+  * **sbw:path(Bridge)** - returns the requested path and file (string)
+  * **sbw:peer_ip(Bridge)** - returns the client's IP address in tuple format
     (74.125.67.100 = `{74, 125, 67, 100}`).
-  * *sbw:peer_port(Bridge)* - returns the client's port.
-  * *sbw:headers(Bridge)* - returns a proplist of headers, `{header1, "Value1"},
-    {header2, "Value2"}, ...]`.
-  * *sbw:header(HeaderBridge)* - returns the value of a header.
-  * *sbw:cookies(Bridge)* - returns a proplist of cookies, `[{"Cookie1", "Value1"},
-    {"Cookie2", "Value2"}, ...]`.
-  * *sbw:query_params(Bridge)* - returns a proplist of query params, `[{"Query1",
-    "Value1"}, {"Query2", "Value2"}, ...]`.
-  * *sbw:query_param(Param, Bridge)* - returns value of a query param named `Param`,
-    `undefined` if not found.
-  * *sbw:query_param_group(Param, Bridge)* - returns values of all query params
-    named `Param` as list, `["Value1", "Value2", ...]`,  `[]` if none found.
-  * *sbw:post_params(Bridge)* - returns a proplist of post params, `[{"Post1",
-    "Value1"}, {"Post2", "Value2"}, ...]`.
-  * *sbw:post_param(Param, Bridge)* - returns value of a post param named `Param`,
-    `undefined` if not found
-  * *sbw:post_param_group(Param, Bridge)* - returns values of all post params named
-    `Param` as list, `["Value1", "Value2", ...]`,  `[]` if none found
-  * *sbw:param(Param, Bridge)* - returns value of a query or post param named
+  * **sbw:peer_port(Bridge)** - returns the client's port (integer)
+  * **sbw:headers(Bridge)**(+) - returns a proplist of headers, `{<<"header">>,
+    <<"Value1">>}, {<<"header2">>, <<"Value2">>}, ...]`.
+  * **sbw:header(Header, Bridge)**(++) - returns the value of a header.
+  * **sbw:cookies(Bridge)**(+) - returns a proplist of cookies,
+    `[{<<"cookie1">>, <<"Value1">>}, {<<"cookie2">>, <<"Value2">>}, ...]`.
+  * **sbw:cookie(Cookie, Bridge)**(++) - returns the value of a cookie.
+  * **sbw:query_params(Bridge)**(+) - returns a proplist of query params,
+    `[{<<"Query1">>, <<"Value1">>}, {<<"Query2">>, <<"Value2">>}, ...]`.
+  * **sbw:query_param(Param, Bridge)**(++) - returns value of a query param
+    named `Param`, `undefined` if not found.
+  * **sbw:query_param_group(Param, Bridge)**(++) - returns values of all query
+    params named `Param` as list, `["Value1", "Value2", ...]`,  `[]` if none
+    found.
+  * **sbw:post_params(Bridge)**(+) - returns a proplist of post params,
+    `[{"Post1", "Value1"}, {"Post2", "Value2"}, ...]`.
+  * **sbw:post_param(Param, Bridge)**(++) - returns value of a post param named
     `Param`, `undefined` if not found
-  * *sbw:param_group(Param, Bridge)* - returns values of all query and post params
-    named Param as list, `["Value1", "Value2", ...]`,  `[]` if none fund
-  * *sbw:post_files(Bridge)* - returns a list of `#sb_uploaded_file` records,
-    describing the files uploaded in a multipart post.
-  * *sbw:request_body(Bridge)* - returns the request body that has been read so
-    far, as a list.
-  * *sbw:error(Bridge)* - returns an Erlang term describing any errors that happened
-    while parsing a multipart post.
+  * **sbw:post_param_group(Param, Bridge)**(++) - returns values of all post
+    params named `Param` as list, `["Value1", "Value2", ...]`,  `[]` if none
+    found.
+  * **sbw:param(Param, Bridge)**(++) - returns value of a query or post param
+    named `Param`, `undefined` if not found
+  * **sbw:param_group(Param, Bridge)**(++) - returns values of all query and
+    post params named Param as list, `["Value1", "Value2", ...]`,  `[]` if none
+    found.
+  * **sbw:post_files(Bridge)** - returns a list of `#sb_uploaded_file` records,
+    describing the files uploaded in a multipart post. These can be
+    conveniently interfaced with the `sb_uploaded_file` module, documented below
+    in the "Uploaded File Interface" section.
+  * **sbw:request_body(Bridge)** - returns the request body that has been read
+    so far, as a list.
+  * **sbw:error(Bridge)** - returns an Erlang term describing any errors that
+    happened while parsing a multipart post.
+
+*(+)* Return Values will be a proplist of binaries. Keys are normalized to
+lower-case binaries.
+
+*(++)* Return type will be dependent on the provided Key (`Cookie`, `Header`,
+`Param`, etc).  If the Key is a binary, the return type will be binary. If Key
+is an atom or a string (list), the return type will be a string.
 
 **Note:** When using Parameter-module style calls, simple remove the `Bridge`
 argument from the call.  For example, when using the `query_param` function as
