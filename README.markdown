@@ -335,7 +335,7 @@ We can be found on:
   * [The Nitrogen Mailing List](https://groups.google.com/forum/#!forum/nitrogenweb)
   * irc.freenode.net: #nitrogen
   * Or you can email Jesse Gumm directly at
-    [gumm@sigma-star.com](gumm@sigma-star.com)
+    [gumm@sigma-star.com](mailto:gumm@sigma-star.com)
 
 ## Contributing
 
