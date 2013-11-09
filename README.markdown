@@ -333,7 +333,7 @@ and use it as a base.
 We can be found on:
 
   * [The Nitrogen Mailing List](https://groups.google.com/forum/#!forum/nitrogenweb)
-  * #nitrogen on irc.freenode.net
+  * irc.freenode.net: #nitrogen
   * Or you can email Jesse Gumm directly at
     [gumm@sigma-star.com](gumm@sigma-star.com)
 
