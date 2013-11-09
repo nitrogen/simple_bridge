@@ -25,9 +25,6 @@
 -record(sb_uploaded_file, { original_name, temp_file, size, field_name, data }).
 -record(request_cache, {request, docroot="", body=""}).
 
--define(B2L(B), simple_bridge_util:b2l(B)).
-
-
 -define(DEFAULT_IP, 	{0,0,0,0}).
 -define(DEFAULT_PORT, 	8000).
 -define(DEFAULT_DOCROOT,"./priv/static").

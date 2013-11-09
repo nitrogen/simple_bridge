@@ -54,17 +54,17 @@ protocol(_ReqKey) ->
 request_method(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
     {Method, Req} = cowboy_req:method(Req),
-    list_to_atom(?B2L(Method)).
+    list_to_atom(simple_bridge_util:to_list(Method)).
 
 path(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
     {Path, Req} = cowboy_req:path(Req),
-    ?B2L(Path).
+    simple_bridge_util:to_list(Path).
 
 uri(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
     {URL, Req} = cowboy_req:url(Req),
-    ?B2L(URL).
+    simple_bridge_util:to_list(URL).
 
 peer_ip(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
@@ -223,7 +223,9 @@ send(Code, Headers, Cookies, Body, Req) ->
 prepare_cookies(Req, Cookies) ->
     lists:foldl(fun(C, R) ->
         Name = C#cookie.name,
-        Value = ?B2L(C#cookie.value),
+        %% In case cookie value was set to an atom, we need to make sure it's
+        %% something usable, so let's just use binary
+        Value = simple_bridge_util:to_binary(C#cookie.value),
         Path = C#cookie.path,
         SecsToLive = C#cookie.minutes_to_live * 60,
         Options = [{path, Path}, {max_age, SecsToLive}],
