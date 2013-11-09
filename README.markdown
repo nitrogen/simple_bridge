@@ -312,6 +312,68 @@ The configuration optiosn found in `etc/simple_bridge.config` are all full
 documented within the config file itself.  Feel free to copy it to your project
 and use it as a base.
 
+## Migrating from 1.x to 2.x?
+
+Simple Bridge 2.0 should be *mostly* compatible with 1.x versions mostly right
+out of the box, but is only compatible through deprecations.
+
+The recommended approach to migrating to 2.x is to remove instantiating your
+Bridge altogether (that is, remove your `simple_bridge:make_request` and
+`simple_bridge:make_response` functions from your app, and instead rely on the
+"Callout" module (above) for handling requests, and the simple_bridge.config
+file for setting up the backend server.
+
+When doing this, instead of starting the backend servers yourself in the code,
+you can rely on Simple Bridge to correctly set up the right configuration based
+on `simple_bridge.config` and instantiate the server in the correct way.
+
+You can start your server with Simple Bridge by using something like
+`simple_bridge:start(yaws, my_callout_module)` (or check the "Starting Simple
+Bridge" section above).
+
+Following this paradigm, however, is not a requirement.  If you want to
+maintain the same basic structure of your app, starting the server yourself,
+handling the requests yourself, and then simply using Simple Bridge to
+interface with the requests and response, then the recommended approach would
+be to convert calls like:
+
+```erlang
+ReqBridge = simple_bridge:make_request(cowboy_request_module, Req),
+ResBridge = simple_bridge:make_response(cowboy_response_module, Req),
+...
+ResBridge:build_response().
+```
+
+to simply using:
+```erlang
+Bridge = simple_bridge:make(cowboy, Req),
+...
+sbw:build_response(Bridge). %% Bridge:build_response() works too!
+```
+
+One of the other things to look out for with the move to 2.0 is the handling of
+query parameter, post parameters, and headers.
+
+* The return value of the `sbw:headers/1, `sbw:query_params/1`, and
+  `sbw:post_params/1` functions is now a list of proplists of binaries.
+* The return values of the single `sbw:header/query_param/post_param/etc`
+  functions however, will be based on the key provided.  For example, calling
+  `sbw:header("x-forwarded-for", Bridge)` will return a list, while
+  `sbw:header(<<"x-forwarded-for">>, Bridge)` will return a binary.
+
+The last thing to deal with when converting from 1.x to 2.0 is making the
+changes from the old-style response bridge calls to the new names for the same
+functions.  This change was made to disambiguate some of the confusion that
+would arise from having `sbw:header/2,3,4` and `sbw:cookie/2,3,5` some of which
+being setters and some being getters.
+
+So Make sure that you're using `sbw:set_status_code` instead of
+`Bridge:status_code`, `sbw:set_header` instead of `Bridge:header`, etc.  The
+thing to note, is that **all of the non-deprecated response functions begin
+with a verb** (e.g. `set_response_data`, `clear_cookies`, `build_response`,
+etc). See the "DEPRECATION NOTICE" a few sections above.
+
+
 ## TODO
 
 #### Version 2.0 TODO
