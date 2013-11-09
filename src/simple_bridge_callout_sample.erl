@@ -77,7 +77,7 @@ body(Bridge) ->
     ].
 
 connection_info(Bridge) ->
-    Fields = [socket, protocol, request_method, uri, path, headers, query_params, post_params, peer_ip, protocol_version],
+    Fields = [socket, protocol, request_method, uri, path, headers, cookies, query_params, post_params, peer_ip, protocol_version],
     [
         <<"<table>">>,
         [draw_connection_info(Field, Bridge) || Field <- Fields],

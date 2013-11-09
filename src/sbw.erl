@@ -90,7 +90,9 @@ new(Mod, Req) ->
 	%% We don't cache the Post params here because the multipart parser might
 	%% do it for us. See simple_bridge:make_nocatch/2
 	Bridge2 = cache_headers(Bridge),
-	_Bridge3 = cache_query_params(Bridge2).
+	Bridge3 = cache_query_params(Bridge2),
+	_Bridge4 = cache_cookies(Bridge3).
+
 
 
 set_multipart(PostParams, PostFiles, Wrapper) ->
@@ -110,6 +112,13 @@ cache_headers(Wrapper) ->
 	FormattedHeaders = [normalize_header({K,V}) || {K,V} <- Mod:headers(Req), V=/=undefined],
 	Wrapper#sbw{headers=FormattedHeaders}.
 
+cache_cookies(Wrapper) ->
+	Mod = Wrapper#sbw.mod,
+	Req = Wrapper#sbw.req,
+	Wrapper#sbw{
+		cookies=[normalize_header({K,V}) || {K,V} <- Mod:cookies(Req), V=/=undefined]
+	}.
+
 normalize_header({Key0, Val0}) ->
 	Key = simple_bridge_util:binarize_header(Key0),
 	Val = simple_bridge_util:to_binary(Val0),
@@ -128,6 +137,7 @@ cache_query_params(Wrapper) ->
 	Wrapper#sbw{
 		query_params=[normalize_param(Param) || Param <- Mod:query_params(Req)]
 	}.
+
 
 normalize_param({K, V}) ->	
 	{simple_bridge_util:to_binary(K), simple_bridge_util:to_binary(V)}.
@@ -210,18 +220,19 @@ header_lower(Header, Wrapper) ->
 
 %% REQUEST COOKIES
 
-?PASSTHROUGH(cookies).
+cookies(Wrapper) ->
+	Wrapper#sbw.cookies.
 
 cookie(Cookie, Wrapper) ->
-	Mod = Wrapper#sbw.mod,
-	Req = Wrapper#sbw.req,
-    case erlang:function_exported(Mod, cookie, 2) of
-        true ->
-            Mod:cookie(Cookie, Req);
-        false ->
-            Cookies = Mod:cookies(Req),
-            proplists:get_value(Cookie, Cookies)
-    end.
+	BinCookie = simple_bridge_util:binarize_header(Cookie),
+	case lists:keyfind(BinCookie, 1, Wrapper#sbw.headers) of
+		false -> undefined;
+		{_, Val} ->
+			if	is_list(Cookie);
+				is_atom(Cookie)   -> binary_to_list(Val);
+				is_binary(Cookie) -> Val
+			end
+	end.
 
 %% PARAM GROUPS
 

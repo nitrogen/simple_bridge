@@ -76,8 +76,8 @@ headers(Req) ->
     Req#mod.parsed_header.
 
 cookies(Req) ->
-    Headers = headers(Req),
-    CookieData = proplists:get_value(cookie, Headers, ""),
+    Headers = Req#mod.parsed_header,
+    CookieData = proplists:get_value("cookie", Headers, ""),
     F = fun(Cookie) ->
         case string:tokens(Cookie, "=") of
             [] -> [];
