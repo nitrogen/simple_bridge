@@ -317,19 +317,22 @@ and use it as a base.
 Simple Bridge 2.0 should be *mostly* compatible with 1.x versions mostly right
 out of the box, but is only compatible through deprecations.
 
+### Let simple bridge start your server and set up the bridge for you
+
 The recommended approach to migrating to 2.x is to remove instantiating your
 Bridge altogether (that is, remove your `simple_bridge:make_request` and
 `simple_bridge:make_response` functions from your app, and instead rely on the
-"Callout" module (above) for handling requests, and the simple_bridge.config
+"Callout" module (above) for handling requests, and the `simple_bridge.config`
 file for setting up the backend server.
 
 When doing this, instead of starting the backend servers yourself in the code,
 you can rely on Simple Bridge to correctly set up the right configuration based
-on `simple_bridge.config` and instantiate the server in the correct way.
-
-You can start your server with Simple Bridge by using something like
+on `simple_bridge.config` and instantiate the server in the correct way, and
+then starting your server with Simple Bridge by using something like
 `simple_bridge:start(yaws, my_callout_module)` (or check the "Starting Simple
 Bridge" section above).
+
+#### You can still set up the bridge yourself, if you prefer
 
 Following this paradigm, however, is not a requirement.  If you want to
 maintain the same basic structure of your app, starting the server yourself,
@@ -351,15 +354,19 @@ Bridge = simple_bridge:make(cowboy, Req),
 sbw:build_response(Bridge). %% Bridge:build_response() works too!
 ```
 
+### Return type changes to look out for in 2.0
+
 One of the other things to look out for with the move to 2.0 is the handling of
 query parameter, post parameters, and headers.
 
-* The return value of the `sbw:headers/1, `sbw:query_params/1`, and
+* The return value of the `sbw:headers/1`, `sbw:query_params/1`, and
   `sbw:post_params/1` functions is now a list of proplists of binaries.
 * The return values of the single `sbw:header/query_param/post_param/etc`
   functions however, will be based on the key provided.  For example, calling
   `sbw:header("x-forwarded-for", Bridge)` will return a list, while
   `sbw:header(<<"x-forwarded-for">>, Bridge)` will return a binary.
+
+### Use non-deprecated functions in 2.0
 
 The last thing to deal with when converting from 1.x to 2.0 is making the
 changes from the old-style response bridge calls to the new names for the same
