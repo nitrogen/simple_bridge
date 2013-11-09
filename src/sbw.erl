@@ -5,15 +5,13 @@
 
 -module (sbw).
 -include("simple_bridge.hrl").
--define(PASSTHROUGH(FunctionName),
-	FunctionName(Wrapper) -> 
-		(Wrapper#sbw.mod):FunctionName(Wrapper#sbw.req)).
 
 %% REQUEST BRIDGE EXPORTS
 -export([
-	new/6,
+	new/2,
 	set_multipart/3,
 	set_error/2,
+	cache_post_params/1,
 	protocol/1,
 	path/1,
 	uri/1,
@@ -80,20 +78,19 @@
 	file/2
 ]).
 
+%% TODO: Add Typespecs to all these
+
 %% REQUEST WRAPPERS
 
-new(Mod, Req, IsMultiPart, PostParams, PostFiles, Error) ->
+new(Mod, Req) ->
 	Bridge = #sbw{
 		mod=Mod,
-		req=Req,
-		is_multipart=IsMultiPart,
-		post_params=PostParams,
-		post_files=PostFiles,
-		error=Error
+		req=Req
 	},
-	Headers = pre_process_headers(Bridge:headers()),
-	Bridge#sbw{headers=Headers}.
-
+	%% We don't cache the Post params here because the multipart parser might
+	%% do it for us. See simple_bridge:make_nocatch/2
+	Bridge2 = cache_headers(Bridge),
+	_Bridge3 = cache_query_params(Bridge2).
 
 
 set_multipart(PostParams, PostFiles, Wrapper) ->
@@ -102,6 +99,38 @@ set_multipart(PostParams, PostFiles, Wrapper) ->
 		post_params=PostParams,
 		post_files=PostFiles
 	}.
+
+%% PRECACHING HEADERS, POST PARAMS AND QUERY PARAMS
+%% So we don't have to convert to and from binary/lists/atom for different
+%% backends. We do it once per request.
+
+cache_headers(Wrapper) ->
+	Mod = Wrapper#sbw.mod,
+	Req = Wrapper#sbw.req,
+	FormattedHeaders = [normalize_header({K,V}) || {K,V} <- Mod:headers(Req), V=/=undefined],
+	Wrapper#sbw{headers=FormattedHeaders}.
+
+normalize_header({Key0, Val0}) ->
+	Key = simple_bridge_util:binarize_header(Key0),
+	Val = simple_bridge_util:to_binary(Val0),
+	{Key, Val}.
+
+cache_post_params(Wrapper) ->
+	Mod = Wrapper#sbw.mod,
+	Req = Wrapper#sbw.req,
+	Wrapper#sbw{
+		post_params=[normalize_param(Param) || Param <- Mod:post_params(Req)]
+	}.
+
+cache_query_params(Wrapper) ->
+	Mod = Wrapper#sbw.mod,
+	Req = Wrapper#sbw.req,
+	Wrapper#sbw{
+		query_params=[normalize_param(Param) || Param <- Mod:query_params(Req)]
+	}.
+
+normalize_param({K, V}) ->	
+	{simple_bridge_util:to_binary(K), simple_bridge_util:to_binary(V)}.
 
 set_error(Error, Wrapper) ->
 	Wrapper#sbw{
@@ -113,6 +142,10 @@ get_peername(Wrapper) ->
 
 error(Wrapper) ->
 	Wrapper#sbw.error.
+
+-define(PASSTHROUGH(FunctionName),
+	FunctionName(Wrapper) -> 
+		(Wrapper#sbw.mod):FunctionName(Wrapper#sbw.req)).
 
 ?PASSTHROUGH(protocol).
 ?PASSTHROUGH(path).
@@ -151,19 +184,6 @@ post_files(Wrapper) ->
 
 %% REQUEST HEADERS
 
-pre_process_headers(Headers) ->
-	[pre_process_header(Header) || Header <- Headers].
-
-pre_process_header({Key, Val}) ->
-	Key2 = simple_bridge_util:deatomize_header(Key),
-	Key3 = simple_bridge_util:binarize_header(Key2),
-	Val2 = simple_bridge_util:to_binary(Val),
-	{Key3, Val2}.
-
-headers(Wrapper) when Wrapper#sbw.headers =:= [] ->
-	Mod = Wrapper#sbw.mod,
-	Req = Wrapper#sbw.req,
-	[{K,V} || {K,V} <- Mod:headers(Req), V=/=undefined];
 headers(Wrapper) ->
 	Wrapper#sbw.headers.
 
@@ -209,17 +229,10 @@ param_group(Param, Wrapper) ->
     param_group(Param, [], Wrapper).
 
 param_group(Param, DefaultValue, Wrapper) ->
-	case 	[V || {K, V} <- query_params(Wrapper), K == Param] 
-		 ++ [V || {K, V} <- post_params(Wrapper), K == Param] of
-		[] -> DefaultValue;
-		L -> L
-	end.
+	query_param_group(Param, DefaultValue, Wrapper) ++ post_param_group(Param, DefaultValue, Wrapper).
 
 query_param_group(Param, DefaultValue, Wrapper) ->
-	case [V || {K, V} <- query_params(Wrapper), K == Param] of
-		[] -> DefaultValue;
-		L -> L
-	end.
+	find_param_group(Param, DefaultValue, query_params(Wrapper)).
 
 query_param_group(Param, Wrapper) ->
     query_param_group(Param, [], Wrapper).
@@ -228,39 +241,29 @@ post_param_group(Param, Wrapper) ->
     post_param_group(Param, [], Wrapper).
 
 post_param_group(Param, DefaultValue, Wrapper) ->
-	case [V || {K, V} <- post_params(Wrapper), K == Param] of
-		[] -> DefaultValue;
-		L -> L
-	end.    
+	find_param_group(Param, DefaultValue, post_params(Wrapper)).
 
 %% QUERY PARAMS
 
-?PASSTHROUGH(query_params).
+query_params(Wrapper) ->
+	Wrapper#sbw.query_params.
 
 query_param(Param, Wrapper) ->
     query_param(Param, undefined, Wrapper).
 
 query_param(Param, DefaultValue, Wrapper) ->
-    proplists:get_value(Param, query_params(Wrapper), DefaultValue).
+	find_param(Param, DefaultValue, query_params(Wrapper)).
 
 %% POST PARAMS
 
 post_params(Wrapper) ->
-	Mod = Wrapper#sbw.mod,
-	Req = Wrapper#sbw.req,
-	IsMultipart = Wrapper#sbw.is_multipart,
-	case {request_method(Wrapper), IsMultipart} of
-		{'POST', true}  -> Wrapper#sbw.post_params;
-		{'POST', false} -> Mod:post_params(Req);
-		{'PUT', false} -> Mod:post_params(Req);
-		_ -> []
-	end.
+	Wrapper#sbw.post_params.
 
 post_param(Param, Wrapper) ->
     post_param(Param, undefined, Wrapper).
 
 post_param(Param, DefaultValue, Wrapper) ->
-    proplists:get_value(Param, post_params(Wrapper), DefaultValue).
+	find_param(Param, DefaultValue, post_params(Wrapper)).
 
 %% AGNOSTIC PARAMS
 
@@ -268,8 +271,32 @@ param(Param, Wrapper) ->
     param(Param, undefined, Wrapper).
 
 param(Param, DefaultValue, Wrapper) ->
-    post_param(Param, query_param(Param, DefaultValue, Wrapper)).
+	case post_param(Param, Wrapper) of
+		undefined -> query_param(Param, DefaultValue, Wrapper);
+		V -> V
+	end.
 
+%% FIND PARAM
+
+find_param(Param, Default, ParamList) when is_binary(Param) ->
+	case lists:keyfind(ParamList, 1, Param) of
+		{_, Val} -> Val;
+		false -> Default
+	end;
+find_param(Param, Default, ParamList) when is_atom(Param); is_list(Param) ->
+	Param1 = simple_bridge_util:to_list(Param),
+	simple_bridge_util:to_list(find_param(Param1, Default, ParamList)).
+
+
+find_param_group(Param, Default, ParamList) when is_binary(Param) ->
+	case [V || {K,V} <- ParamList, K=:=Param] of
+		[] -> Default;
+		L -> L
+	end;
+find_param_group(Param, Default, ParamList) when is_list(Param); is_atom(Param) ->
+	Param1 = simple_bridge_util:to_list(Param),
+	ResultList = find_param_group(Param1, Default, ParamList),
+	[simple_bridge_util:to_list(V) || V <- ResultList].
 
 %% DEEP PARAM STUFF
 
@@ -326,11 +353,12 @@ set_status_code(StatusCode, Wrapper) ->
 		Res#response{status_code=StatusCode}
 	end, Wrapper).
 
-set_header(Name, Value, Wrapper) ->
+set_header(Name0, Value, Wrapper) ->
+	Name = simple_bridge_util:binarize_header(Name0),
 	update_response(fun(Res) ->
 		Header = #header { name=Name, value=Value },
 		Headers = Res#response.headers,
-		Headers1 = [X || X <- Headers, X#header.name /= Name orelse X#header.name =:= "Set-Cookie"],
+		Headers1 = [X || X <- Headers, X#header.name /= Name orelse X#header.name =:= <<"set-cookie">>],
 		Headers2 = [Header|Headers1],
 		Res#response{headers=Headers2}
 	end, Wrapper).

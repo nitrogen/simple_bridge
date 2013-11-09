@@ -86,12 +86,16 @@ inner_make(Module, RequestData) ->
 
 make_nocatch(Module, RequestData) -> 
 	RequestData1 = Module:init(RequestData),
-	Bridge = sbw:new(Module, RequestData1, false, [], [], none),
+	Bridge = sbw:new(Module, RequestData1),
 	case simple_bridge_multipart:parse(Bridge) of
-		{ok, Params, Files} -> 
-			Bridge:set_multipart(Params, Files);
+		{ok, PostParams, Files} -> 
+			%% Post Params are read from the multipart parsing
+			sbw:set_multipart(PostParams, Files, Bridge);
 		{ok, not_multipart} -> 
-			Bridge;
+			%% But if it's not a multipart post, then we need to manually tell
+			%% simple bridge to cache the post params in the wrapper for quick
+			%% lookup
+			sbw:cache_post_params(Bridge);
 		{error, Error} -> 
 			Bridge:set_error(Error);
 		Other -> 

@@ -73,7 +73,7 @@ parse_multipart(Req) ->
         % Respond with {ok, Params, Files}.
         {
             ok,
-            [{Name, Value} || #part { name=Name, value=Value, filename=undefined } <- State1#state.parts],
+            [{simple_bridge_util:to_binary(Name), simple_bridge_util:to_binary(Value)} || #part { name=Name, value=Value, filename=undefined } <- State1#state.parts],
             [#sb_uploaded_file {
                 original_name=Filename,
                 temp_file=sb_file_upload_handler:get_tempfile(FileUploadHandler),

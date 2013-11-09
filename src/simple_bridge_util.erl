@@ -15,11 +15,9 @@
     get_max_file_in_memory_size/1,
     get_scratch_dir/1,
     atomize_header/1,
-    deatomize_header/1,
     binarize_header/1,
     is_static_path/2,
     expires/2,
-    b2l/1,
     to_list/1,
     to_binary/1,
     has_header/2,
@@ -36,9 +34,6 @@
 -type header_key() :: string() | binary() | atom().
 -type header() :: {header_key(), string()}.
 -type header_list() :: [header()].
-
-%% converts a Header to a lower-case, underscored version
-%% ie. "X-Forwarded-For" -> x_forwarded_for
 
 get_env(Key) ->
     get_env(Key, undefined).
@@ -154,17 +149,6 @@ atomize_header(Header) when is_list(Header) ->
     end,
     list_to_atom(lists:map(LowerUnderscore,Header)).
 
-deatomize_header(B) when is_binary(B) ->
-    B;
-deatomize_header(Header) when is_atom(Header) ->
-    deatomize_header(atom_to_list(Header));
-deatomize_header([$_|T]) ->
-    [$-|deatomize_header(T)];
-deatomize_header([H|T]) ->
-    [H|deatomize_header(T)];
-deatomize_header([]) ->
-    [].
-
 binarize_header(Header) when is_binary(Header) ->
     binarize_header(binary_to_list(Header));
 binarize_header(Header) when is_atom(Header) ->
@@ -174,6 +158,11 @@ binarize_header(Header) when is_atom(Header) ->
 binarize_header(Header) when is_list(Header) ->
     list_to_binary(string:to_lower(Header)).
 
+%% TODO: All this below "ensure_header" stuff needs to be reworked.  Since
+%% headers are now normalized before being inserted into the response header
+%% list, it will be easier to check for existence, and shouldn't require all
+%% this conversion that's being done right here.
+%%
 %% Checks if `Header` exists as a key in `HeaderList`
 %% if it doesn't, inserts it with the value `Value`
 -spec ensure_header(header_list(), {header_key(), term()}) -> header_list().
@@ -234,7 +223,7 @@ lower_keys(HeaderList) ->
 to_lower(Header) when is_atom(Header) ->
     to_lower(atom_to_list(Header));
 to_lower(Header) when is_binary(Header) ->
-    to_lower(b2l(Header));
+    to_lower(binary_to_list(Header));
 to_lower(Header) when is_list(Header) ->
     string:to_lower(Header).
 
@@ -285,15 +274,12 @@ make_expires_from_seconds(Seconds) ->
     ExpiresDate = calendar:now_to_local_time({NowMegaSec,NowSec+Seconds,0}),
     httpd_util:rfc1123_date(ExpiresDate).
 
--spec b2l(binary() | string()) -> string().
-b2l(B) when is_binary(B) -> binary_to_list(B);
-b2l(B) -> B.
 
 -spec to_list(any()) -> string().
 to_list(A) when is_atom(A) ->
     atom_to_list(A);
 to_list(B) when is_binary(B) ->
-    b2l(B);
+    binary_to_list(B);
 to_list(L) when is_list(L) ->
     L.
 
