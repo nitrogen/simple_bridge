@@ -8,7 +8,11 @@
 	start/1,
 	start/2,
 	make/2,
-	make/3
+	make/3,
+
+	%% deprecated
+	make_request/2,
+	make_response/2
 ]).
 
 -include("simple_bridge.hrl").
@@ -93,4 +97,47 @@ make_nocatch(Module, RequestData) ->
 		Other -> 
 			throw({unexpected, Other})
 	end.
+
+
+%% DEPRECATED STUFF BELOW
+%%
+%% please use application:start(simple_bridge),
+%%            simple_bridge:start/0-2, or
+%%            simple_bridge:make/2-3
+make_request(Module, Req) ->
+	FixedModule = fix_old_modules(Module),
+	inner_make(FixedModule, Req).
+
+make_response(Module, Req) ->
+	FixedModule = fix_old_modules(Module),
+	inner_make(FixedModule, Req).
+
+
+%%   wow
+%%         much grow
+%%
+%%    such aesthetic
+%%
+%%        bridge modules so old
+%%
+%%      many deprecated
+fix_old_modules(yaws_request_bridge) -> yaws_simple_bridge;
+fix_old_modules(yaws_response_bridge) -> yaws_simple_bridge;
+fix_old_modules(inets_request_bridge) -> inets_simple_bridge;
+fix_old_modules(inets_response_bridge) -> inets_simple_bridge;
+fix_old_modules(cowboy_request_bridge) -> cowboy_simple_bridge;
+fix_old_modules(cowboy_response_bridge) -> cowboy_simple_bridge;
+fix_old_modules(mochiweb_request_bridge) -> mochiweb_simple_bridge;
+fix_old_modules(mochiweb_response_bridge) -> mochiweb_simple_bridge;
+fix_old_modules(webmachine_request_bridge) -> webmachine_simple_bridge;
+fix_old_modules(webmachine_response_bridge) -> webmachine_simple_bridge;
+%% wow
+%% 
+%%     so long error msg
+%%
+%%  such descriptive
+%%
+%%      wow
+%%
+fix_old_modules(Other) -> throw({unknown_or_non_deprecated_bridge_module_specified_in_deprecated_call, {simple_bridge, make_request, [Other]}}).
 
