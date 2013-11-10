@@ -46,6 +46,7 @@
 	query_param_group/2,
 	query_param_group/3,
 
+	params/1,
 	param/2,
 	param/3,
 
@@ -277,6 +278,9 @@ post_param(Param, DefaultValue, Wrapper) ->
 	find_param(Param, DefaultValue, post_params(Wrapper)).
 
 %% AGNOSTIC PARAMS
+
+params(Wrapper) ->
+	post_params(Wrapper) ++ query_params(Wrapper).
 
 param(Param, Wrapper) ->
     param(Param, undefined, Wrapper).
