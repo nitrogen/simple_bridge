@@ -290,7 +290,7 @@ param(Param, DefaultValue, Wrapper) ->
 %% FIND PARAM
 
 find_param(Param, Default, ParamList) when is_binary(Param) ->
-	case lists:keyfind(ParamList, 1, Param) of
+	case lists:keyfind(Param, 1, ParamList) of
 		{_, Val} -> Val;
 		false -> Default
 	end;
