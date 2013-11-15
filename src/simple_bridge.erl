@@ -26,7 +26,7 @@
 -callback headers(bridge())                     -> [{key(), value()}].
 -callback query_params(bridge())                -> [{key(), value()}].
 -callback post_params(bridge())                 -> [{key(), value()}].
--callback peer_ip(bridge())                     -> i
+-callback peer_ip(bridge())                     -> ipv4() | ipv8().
 -callback build_response(any(), #response{})    -> any().
 
 start() ->
