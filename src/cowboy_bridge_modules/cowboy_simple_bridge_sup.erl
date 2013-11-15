@@ -25,6 +25,7 @@ start_link() ->
 init([]) ->
     application:start(crypto),
     application:start(ranch),
+    application:start(cowlib),
     application:start(cowboy),
     {Address, Port} = simple_bridge_util:get_address_and_port(cowboy),
 
@@ -74,11 +75,11 @@ build_dispatch(DocRoot,StaticPaths) ->
     Handler = cowboy_static,
     StaticDispatches = lists:map(fun(Dir) ->
         Path = reformat_path(Dir),
+        {StaticType, StaticFileDir} = localized_dir_file(DocRoot, Dir),
         Opts = [
-                {mimetypes, {fun mimetypes:path_to_mimes/2, default}}
-                | localized_dir_file(DocRoot, Dir)
+                {mimetypes, cow_mimetypes, all}
         ],
-        {Path,Handler,Opts}
+        {Path, Handler, {StaticType, StaticFileDir, Opts}}
     end,StaticPaths),
 
     %% HandlerModule will end up calling HandlerModule:handle(Req,HandlerOpts)
@@ -108,14 +109,15 @@ localized_dir_file(DocRoot,Path) ->
         _ -> DocRoot ++ "/" ++ Path
     end,
     _NewPath2 = case lists:last(Path) of
-        $/ -> [{directory, NewPath}];
+        $/ -> {dir, NewPath};
         _ ->
-            Dir = filename:dirname(NewPath),
-            File = filename:basename(NewPath),
-            [
-                {directory,Dir},
-                {file,File}
-            ]
+         %   Dir = filename:dirname(NewPath),
+         %   File = filename:basename(NewPath),
+            {file, NewPath}
+          %%  [
+          %%      {dir, Dir},
+          %%      {file, File}
+          %%  ]
     end.
 
 %% Ensure the paths start with /, and if a path ends with /, then add "[...]" to it
