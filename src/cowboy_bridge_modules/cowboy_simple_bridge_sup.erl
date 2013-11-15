@@ -72,14 +72,13 @@ build_dispatch() ->
 
 %% @doc Generate the dispatch tables
 build_dispatch(DocRoot,StaticPaths) ->
-    Handler = cowboy_static,
     StaticDispatches = lists:map(fun(Dir) ->
         Path = reformat_path(Dir),
         {StaticType, StaticFileDir} = localized_dir_file(DocRoot, Dir),
-        Opts = [
-                {mimetypes, cow_mimetypes, all}
-        ],
-        {Path, Handler, {StaticType, StaticFileDir, Opts}}
+        Opts = [{mimetypes, cow_mimetypes, all}],
+        %% This will end up being something like:
+        %% { [<<"js">>,'...'], cowboy_static, {dir, "./priv/static/js", Opts}}
+        {Path, cowboy_static, {StaticType, StaticFileDir, Opts}}
     end,StaticPaths),
 
     %% HandlerModule will end up calling HandlerModule:handle(Req,HandlerOpts)
@@ -98,7 +97,7 @@ build_dispatch(DocRoot,StaticPaths) ->
     %% static_paths, or rewrite cowboy's dispatch table
     Dispatch = [
         %% Nitrogen will handle everything that's not handled in the StaticDispatches
-        {'_', StaticDispatches ++ [{'_',HandlerModule , HandlerOpts}]}
+        {'_', StaticDispatches ++ [{'_', HandlerModule , HandlerOpts}]}
     ],
     cowboy_router:compile(Dispatch).
 
@@ -110,14 +109,7 @@ localized_dir_file(DocRoot,Path) ->
     end,
     _NewPath2 = case lists:last(Path) of
         $/ -> {dir, NewPath};
-        _ ->
-         %   Dir = filename:dirname(NewPath),
-         %   File = filename:basename(NewPath),
-            {file, NewPath}
-          %%  [
-          %%      {dir, Dir},
-          %%      {file, File}
-          %%  ]
+        _ ->  {file, NewPath}
     end.
 
 %% Ensure the paths start with /, and if a path ends with /, then add "[...]" to it
