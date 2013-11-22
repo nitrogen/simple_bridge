@@ -63,7 +63,8 @@ massage_reply({reply, {Type, Data}}, Req, State)
         when Type==binary orelse Type==text ->
     {reply, {Type, iolist_to_binary(Data)}, Req, State};
 massage_reply({reply, List}, Req, State) ->
-    {reply, List, Req, State};
+    FixedList = [{Type, iolist_to_binary(Data)} || {Type, Data} <- List],
+    {reply, FixedList, Req, State};
 massage_reply(noreply, Req, State) ->
     {ok, Req, State};
 massage_reply(close, Req, State) ->
