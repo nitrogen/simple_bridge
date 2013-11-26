@@ -42,8 +42,9 @@ body(Bridge) ->
     [
     <<"<html>
     <head>
+        <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">
         <title>Hello from Simple Bridge!</title>
-        <script src='//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js'></script>
+        <script src='http://code.jquery.com/jquery-1.10.2.js'></script>
         <script src='/js/websocket.js'></script>
     </head>
     <body>
