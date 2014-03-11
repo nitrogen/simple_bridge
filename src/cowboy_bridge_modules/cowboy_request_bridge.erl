@@ -29,7 +29,13 @@ init({Req, DocRoot}) ->
     put_key(ReqKey, #request_cache{body = not_loaded, docroot=DocRoot, request = Req}),
     ReqKey.
 
-protocol(_ReqKey) -> undefined.
+protocol(ReqKey) ->
+    {_RequestCache, Req} = get_key(ReqKey),
+    Transport = cowboy_req:get(transport, Req),
+    case Transport:name() of
+        tcp -> http;
+        ssl -> https
+    end.
 
 request_method(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
