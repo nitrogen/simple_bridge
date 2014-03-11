@@ -67,7 +67,8 @@ headers(Req) ->
         {content_encoding, F("content-encoding")},
         {authorization, F("authorization")},
         {x_forwarded_for, F("x-forwarded-for")},
-        {transfer_encoding, F("transfer-encoding")}
+        {x_forwarded_proto, F("x-forwarded-proto")},
+	{transfer_encoding, F("transfer-encoding")}
     ],
     [{K, V} || {K, V} <- Headers1, V /= undefined].
 
