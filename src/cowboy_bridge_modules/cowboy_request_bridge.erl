@@ -8,21 +8,21 @@
 -include_lib ("simple_bridge.hrl").
 
 -export ([
-	  init/1,
-	  protocol/1,
-	  request_method/1,
-	  path/1,
-	  uri/1,
-	  peer_ip/1,
-	  peer_port/1,
-	  headers/1,
-	  cookies/1,
-	  query_params/1,
-	  post_params/1,
-	  request_body/1,
-	  recv_from_socket/3,
-	  protocol_version/1
-	 ]).
+      init/1,
+      protocol/1,
+      request_method/1,
+      path/1,
+      uri/1,
+      peer_ip/1,
+      peer_port/1,
+      headers/1,
+      cookies/1,
+      query_params/1,
+      post_params/1,
+      request_body/1,
+      recv_from_socket/3,
+      protocol_version/1
+     ]).
 
 init({Req, DocRoot}) ->
     ReqKey = new_key(),
@@ -87,7 +87,7 @@ post_params(ReqKey) ->
     [{?B2L(K), ?B2L(V)} || {K, V} <- BodyQs].
 
 request_body(ReqKey) ->
-    request_body(ReqKey, string).
+    request_body(ReqKey, binary).
 
 request_body(ReqKey, string) ->
     ?B2L(request_body(ReqKey, binary));
@@ -95,12 +95,12 @@ request_body(ReqKey, binary) ->
     {RequestCache, Req} = get_key(ReqKey),
      %% We cache the body here because we can't request the body twice in cowboy or it'll crash
     {Body, NewReq} =
-	case RequestCache#request_cache.body of
-	    not_loaded ->
-		{ok, B, R} = cowboy_req:body(Req),
-		{B, R};
-	    B -> {B, Req}
-	end,
+    case RequestCache#request_cache.body of
+        not_loaded ->
+            {ok, B, R} = cowboy_req:body(infinity, Req),
+            {B, R};
+        B -> {B, Req}
+    end,
     put_key(ReqKey, RequestCache#request_cache{body = Body, request = NewReq}),
     Body.
 
@@ -109,10 +109,10 @@ recv_from_socket(_Length, _Timeout, ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
     case cowboy_req:stream_body(Req) of
         {ok, Data, NewReq} ->
-	    put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
+        put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
             Data;
         {done, NewReq} ->
-	    put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
+        put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
             <<"">>;
         {error, Reason} ->
             exit({error, Reason}) %% exit(normal) instead?
