@@ -110,10 +110,9 @@ post_params(ReqKey) ->
 request_body(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
      %% We cache the body here because we can't request the body twice in cowboy or it'll crash
-    {Body, NewReq} =
-    case RequestCache#request_cache.body of
+    {Body, NewReq} = case RequestCache#request_cache.body of
         not_loaded ->
-            {ok, B, R} = cowboy_req:body(Req),
+            {ok, B, R} = cowboy_req:body(infinity, Req),
             {B, R};
         B ->
             {B, Req}
