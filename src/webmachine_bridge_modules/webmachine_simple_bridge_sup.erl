@@ -64,7 +64,7 @@ build_dispatch() ->
     
 
 build_dispatch(DocRoot, StaticPaths) -> 
-    Callout = simple_bridge_util:get_env(callout),
+    Handler = simple_bridge_util:get_env(handler),
     StaticDispatches = [make_static_dispatch(DocRoot, StaticPath) || StaticPath <- StaticPaths],
     StaticDispatches ++ [
         %% Static content handlers can be defined manually like so:
@@ -76,7 +76,7 @@ build_dispatch(DocRoot, StaticPaths) ->
 
         %% Add routes to your modules here. The last entry makes the
         %% system use simple_bridge's handler, which is a generic handler for
-        %% all non-static requests, and uses the `callout` configuration
+        %% all non-static requests, and uses the `handler` configuration
         %% variable to call out to your application.
         %% 
         %% p.s. - Remember that you will need to RESTART THE VM for
@@ -85,7 +85,7 @@ build_dispatch(DocRoot, StaticPaths) ->
         %% {["path","to","module1",'*'], HandlerModule1, InitialState1}
         %% {["path","to","module2",'*'], HandlerModule2, InitialState2}
         %% {["path","to","module3",'*'], HandlerModule3, InitialState3}
-        {['*'], simple_bridge_util:get_anchor_module(webmachine), Callout}
+        {['*'], simple_bridge_util:get_anchor_module(webmachine), Handler}
     ].
 
 join_path(Root,Path) when is_binary(Root) orelse is_binary(Path) ->

@@ -27,37 +27,37 @@ init(_Transport, Req, _Opts) ->
 
 handle(Req, State) ->
     DocRoot = simple_bridge_util:get_env(document_root),
-    Callout = simple_bridge_util:get_env(callout),
+    Handler = simple_bridge_util:get_env(handler),
     Bridge = simple_bridge:make(cowboy, {Req, DocRoot}),
-    {ok, NewReq} = Callout:run(Bridge),
+    {ok, NewReq} = Handler:run(Bridge),
     {ok, NewReq, State}.
 
 terminate(_Reason, _Req, _State) ->
     ok.
 
 websocket_init(_Transport, Req, _Opts) ->
-    {ok, Callout} = application:get_env(simple_bridge, callout),
+    {ok, Handler} = application:get_env(simple_bridge, handler),
     Bridge = simple_bridge:make(cowboy, {Req, ""}),
-    ok = Callout:ws_init(Bridge),
-    {ok, Req, {Bridge, Callout}}.
+    ok = Handler:ws_init(Bridge),
+    {ok, Req, {Bridge, Handler}}.
 
 websocket_handle({ping, _Data}, Req, State) ->
     %% We don't need to pong, cowboy does that automatically. So just carry on!
     {ok, Req, State};
 websocket_handle({pong, _}, Req, State) ->
     {ok, Req, State};
-websocket_handle(Data, Req, State={Bridge, Callout}) ->
-    Result = Callout:ws_message(Data, Bridge),
+websocket_handle(Data, Req, State={Bridge, Handler}) ->
+    Result = Handler:ws_message(Data, Bridge),
     Reply = massage_reply(Result, Req, State),
     Reply.
 
-websocket_info(Data, Req, State={Bridge, Callout}) ->
-    Result = Callout:ws_info(Data, Bridge),
+websocket_info(Data, Req, State={Bridge, Handler}) ->
+    Result = Handler:ws_info(Data, Bridge),
     Reply = massage_reply(Result, Req, State),
     Reply.
 
-websocket_terminate(Reason, _Req, {Bridge, Callout}) ->
-    ok = Callout:ws_terminate(Reason, Bridge).
+websocket_terminate(Reason, _Req, {Bridge, Handler}) ->
+    ok = Handler:ws_terminate(Reason, Bridge).
 
 massage_reply({reply, {Type, Data}}, Req, State)
         when Type==binary orelse Type==text ->

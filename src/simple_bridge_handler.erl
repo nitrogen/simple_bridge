@@ -1,5 +1,5 @@
 % vim: ts=4 sw=4 et
--module(simple_bridge_callout).
+-module(simple_bridge_handler).
 -include("simple_bridge.hrl").
 
 -type data()                ::  iolist().

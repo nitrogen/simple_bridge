@@ -9,14 +9,14 @@ do(Req) ->
 			Bridge2 = Bridge:set_response_file(ReqPath),
 			Bridge2:build_response();
 		false ->
-			Callout = simple_bridge_util:get_env(callout),
-			case simple_bridge_websocket:attempt_hijacking(Bridge, Callout) of
+			Handler = simple_bridge_util:get_env(handler),
+			case simple_bridge_websocket:attempt_hijacking(Bridge, Handler) of
 				{hijacked, closed} ->
 					gen_tcp:close(Bridge:socket()),
 					exit(normal);
 				{hijacked, Bridge2} ->
 					Bridge2:build_response();
 				spared ->
-					Callout:run(Bridge)
+					Handler:run(Bridge)
 			end
 	end.

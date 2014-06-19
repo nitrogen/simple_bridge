@@ -1,6 +1,6 @@
 %% vim: ts=4 sw=4 et
--module(simple_bridge_callout_sample).
--behaviour(simple_bridge_callout).
+-module(simple_bridge_handler_sample).
+-behaviour(simple_bridge_handler).
 -export([run/1,
         ws_init/1,
         ws_message/2,

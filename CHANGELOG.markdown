@@ -6,16 +6,16 @@
 * All backends now provide a default supervisor for simplified starting and
   building backend-specific configurations.
 * All backends now provide an "anchor" module, which serves as an intermediary
-  between the server and the "callout" module.
+  between the server and the "handler" module.
 * Merged Request and Response bridge into a single "sbw" (simple bridge
   wrapper) object.
 * Added `simple_bridge:make(Backend)` function to replace having to make both
   request and response bridges.
-* Added callout module behaviour (`-behaviour(simple_bridge_callout)`) for each
-  platform, customizable with `simple_bridge:start(CalloutMod, Backend)`. This
+* Added handler module behaviour (`-behaviour(simple_bridge_handler)`) for each
+  platform, customizable with `simple_bridge:start(Backend, HandlerMod)`. This
   relies on the use an "Anchor" module, a default provided for each module.
-* Added a sample callout module which can be used as a basis for future
-  functionality. (`simple_bridge_callout_sample.erl`)
+* Added a sample handler module which can be used as a basis for future
+  functionality. (`simple_bridge_handler_sample.erl`)
 * Added Websocket Support for Yaws, Cowboy using their native implementations.
 * Added a Websocket Hijacker to support websockets on non-websocket backends,
   particularly Mochiweb, Inets, and Webmachine.

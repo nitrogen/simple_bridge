@@ -10,37 +10,37 @@
 
 out(Arg) ->
     Bridge = simple_bridge:make(yaws, Arg),
-    Callout = simple_bridge_util:get_env(callout),
+    Handler = simple_bridge_util:get_env(handler),
     Upgrade = sbw:header_lower(upgrade, Bridge),
     case Upgrade of
         "websocket" ->
-            %% Pass the Callout module and the Bridge as the initial State but
+            %% Pass the Handler module and the Bridge as the initial State but
             %% use the current module as the actual Websocket handler
-            Opts = [{callback, {basic, {Callout, Bridge}}}],
+            Opts = [{callback, {basic, {Handler, Bridge}}}],
             {websocket, ?MODULE, Opts};
         _ ->
-            Callout:run(Bridge)
+            Handler:run(Bridge)
     end.
 
-init([_Arg, State={Callout, Bridge}]) ->
-    Callout:ws_init(Bridge),
+init([_Arg, State={Handler, Bridge}]) ->
+    Handler:ws_init(Bridge),
     {ok, State}.
 
 handle_message({close, Status, Reason}, State) ->
     {close, {Status, Reason}, State};
 
-handle_message(Data, State={Callout, Bridge}) ->
-    Result = Callout:ws_message(Data, Bridge),
+handle_message(Data, State={Handler, Bridge}) ->
+    Result = Handler:ws_message(Data, Bridge),
     Reply = massage_reply(Result, State),
     Reply.
 
-handle_info(Data, State={Callout, Bridge}) ->
-    Result = Callout:ws_info(Data, Bridge),
+handle_info(Data, State={Handler, Bridge}) ->
+    Result = Handler:ws_info(Data, Bridge),
     Reply = massage_reply(Result, State),
     Reply.
 
-terminate(Reason, {Callout, Bridge}) ->
-    ok = Callout:ws_terminate(Reason, Bridge).
+terminate(Reason, {Handler, Bridge}) ->
+    ok = Handler:ws_terminate(Reason, Bridge).
 
 massage_reply(noreply, State) ->
     {noreply, State};

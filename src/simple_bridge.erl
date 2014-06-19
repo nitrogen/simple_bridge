@@ -36,14 +36,14 @@ start(Backend) ->
     start(Backend, undefined).
 
 
-start(Backend, Callout) when is_atom(Backend) ->
+start(Backend, Handler) when is_atom(Backend) ->
     application:load(simple_bridge),
-    Callout2 = case Callout of
+    Handler2 = case Handler of
         undefined ->
-            simple_bridge_util:get_env(callout);
+            simple_bridge_util:get_env(handler);
         _ ->
-            application:set_env(simple_bridge, callout, Callout),
-            Callout
+            application:set_env(simple_bridge, handler, Handler),
+            Handler
     end,
     Backend2 = case Backend of
         undefined ->
@@ -53,9 +53,9 @@ start(Backend, Callout) when is_atom(Backend) ->
             Backend
     end,
 
-    case {Callout2, Backend2} of
+    case {Handler2, Backend2} of
         {undefined, _} -> throw("No backend defined for simple_bridge.");
-        {_, undefined} -> io:format("*** Warning: No callout module defined for simple_bridge. If this intentional,~n*** if you are using a custom dispatch table, for example), then this message~n*** can be safely ignored.");
+        {_, undefined} -> io:format("*** Warning: No handler module defined for simple_bridge. If this intentional,~n*** (like if you are using a custom dispatch table, for example), then this message~n*** can be safely ignored.");
         {_,_} -> ok
     end,
 

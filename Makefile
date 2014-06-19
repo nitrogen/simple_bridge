@@ -1,3 +1,5 @@
+BACKEND:=inets
+
 all: compile
 
 get-deps:

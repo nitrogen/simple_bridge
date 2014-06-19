@@ -35,11 +35,12 @@ SimpleBridge has some key improvements/differences:
   + SimpleBridge is split into three parts:
     + A Bridge module to allows you to see information about the incoming
       request and construct a response.
-    + A Default Supervisor that starts and configures the underlying server
+    + A Default supervisor that starts and configures the underlying server
       based on either the server-specific configuration, or the univeral Simple
       Bridge configuration.
-    + A Default anchor module that interfaces the web server with a universal
-      callout module behaviour.
+    + A Default **anchor** module, which implements the underlying
+      communication and connection setup for each request, and that interfaces
+      with your appliction through the use of a **handler** module.
 
 ## Hello World Example
 
@@ -47,8 +48,8 @@ SimpleBridge has some key improvements/differences:
 % SimpleBridge Hello World Example
 
 start() ->
-  CalloutMod = ?MODULE,
-  simple_bridge:start(mochiweb, CalloutMod).
+  Handler = ?MODULE,
+  simple_bridge:start(mochiweb, Handler).
 
 run(Bridge) ->
     HTML = [
@@ -66,10 +67,10 @@ run(Bridge) ->
 
 ## A more complete example:
 
-To see a complete example callout page using SimpleBridge, demonstrating the
-results of pages, as well as providing a simple echo websocket server, look at
+To see a complete example handler page using SimpleBridge, demonstrating the
+results of requests, as well as providing a simple echo websocket server, look at
 the code of
-[simple_bridge_callout_sample](https://github.com/nitrogen/simple_bridge/blob/ws/src/simple_bridge_callout_sample.erl).
+[simple_bridge_handler_sample](https://github.com/nitrogen/simple_bridge/blob/ws/src/simple_bridge_handler_sample.erl).
 
 ## Quick Start
 
@@ -94,13 +95,13 @@ will then start the server to the specs of your choice.
 
 The following are all valid ways to start Simple Bridge:
 ```erlang
-%% Explicitly start with particular Backend and CalloutMod
-simple_bridge:start(Backend, CalloutMod).
+%% Explicitly start with particular Backend and HandlerMod
+simple_bridge:start(Backend, HandlerMod).
 
-%% CalloutMod is determined from the callout config variable
+%% HandlerMod is determined from the handler config variable
 simple_bridge:start(Backend).  
 
-%% Backend and CalloutMod are both determined by the configuration
+%% Backend and HandlerMod are both determined by the configuration
 simple_bridge:start(). 
 
 %% Same as simple_bridge:start().
@@ -119,13 +120,13 @@ provided by Simple Bridge.
 
 The anchor module serves as an additional layer to eliminate the need to write
 *any* platform-specific code in your application.  The anchor module will
-transform the platform-specific requests and pass them off to the Callout
+transform the platform-specific requests and pass them off to the Handler
 Module in a uniform fashion.
 
-## The Callout Module
+## The Handler Module
 
-A Callout module is a standard module that SimpleBridge will call out to when a
-request is made, both standard HTTP requests, and websocket frames.  A Callout
+A Handler module is a standard module that SimpleBridge will call out to when a
+request is made, both standard HTTP requests, and websocket frames.  A Handler
 module is expected to export the following functions:
 
   + `run(Bridge)` - Bridge will be an initialized instance of a SimpleBridge
@@ -336,14 +337,14 @@ out of the box, but is only compatible through deprecations.
 The recommended approach to migrating to 2.x is to remove instantiating your
 Bridge altogether (that is, remove your `simple_bridge:make_request` and
 `simple_bridge:make_response` functions from your app, and instead rely on the
-"Callout" module (above) for handling requests, and the `simple_bridge.config`
+"Handler" module (above) for handling requests, and the `simple_bridge.config`
 file for setting up the backend server.
 
 When doing this, instead of starting the backend servers yourself in the code,
 you can rely on Simple Bridge to correctly set up the right configuration based
 on `simple_bridge.config` and instantiate the server in the correct way, and
 then starting your server with Simple Bridge by using something like
-`simple_bridge:start(yaws, my_callout_module)` (or check the "Starting Simple
+`simple_bridge:start(yaws, my_handler_module)` (or check the "Starting Simple
 Bridge" section above).
 
 #### You can still set up the bridge yourself, if you prefer

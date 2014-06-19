@@ -15,28 +15,28 @@
 ping(Req, State) ->
 	{pong, Req, State}.
 
-init(_Callout = Callout) -> 
-    {ok, Callout}.
+init(_Handler = Handler) -> 
+    {ok, Handler}.
 
-allowed_methods(Req, Callout) -> 
-    {['HEAD', 'GET', 'POST'], Req, Callout}.
+allowed_methods(Req, Handler) -> 
+    {['HEAD', 'GET', 'POST'], Req, Handler}.
 
-post_is_create(Req, Callout) -> 
-    {false, Req, Callout}.
+post_is_create(Req, Handler) -> 
+    {false, Req, Handler}.
 
-to_html(Req, Callout) ->
-    {ok, Data, Req1} = do_bridge(Callout, Req),
-    {Data, Req1, Callout}.
+to_html(Req, Handler) ->
+    {ok, Data, Req1} = do_bridge(Handler, Req),
+    {Data, Req1, Handler}.
 
-process_post(Req, Callout) ->
-    {ok, Data, Req1} = do_bridge(Callout, Req),
+process_post(Req, Handler) ->
+    {ok, Data, Req1} = do_bridge(Handler, Req),
     Req2 = wrq:set_resp_body(Data, Req1),
-    {true, Req2, Callout}.
+    {true, Req2, Handler}.
 
-do_bridge(Callout, Req) ->
+do_bridge(Handler, Req) ->
 	Bridge = simple_bridge:make(webmachine, Req),
-	case simple_bridge_websocket:attempt_hijacking(Bridge, Callout) of
+	case simple_bridge_websocket:attempt_hijacking(Bridge, Handler) of
 		{hijacked, closed} -> gen_tcp:close(Bridge:socket());
 		{hijacked, Bridge2} -> Bridge2:build_response();
-		spared -> Callout:run(Bridge)
+		spared -> Handler:run(Bridge)
 	end.

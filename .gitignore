@@ -6,3 +6,5 @@ erl_crash.dump
 /deps/*
 test/logs/*
 logs
+crypto_compat.hrl
+log/
