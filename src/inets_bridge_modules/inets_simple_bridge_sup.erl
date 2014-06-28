@@ -64,7 +64,7 @@ build_config(HasMimetypes) ->
         {server_root, "."},
         {document_root, DocRoot},
         {error_log, "./log/inets.log"},
-        {modules, [simple_bridge_util:get_anchor_module(inets)]},
+        {modules, [mod_log, mod_disk_log, simple_bridge_util:get_anchor_module(inets)]},
         {mime_types, build_mimetypes(HasMimetypes)}
     ]},
 

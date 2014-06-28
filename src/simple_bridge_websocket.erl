@@ -44,11 +44,15 @@ attempt_hijacking(Bridge, Handler) ->
     UpgradeHeader = sbw:header_lower(upgrade, Bridge),
     ConnectionHeader = sbw:header_lower(connection, Bridge),
     WSVersionHead = sbw:header("Sec-WebSocket-Version", Bridge),
-    
+    ConnectionHeaderHasUpgrade = case re:run(ConnectionHeader, "upgrade") of
+        nomatch -> false;
+        {match, _} -> true
+    end,
+
     if
         ProtocolVersion     >= {1,1},
         UpgradeHeader       =:= "websocket",
-        ConnectionHeader    =:= "upgrade",
+        ConnectionHeaderHasUpgrade,
         WSVersionHead       =/= undefined ->
             WSVersions = re:split(WSVersionHead, "[, ]+]", [{return, list}]),
             HijackedBridge = case lists:member(?WS_VERSION, WSVersions) of

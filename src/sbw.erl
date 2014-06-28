@@ -299,7 +299,7 @@ find_param(Param, Default, ParamList) when is_binary(Param) ->
 		false -> Default
 	end;
 find_param(Param, Default, ParamList) when is_atom(Param); is_list(Param) ->
-	Param1 = simple_bridge_util:to_list(Param),
+	Param1 = simple_bridge_util:to_binary(Param),
 	simple_bridge_util:to_list(find_param(Param1, Default, ParamList)).
 
 
