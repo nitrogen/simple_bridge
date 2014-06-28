@@ -22,14 +22,14 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    application:start(mimetypes),
+    HasMimetypes = start_mimetypes(),
     application:load(inets),
     case application:get_env(inets, services) of
-        undefined -> build_config();
+        undefined -> build_config(HasMimetypes);
         {ok, Services} ->
             case proplists:get_value(Services, httpd) of
                 undefined ->
-                    build_config();
+                    build_config(HasMimetypes);
                 _ -> ok
             end
     end,
@@ -43,7 +43,14 @@ init([]) ->
     end,
     {ok, { {one_for_one, 5, 10}, []} }.
 
-build_config() ->
+start_mimetypes() ->
+    case application:start(mimetypes) of
+        ok -> true;
+        {error, {already_started, mimetypes}} -> true;
+        {error, _} -> false
+    end.
+
+build_config(HasMimetypes) ->
     io:format("No configuration for inets httpd, so constructing from simple_bridge.config...~n"),
     {Address, Port} = simple_bridge_util:get_address_and_port(inets),
     {DocRoot, StaticPaths} = simple_bridge_util:get_docroot_and_static_paths(inets),
@@ -58,7 +65,7 @@ build_config() ->
         {document_root, DocRoot},
         {error_log, "./log/inets.log"},
         {modules, [simple_bridge_util:get_anchor_module(inets)]},
-        {mime_types, build_mimetypes()}
+        {mime_types, build_mimetypes(HasMimetypes)}
     ]},
 
     case application:get_env(inets, services) of
@@ -69,5 +76,17 @@ build_config() ->
             application:set_env(inets, services, NewServices)
     end.
 
-build_mimetypes() ->
-    [{binary_to_list(Ext), binary_to_list(hd(mimetypes:ext_to_mimes(Ext)))} || Ext <- mimetypes:extensions()].
+build_mimetypes(true = _HasMimetypes) ->
+    [{binary_to_list(Ext), binary_to_list(hd(mimetypes:ext_to_mimes(Ext)))} 
+        || Ext <- mimetypes:extensions()];
+build_mimetypes(false = _HasMimetypes) ->
+    Mimetypes = [
+        {"html", "text/html"},
+        {"js", "text/javascript"},
+        {"jpg", "image/jpeg"},
+        {"jpeg", "image/jpeg"},
+        {"png", "image/png"},
+        {"gif", "image/gif"}
+    ],
+    io:format("mimetypes application not found.~n Specifying bare-bones mimetypes:~n~p~n", [Mimetypes]),
+    Mimetypes.
