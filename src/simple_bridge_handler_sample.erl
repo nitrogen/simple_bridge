@@ -3,9 +3,9 @@
 -behaviour(simple_bridge_handler).
 -export([run/1,
         ws_init/1,
-        ws_message/2,
-        ws_info/2,
-        ws_terminate/2]).
+        ws_message/3,
+        ws_info/3,
+        ws_terminate/3]).
 
 
 run(Bridge) ->
@@ -16,20 +16,20 @@ ws_init(_Bridge) ->
     %erlang:send_after(1000, self(), "START"),
     ok.
 
-ws_message({text, <<"frag">>}, _Bridge) ->
+ws_message({text, <<"frag">>}, _State, _Bridge) ->
     Reply = [{text, [Msg," "]} || Msg <- ["A","spoon","full","of","sugar"]],
     {reply, Reply};
-ws_message({text, Data}, _Bridge) ->
+ws_message({text, Data}, _State, _Bridge) ->
     %Reply = io_lib:format("~s", [Data]),
     {reply, {text, Data}};
-ws_message({binary, Data}, _Bridge) ->
+ws_message({binary, Data}, _State, _Bridge) ->
     {reply, {binary, Data}}.
 
-ws_info(Data, _Bridge) ->
+ws_info(Data, _Bridge, _State) ->
     Reply = {text, io_lib:format("~s", [Data])},
     {reply, Reply}.
 
-ws_terminate(_Reason, _Bridge) ->
+ws_terminate(_Reason, _Bridge, _State) ->
     ok.
 
 

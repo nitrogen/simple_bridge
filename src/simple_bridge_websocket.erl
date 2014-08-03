@@ -84,13 +84,21 @@ hijack(Bridge, Handler) ->
     Socket = sbw:socket(Bridge),
     inet:setopts(Socket, [{buffer,65535}]),
     send_handshake_response(Socket, ResponseKey),
-    case erlang:function_exported(Handler, ws_init, 1) of
-        true -> ok = Handler:ws_init(Bridge);
-        false -> do_nothing
-    end,
     inet:setopts(Socket, [{active, once}]),
-    websocket_loop(Socket, Bridge, Handler, #partial_data{}).
+    State = call_init(Handler, Bridge),
+    websocket_loop(Socket, Bridge, Handler, State, #partial_data{}).
     
+call_init(Handler, Bridge) ->
+    case erlang:function_exported(Handler, ws_init, 1) of
+        true ->
+            case Handler:ws_init(Bridge) of
+                ok -> undefined;
+                {ok, State} -> State
+            end;
+        false -> undefined
+    end.
+
+
 send_handshake_response(Socket, ResponseKey) ->
     Handshake = [
                  <<"HTTP/1.1 101 Switching Protocols\r\n">>,
@@ -102,7 +110,7 @@ send_handshake_response(Socket, ResponseKey) ->
     gen_tcp:send(Socket, Handshake).
 
 
-websocket_loop(Socket, Bridge, Handler, PartialData) ->
+websocket_loop(Socket, Bridge, Handler, State, PartialData) ->
     try
         receive 
             {tcp, Socket, Data} ->
@@ -110,18 +118,18 @@ websocket_loop(Socket, Bridge, Handler, PartialData) ->
                 Frames = parse_frame(AttemptPacket),
                 
                 PendingFrames = PartialData#partial_data.message_frames,
-                case process_frames(Frames, Socket, Bridge, Handler, PendingFrames) of
-                    {PendingFrames2, RemainderData} ->
+                case process_frames(Frames, Socket, Bridge, Handler, State, PendingFrames) of
+                    {PendingFrames2, RemainderData, NewState} ->
                         inet:setopts(Socket, [{active, once}]),
-                        websocket_loop(Socket, Bridge, Handler, #partial_data{data=RemainderData, message_frames=PendingFrames2});
+                        websocket_loop(Socket, Bridge, Handler, NewState, #partial_data{data=RemainderData, message_frames=PendingFrames2});
                     closed -> closed
                 end;
             {tcp_closed, Socket} ->
                 closed;
             Msg ->
-                Reply = Handler:ws_info(Msg, Bridge),
+                {Reply, NewState} = call_info(Handler, Msg, Bridge, State),
                 send(Socket, Reply),
-                websocket_loop(Socket, Bridge, Handler, PartialData)
+                websocket_loop(Socket, Bridge, Handler, NewState, PartialData)
         end
     catch
         exit:{websocket, ReasonCode, _Reason} ->
@@ -131,6 +139,24 @@ websocket_loop(Socket, Bridge, Handler, PartialData) ->
             exit(normal)
     end.
 
+call_info(Handler, Msg, Bridge, State) ->
+    case erlang:function_exported(Handler, ws_info, 3) of
+        true ->
+            HandlerReturn = Handler:ws_info(Msg, Bridge, State),
+            {_Reply, _NewState} = extract_reply_state(State, HandlerReturn);
+        false ->
+            {noreply, State}
+    end.
+
+extract_reply_state(State, InfoMsgReturn) ->
+    case InfoMsgReturn of
+        noreply -> {noreply, State};
+        {noreply, NewState} -> {noreply, NewState};
+        {reply, Reply} -> {{reply, Reply}, State};
+        {reply, Reply, NewState} -> {{reply, Reply}, NewState};
+        close -> {close, 1000};
+        {close, CloseReason} -> {close, CloseReason}
+    end.
 
 close_with_purpose(ReasonCode, Reason) ->
     exit({websocket, ReasonCode, Reason}).
@@ -203,67 +229,69 @@ encode_frame(#frame{
 %% frames to the handler module and discard them.
 
 %% Done processing frames
-process_frames([], _Socket, _Bridge, _Handler, PendingFrames) ->
-    {PendingFrames, <<>>};
+process_frames([], _Socket, _Bridge, _Handler, State, PendingFrames) ->
+    {PendingFrames, <<>>, State};
 
 %% Done processing frames, and we have some left-over binary data
-process_frames([Bin], _Socket, _Bridge, _Handler, PendingFrames) when is_binary(Bin) ->
-    {PendingFrames, Bin};
+process_frames([Bin], _Socket, _Bridge, _Handler, State, PendingFrames) when is_binary(Bin) ->
+    {PendingFrames, Bin, State};
 
 %% Handling erroneous Frams:
 %% Control frames with payload > 126
-process_frames([#frame{opcode=Ctl, payload_len=PayloadLen} | _], _Socket, _Bridge, _Handler, _Pending) 
+process_frames([#frame{opcode=Ctl, payload_len=PayloadLen} | _], _Socket, _Bridge, _Handler, _State, _Pending) 
         when (Ctl=:=?WS_PING orelse Ctl=:=?WS_PONG orelse Ctl=:=?WS_CLOSE) andalso PayloadLen >= ?WS_EXTENDED_PAYLOAD_16BIT ->
     close_with_purpose(1002, {control_frame_payload_to_large, PayloadLen});
 %% RSV bits set to anything but zero
-process_frames([#frame{rsv=RSV} | _], _Socket, _Bridge, _Handler, _Pending)
+process_frames([#frame{rsv=RSV} | _], _Socket, _Bridge, _Handler, _State, _Pending)
         when RSV =/= 0 ->
     close_with_purpose(1002, {invalid_rsv, RSV});
 %% Invalid Opcode
-process_frames([#frame{opcode=Op} | _], _Socket, _Bridge, _Handler, _Pending)
+process_frames([#frame{opcode=Op} | _], _Socket, _Bridge, _Handler, _State, _Pending)
         when ?IS_INVALID_OPCODE(Op) ->
     close_with_purpose(1002, {invalid_opcode, Op});
 
 
 %% Single Text or Binary Frame (PendingFrames must be empty)
-process_frames([_F = #frame{opcode=Opcode, fin=1, data=Data} |Rest], Socket, Bridge, Handler, []) 
+process_frames([_F = #frame{opcode=Opcode, fin=1, data=Data} |Rest], Socket, Bridge, Handler, State, []) 
         when Opcode=:=?WS_BINARY; Opcode=:=?WS_TEXT ->
     Type = type(Opcode),
     %% Side-effects, look out!
     close_on_invalid_utf8_text(Type, Data),
-    Reply = Handler:ws_message({Type, Data}, Bridge),
+    HandlerReturn = Handler:ws_message({Type, Data}, Bridge, State),
+    {Reply, NewState} = extract_reply_state(State, HandlerReturn),
     send(Socket, Reply),
-    process_frames(Rest, Socket, Bridge, Handler, []);
+    process_frames(Rest, Socket, Bridge, Handler, NewState, []);
 
 %% First Text or Binary Fragment (PendingFrames must be empty)
-process_frames([F = #frame{opcode=Opcode, fin=0}|Rest], Socket, Bridge, Handler, [])
+process_frames([F = #frame{opcode=Opcode, fin=0}|Rest], Socket, Bridge, Handler, State, [])
         when Opcode=:=?WS_BINARY; Opcode=:=?WS_TEXT ->
-    process_frames(Rest, Socket, Bridge, Handler, [F]);
+    process_frames(Rest, Socket, Bridge, Handler, State, [F]);
 
 %% Continuation Frame
-process_frames([F = #frame{opcode=?WS_CONTINUATION, fin=0}|Rest], Socket, Bridge, Handler, PendingFrames=[_|_]) ->
-    process_frames(Rest, Socket, Bridge, Handler, PendingFrames ++ [F]);
+process_frames([F = #frame{opcode=?WS_CONTINUATION, fin=0}|Rest], Socket, Bridge, Handler, State, PendingFrames=[_|_]) ->
+    process_frames(Rest, Socket, Bridge, Handler, State, PendingFrames ++ [F]);
 
 %% Last fragment of a fragmented message
-process_frames([F = #frame{opcode=?WS_CONTINUATION, fin=1}|Rest], Socket, Bridge, Handler, PendingFrames=[_|_]) ->
+process_frames([F = #frame{opcode=?WS_CONTINUATION, fin=1}|Rest], Socket, Bridge, Handler, State, PendingFrames=[_|_]) ->
     ReorderedFrames = PendingFrames ++ [F],
     Type = type((hd(ReorderedFrames))#frame.opcode),
     Msg = defragment_data(ReorderedFrames),
     %% Side-effects, look out!
     close_on_invalid_utf8_text(Type, Msg),
-    Reply = Handler:ws_message({Type, Msg}, Bridge),
+    HandlerReturn = Handler:ws_message({Type, Msg}, Bridge, State),
+    {Reply, NewState} = extract_reply_state(State, HandlerReturn),
     send(Socket, Reply),
-    process_frames(Rest, Socket, Bridge, Handler, []);
+    process_frames(Rest, Socket, Bridge, Handler, NewState, []);
 
-process_frames([_F = #frame{opcode=?WS_PONG}|Rest], Socket, Bridge, Handler, PendingFrames) ->
+process_frames([_F = #frame{opcode=?WS_PONG}|Rest], Socket, Bridge, Handler, State, PendingFrames) ->
     %% do nothing?
-    process_frames(Rest, Socket, Bridge, Handler, PendingFrames);
+    process_frames(Rest, Socket, Bridge, Handler, State, PendingFrames);
 
-process_frames([#frame{opcode=?WS_PING, data=Data, fin=1}|Rest], Socket, Bridge, Handler, PendingFrames) ->
+process_frames([#frame{opcode=?WS_PING, data=Data, fin=1}|Rest], Socket, Bridge, Handler, State, PendingFrames) ->
     send(Socket, {pong, Data}),
-    process_frames(Rest, Socket, Bridge, Handler, PendingFrames);
+    process_frames(Rest, Socket, Bridge, Handler, State, PendingFrames);
 
-process_frames([_F = #frame{opcode=?WS_CLOSE, data=Data}|_Rest], Socket, Bridge, Handler, _PendingFrames) ->
+process_frames([_F = #frame{opcode=?WS_CLOSE, data=Data}|_Rest], Socket, Bridge, Handler, State, _PendingFrames) ->
     StatusCode = case Data of
         <<_:8>> ->
             1002;
@@ -280,12 +308,12 @@ process_frames([_F = #frame{opcode=?WS_CLOSE, data=Data}|_Rest], Socket, Bridge,
     end,
             
     send(Socket, {close, StatusCode}),
-    Handler:ws_terminate(closed, Bridge),
+    Handler:ws_terminate(closed, Bridge, State),
     inet:close(Socket),
     closed;
 
 %% None of the above caught it. something must be wrong, so let's just die
-process_frames([F|_], _Socket, _Bridge, _Handler, _PendingFrames) ->
+process_frames([F|_], _Socket, _Bridge, _Handler, _State, _PendingFrames) ->
     close_with_purpose(1002, {unknown_error_processing_frame, F}).
     
 defragment_data(Frames) ->
