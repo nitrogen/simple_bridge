@@ -8,8 +8,10 @@
         websocket_init/3,
         websocket_handle/3,
         websocket_info/3,
-        websocket_terminate/3
+        websocket_terminate/2
     ]).
+
+-record(ws_state, {handler, bridge, state}).
 
 init(_Transport, Req, _Opts) ->
     {Upgrade, _} = cowboy_req:header(<<"upgrade">>, Req),
@@ -38,34 +40,41 @@ terminate(_Reason, _Req, _State) ->
 websocket_init(_Transport, Req, _Opts) ->
     {ok, Handler} = application:get_env(simple_bridge, handler),
     Bridge = simple_bridge:make(cowboy, {Req, ""}),
-    ok = Handler:ws_init(Bridge),
-    {ok, Req, {Bridge, Handler}}.
+    UserState = simple_bridge_websocket:call_init(Handler, Bridge),
+    WSState = #ws_state{bridge=Bridge, handler=Handler, state=UserState},
+    {ok, Req, WSState}.
 
-websocket_handle({ping, _Data}, Req, State) ->
+websocket_handle({ping, _Data}, Req, WSState) ->
     %% We don't need to pong, cowboy does that automatically. So just carry on!
-    {ok, Req, State};
-websocket_handle({pong, _}, Req, State) ->
-    {ok, Req, State};
-websocket_handle(Data, Req, State={Bridge, Handler}) ->
-    Result = Handler:ws_message(Data, Bridge),
-    Reply = massage_reply(Result, Req, State),
-    Reply.
+    {ok, Req, WSState};
+websocket_handle({pong, _}, Req, WSState) ->
+    {ok, Req, WSState};
+websocket_handle(Data, Req, WSState) ->
+    #ws_state{handler=Handler, bridge=Bridge, state=State} = WSState,
+    Result = Handler:ws_message(Data, Bridge, State),
+    massage_reply(Result, Req, WSState).
 
-websocket_info(Data, Req, State={Bridge, Handler}) ->
-    Result = Handler:ws_info(Data, Bridge),
-    Reply = massage_reply(Result, Req, State),
-    Reply.
+websocket_info(Data, Req, WSState) ->
+    #ws_state{handler=Handler, bridge=Bridge, state=State} = WSState,
+    Result = Handler:ws_info(Data, Bridge, State),
+    massage_reply(Result, Req, WSState).
 
-websocket_terminate(Reason, _Req, {Bridge, Handler}) ->
-    ok = Handler:ws_terminate(Reason, Bridge).
+websocket_terminate(Reason, #ws_state{bridge=Bridge, handler=Handler, state=State}) ->
+    ok = Handler:ws_terminate(Reason, Bridge, State).
 
-massage_reply({reply, {Type, Data}}, Req, State)
+massage_reply({reply, {Type, Data}, NewState}, Req, WSState)
         when Type==binary orelse Type==text ->
-    {reply, {Type, iolist_to_binary(Data)}, Req, State};
-massage_reply({reply, List}, Req, State) ->
+    {reply, {Type, iolist_to_binary(Data)}, Req, WSState#ws_state{state=NewState}};
+massage_reply({reply, List, NewState}, Req, WSState) ->
     FixedList = [{Type, iolist_to_binary(Data)} || {Type, Data} <- List],
-    {reply, FixedList, Req, State};
-massage_reply(noreply, Req, State) ->
-    {ok, Req, State};
-massage_reply(close, Req, State) ->
-    {shutdown, Req, State}.
+    {reply, FixedList, Req, WSState#ws_state{state=NewState}};
+massage_reply({reply, Reply}, Req, WSState) ->
+    massage_reply({reply, Reply, WSState#ws_state.state}, Req, WSState);
+massage_reply({noreply, NewState}, Req, WSState) ->
+    {ok, Req, WSState#ws_state{state=NewState}};
+massage_reply(noreply, Req, WSState) ->
+    {ok, Req, WSState};
+massage_reply({close, _Reason}, Req, WSState) ->
+    {shutdown, Req, WSState};
+massage_reply(close, Req, WSState) ->
+    {shutdown, Req, WSState}.

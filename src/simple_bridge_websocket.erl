@@ -1,10 +1,11 @@
 %% vim: ts=4 sw=4 et
 -module(simple_bridge_websocket).
 -export([
-        attempt_hijacking/2
+        attempt_hijacking/2,
+        call_init/2
     ]).
 
--compile(export_all).
+%-compile(export_all).
 
 -include("crypto_compat.hrl").
 
