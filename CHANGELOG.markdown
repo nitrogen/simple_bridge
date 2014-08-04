@@ -7,13 +7,13 @@
   building backend-specific configurations.
 * All backends now provide an "anchor" module, which serves as an intermediary
   between the server and the "handler" module.
-* Merged Request and Response bridge into a single "sbw" (simple bridge
-  wrapper) object.
+* Merged Request and Response bridge into a single `Bridge` "object" using the
+  module "sbw" (simple bridge wrapper).
 * Added `simple_bridge:make(Backend)` function to replace having to make both
   request and response bridges.
-* Added handler module behaviour (`-behaviour(simple_bridge_handler)`) for each
+* Added a handler behaviour (`-behaviour(simple_bridge_handler)`) for each
   platform, customizable with `simple_bridge:start(Backend, HandlerMod)`. This
-  relies on the use an "Anchor" module, a default provided for each module.
+  relies on the use of an "Anchor" module, a default provided for each module.
 * Added a sample handler module which can be used as a basis for future
   functionality. (`simple_bridge_handler_sample.erl`)
 * Added Websocket Support for Yaws, Cowboy using their native implementations.
