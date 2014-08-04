@@ -128,7 +128,7 @@ websocket_loop(Socket, Bridge, Handler, State, PartialData) ->
             {tcp_closed, Socket} ->
                 closed;
             Msg ->
-                {Reply, NewState} = call_info(Handler, Msg, Bridge, State),
+                {Reply, NewState} = call_info(Handler, Bridge, Msg, State),
                 send(Socket, Reply),
                 websocket_loop(Socket, Bridge, Handler, NewState, PartialData)
         end
@@ -140,7 +140,7 @@ websocket_loop(Socket, Bridge, Handler, State, PartialData) ->
             exit(normal)
     end.
 
-call_info(Handler, Msg, Bridge, State) ->
+call_info(Handler, Bridge, Msg, State) ->
     case erlang:function_exported(Handler, ws_info, 3) of
         true ->
             HandlerReturn = Handler:ws_info(Msg, Bridge, State),

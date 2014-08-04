@@ -62,6 +62,9 @@ websocket_info(Data, Req, WSState) ->
 websocket_terminate(Reason, #ws_state{bridge=Bridge, handler=Handler, state=State}) ->
     ok = Handler:ws_terminate(Reason, Bridge, State).
 
+
+%% MASSAGE_REPLY reformats a simple_bridge return value into something that can
+%% be handled by cowboy.
 massage_reply({reply, {Type, Data}, NewState}, Req, WSState)
         when Type==binary orelse Type==text ->
     {reply, {Type, iolist_to_binary(Data)}, Req, WSState#ws_state{state=NewState}};
