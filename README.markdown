@@ -126,8 +126,9 @@ Module in a uniform fashion.
 ## The Handler Module
 
 A Handler module is a standard module that SimpleBridge will call out to when a
-request is made, both standard HTTP requests, and websocket frames.  A Handler
-module is expected to export the following functions:
+request is made, both standard HTTP requests, and websocket frames.
+
+A Handler module is expected to export the following functions:
 
   + `run(Bridge)` - Bridge will be an initialized instance of a SimpleBridge
     object, and the last step of the run will be the return value of
@@ -135,9 +136,12 @@ module is expected to export the following functions:
   + `ws_init(Bridge)` - Called when a websocket connection is initialized.
     + Return Values:
       + `ok` - Everything went okay, proceed with the connection.
+      + `{ok, State}` - Everything went okay, proceeed with connection and
+        initialize with the provided `State` (which will be passed to
+        `ws_message`, `ws_info`, and `ws_terminate` functions.
       + `close` - Everything did not go okay, let's shut down the connection.
-  + `ws_message(Message, Bridge)` - Called when a websocket client has sent us
-    something. 
+  + `ws_message(Message, Bridge, State)` - Called when a websocket client has
+    sent us something. 
     + `Message` can be:
       + `{Type, Data}` - `Type` will be either `binary` or `text`, depending on
       the nature of the message. `Data` will always be a binary. By the nature of the
@@ -145,19 +149,25 @@ module is expected to export the following functions:
       will be verified to be valid UTF8 Unicode.
     + Return Values:
       + `noreply` - No reply will be made.
+      + `{noreply, NewState}` - No reply will be made, but change the state to
+        `NewState`
       + `{reply, {Type, Data}}` - `Type` can be `text` or `binary` and `Data`
         can be a binary, list, or iolist.
+      + `{reply, {Type, Data}, NewState}` - Same as `{reply, {Type, Data}}`,
+        except that the internal state will be changed to `NewState`
       + `{reply, [{Type, Data}]}` - Reply with a list of `{Type, Data}` pairs
         as a single message broken into several frames.
+      + `{reply, [{Type, Data}], NewState}` - Same as `{reply, [{Type, Data}]}`
+        except change the state to `NewState`
       + `close` - Kill the connection (will provide the Websocket Error code 1000)
       + `{close, StatusCode}` - Kill the connection with `StatusCode` (See
         [RFC6455 Sec 7.4.1](https://tools.ietf.org/html/rfc6455#section-7.4.1)
         for the list of valid connection codes).
-  + `ws_info(Message, Bridge)` - Called when the websocket *process* receives a
+  + `ws_info(Message, Bridge, State)` - Called when the websocket *process* receives a
     message (that is, a message was sent from an Erlang process).
     + `Message` can be any term
     + Return values are exactly the same as `ws_message`
-  + `ws_terminate(ReasonCode, Bridge)` - The websocket is shutting down with
+  + `ws_terminate(ReasonCode, Bridge, State)` - The websocket is shutting down with
     `ReasonCode`.
     + Return Value: `ok`
 
@@ -165,6 +175,26 @@ Notice that each of the call above passes in a `Bridge` object. This object
 will be how you interface with the underlying server, both retrieving
 information about the request (headers, query strings, etc), as well as
 building your response to the server.
+
+### A brief note about `State` and Websockets
+
+In the above handler functions, `State` can be any term.  It's for your own
+applications to track the state of your application's.  The `State` is local
+only to the specific client's connection.  For example, it could be used for
+storing a session identifier (for quick lookup in the session key-value store,
+rather than having to read a cookie from the `Bridge` object), or for tracking
+some user-specific value that might change from message to message, such as
+"Away" or "Do Not Disturb" status.  It's provided as a convenience so that you
+won't need to rely on the process dictionary for tracking this state.  As soon
+as the connection dies, this `State` will cease to exist. It is not, as one
+might be inclined to believe, an application-wide state.
+
+If your function returns, for example, the atom `noreply` or the `{reply,
+Message}` two-tuples, then `State` will remain unchanged.  As such, if you
+simply don't care about using the `State` variable, then you could easily
+ignore the `State` variable by matching it with `_` in your function
+definitions, and retuning the "Stateless" versions of each return value
+(`noreply`, `{reply, Message}`).
 
 ### What can I do with the Bridge?
 
