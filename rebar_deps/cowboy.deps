@@ -1,2 +1,1 @@
     {cowboy,        ".*",   {git, "git://github.com/extend/cowboy",         {tag, "0.10.0"}}},
-    {ranch,         ".*",   {git, "git://github.com/extend/ranch",          {tag, "0.10.0"}}}
