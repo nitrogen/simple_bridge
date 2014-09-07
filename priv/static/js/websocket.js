@@ -18,7 +18,7 @@ function init() {
 function connect()
 {
 	wsHost = $("#server").val()
-		websocket = new WebSocket(wsHost);
+	websocket = new WebSocket(wsHost);
 	showScreen('<b>Connecting to: ' +  wsHost + '</b>'); 
 	websocket.onopen = function(evt) { onOpen(evt) }; 
 	websocket.onclose = function(evt) { onClose(evt) }; 
