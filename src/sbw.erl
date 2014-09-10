@@ -226,7 +226,7 @@ cookies(Wrapper) ->
 
 cookie(Cookie, Wrapper) ->
 	BinCookie = simple_bridge_util:binarize_header(Cookie),
-	case lists:keyfind(BinCookie, 1, Wrapper#sbw.headers) of
+	case lists:keyfind(BinCookie, 1, Wrapper#sbw.cookies) of
 		false -> undefined;
 		{_, Val} ->
 			if	is_list(Cookie);
