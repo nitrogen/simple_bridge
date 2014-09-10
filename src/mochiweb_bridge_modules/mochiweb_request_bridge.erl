@@ -110,6 +110,8 @@ header(x_forwarded_for, Req) ->
     Req:get_header_value("x-forwarded-for");
 header(x_forwarded_proto, Req) ->
     Req:get_header_value("x-forwarded-proto");
+header(x_requested_with, Req) ->
+    Req:get_header_value("x-requested-with");
 header(transfer_encoding, Req) ->
     Req:get_header_value("transfer-encoding");
 header(accept_encoding, Req) ->

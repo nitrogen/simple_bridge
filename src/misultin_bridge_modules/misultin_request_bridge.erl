@@ -76,6 +76,8 @@ header(x_forwarded_for, Req) ->
     misultin_utility:get_key_value('X-Forwarded-For', Req:get(headers));
 header(x_forwarded_proto, Req) ->
     misultin_utility:get_key_value('X-Forwarded-Proto', Req:get(headers));
+header(x_requested_with, Req) ->
+    misultin_utility:get_key_value('X-Requested-With', Req:get(headers));
 header(transfer_encoding, Req) ->
     misultin_utility:get_key_value('Transfer-Encoding', Req:get(headers));
 header(accept_language, Req) ->
