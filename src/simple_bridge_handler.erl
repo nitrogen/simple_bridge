@@ -2,8 +2,8 @@
 -module(simple_bridge_handler).
 -include("simple_bridge.hrl").
 
--type data()                ::  iolist().
--type ws_data()             ::  {text, binary()} | {binary, binary()}.
+-type data()                ::  iolist() | binary().
+-type ws_data()             ::  {text, data()} | {binary, data()}.
 -type reply()               ::  ws_data() | [ws_data()].
 -type reason()              ::  integer().
 -type state()               ::  any().
