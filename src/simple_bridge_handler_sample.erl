@@ -35,9 +35,6 @@ ws_terminate(_Reason, _Bridge, _State) ->
 
 %%% HTML BODY AND DRAWING TESTING THE BRIDGE CAPABILITIES
 
-welcome() ->
-    "Welcome to the Simple Bridge Websocket test.<br />Send <b>frag</b> to have the server send frames in fragments to the client.<br />Send <b>frag2</b> to send a fragmented message to the server from the client.".
-
 body(Bridge) ->
     [
     <<"<html>
