@@ -8,7 +8,7 @@
         websocket_init/3,
         websocket_handle/3,
         websocket_info/3,
-        websocket_terminate/2
+        websocket_terminate/3
     ]).
 
 -record(ws_state, {handler, bridge, state}).
@@ -59,7 +59,7 @@ websocket_info(Data, Req, WSState) ->
     Result = Handler:ws_info(Data, Bridge, State),
     massage_reply(Result, Req, WSState).
 
-websocket_terminate(Reason, #ws_state{bridge=Bridge, handler=Handler, state=State}) ->
+websocket_terminate(Reason, _Req, #ws_state{bridge=Bridge, handler=Handler, state=State}) ->
     ok = Handler:ws_terminate(Reason, Bridge, State).
 
 
