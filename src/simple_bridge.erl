@@ -115,6 +115,8 @@ make_request(Module, Req) ->
     FixedModule = fix_old_modules(Module),
     inner_make(FixedModule, Req).
 
+make_response(cowboy_response_bridge, Bridge = #sbw{}) ->
+    Bridge;
 make_response(Module, {Req = {mochiweb_request, _}, Docroot}) ->
     application:set_env(simple_bridge, document_root, Docroot),
     make_response(Module, Req);
