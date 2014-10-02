@@ -111,7 +111,13 @@ query_params(Arg) ->
     yaws_api:parse_query(Arg).
 
 post_params(Arg) ->
-    yaws_api:parse_post(Arg).
+    case should_we_parse_post_params(request_method(Arg)) of
+        true -> yaws_api:parse_post(Arg);
+        _ -> []
+    end.
+
+should_we_parse_post_params('GET') -> false;
+should_we_parse_post_params(_) -> true.
 
 request_body(Arg) ->
     case yaws_api:arg_clidata(Arg) of
