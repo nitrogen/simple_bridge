@@ -103,7 +103,7 @@ query_params(ReqKey) ->
 post_params(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
 
-    {ok, BodyQs, NewReq} = cowboy_req:body_qs(200000, Req),
+    {ok, BodyQs, NewReq} = cowboy_req:body_qs(Req, [{length, 2000000}]),
     put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
     BodyQs.
 
@@ -112,8 +112,10 @@ request_body(ReqKey) ->
      %% We cache the body here because we can't request the body twice in cowboy or it'll crash
     {Body, NewReq} = case RequestCache#request_cache.body of
         not_loaded ->
-            {ok, B, R} = cowboy_req:body(infinity, Req),
-            {B, R};
+            case cowboy_req:body(Req, [{continue, false}, {length, 1000000}]) of
+                {ok, B, R} -> {B, R};
+                {more, B, R} -> {B, R}
+            end;
         B ->
             {B, Req}
     end,
@@ -123,16 +125,17 @@ request_body(ReqKey) ->
 socket(_ReqKey) ->
     undefined.
 
-%% TODO: Cowboy's stream_body doesn't support customizable Length and Timeout
 recv_from_socket(_Length, _Timeout, ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
-    case cowboy_req:stream_body(Req) of
+    case cowboy_req:body(Req, [{length, 1000000}]) of
         {ok, Data, NewReq} ->
             put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
+            io:format("ok ~p~n", [byte_size(Data)]),
             Data;
-        {done, NewReq} ->
+        {more, Data, NewReq} ->
             put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
-            <<"">>;
+            io:format("more ~p~n", [byte_size(Data)]),
+            Data;
         {error, Reason} ->
             exit({error, Reason}) %% exit(normal) instead?
     end.

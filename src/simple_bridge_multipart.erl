@@ -56,36 +56,60 @@ parse_multipart(Req) ->
         % Get the boundary...
         {_K, _V, Props} = parse_header(sbw:header(content_type, Req)),
         Length = to_integer(sbw:header(content_length, Req)),
-        Boundary = to_binary(proplists:get_value("boundary", Props)),
+        Boundary = simple_bridge_util:to_binary(proplists:get_value("boundary", Props)),
 
         % Throw exception if the post is getting too big.
-        case Length > get_max_post_size() of
-            true  -> throw(post_too_big);
-            false -> continue
-        end,
+        ok = crash_if_too_big(Length),
 
         % Get whatever the underlying server has already read...
-        Data = to_binary(sbw:request_body(Req)),
+        Data = simple_bridge_util:to_binary(sbw:request_body(Req)),
 
         % Create the state...
-        State = #state { req = Req, boundary = Boundary, length=Length, bytes_read = size(Data), parts = [] },
+        State = init_state(Req, Boundary, Length, Data),
+        
         State1 = read_boundary(Data, State),
-        % Respond with {ok, Params, Files}.
-        {
-            ok,
-            [{simple_bridge_util:to_binary(Name), simple_bridge_util:to_binary(Value)} || #part { name=Name, value=Value, filename=undefined } <- State1#state.parts],
-            [#sb_uploaded_file {
-                original_name=Filename,
-                temp_file=sb_file_upload_handler:get_tempfile(FileUploadHandler),
-                data=sb_file_upload_handler:get_data(FileUploadHandler),
-                size=Size,
-                field_name=Name
-            } || #part { filename=Filename, value={file, FileUploadHandler}, size=Size, name=Name } <- State1#state.parts]
-        }
+        {Params, Files} = process_parts(State1#state.parts),
+        {ok, Params, Files}
     catch
         throw : post_too_big -> {error, post_too_big};
         throw : {file_too_big, FileName} -> {error, {file_too_big, FileName}}
     end.
+
+init_state(Req, Boundary, Length, Data) ->
+    #state{
+        req = Req,
+        boundary = Boundary,
+        length=Length,
+        bytes_read = size(Data),
+        parts = []
+    }.
+
+crash_if_too_big(Length) ->
+    case Length > get_max_post_size() of
+        true  -> throw(post_too_big);
+        false -> ok
+    end.
+
+process_parts(Parts) ->
+    Params = convert_parts_to_params(Parts),
+    Files = convert_parts_to_files(Parts),
+    {Params, Files}.
+
+convert_parts_to_params(Parts) ->
+    [
+        {simple_bridge_util:to_binary(Name),
+         simple_bridge_util:to_binary(Value)
+        } || #part { name=Name, value=Value, filename=undefined } <- Parts
+    ].
+
+convert_parts_to_files(Parts) ->
+    [#sb_uploaded_file {
+        original_name=Filename,
+        temp_file=sb_file_upload_handler:get_tempfile(FileUploadHandler),
+        data=sb_file_upload_handler:get_data(FileUploadHandler),
+        size=Size,
+        field_name=Name
+    } || #part { filename=Filename, value={file, FileUploadHandler}, size=Size, name=Name } <- Parts].
 
 % Not yet in a part. Read the POST headers to get content boundary and length.
 read_boundary(Data, State = #state { boundary=Boundary }) ->
@@ -189,6 +213,7 @@ get_next_line(Data, Acc, Part, State) when Data == undefined orelse Data == <<>>
 
 read_chunk(State = #state { req=Req, length=Length, bytes_read=BytesRead }) ->
     BytesToRead = lists:min([Length - BytesRead, ?CHUNKSIZE]),
+    io:format("Receiving From Socket~n"),
     Data = sbw:recv_from_socket(BytesToRead, ?IDLE_TIMEOUT, Req),
     NewBytesRead = BytesRead + size(Data),
 
@@ -237,12 +262,6 @@ unquote_header("", Acc) -> lists:reverse(Acc);
 unquote_header("\"", Acc) -> lists:reverse(Acc);
 unquote_header([$\\, C | Rest], Acc) -> unquote_header(Rest, [C | Acc]);
 unquote_header([C | Rest], Acc) -> unquote_header(Rest, [C | Acc]).
-
-to_binary(undefined) -> <<"">>;
-to_binary(A) when is_atom(A) -> to_binary(atom_to_list(A));
-to_binary(B) when is_binary(B) -> B;
-to_binary(I) when is_integer(I) -> to_binary(integer_to_list(I));
-to_binary(L) when is_list(L) -> list_to_binary(L).
 
 to_integer(L) when is_list(L) -> list_to_integer(L);
 to_integer(B) when is_binary(B) -> to_integer(binary_to_list(B));
