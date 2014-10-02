@@ -102,7 +102,6 @@ query_params(ReqKey) ->
 
 post_params(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
-
     {ok, BodyQs, NewReq} = cowboy_req:body_qs(Req, [{length, 2000000}]),
     put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
     BodyQs.
@@ -186,7 +185,7 @@ build_response(ReqKey, Res) ->
  
             Path = strip_leading_slash(P),
             Mimetype = get_mimetype(Path),
-            Headers2 = simple_bridge_util:ensure_header(Headers,{"Content-Type",Mimetype}),
+            Headers2 = simple_bridge_util:ensure_header(Headers,{"Content-Type", Mimetype}),
             Headers3 = simple_bridge_util:ensure_expires_header(Headers2),
             FullPath = filename:join(DocRoot, Path),
             {ok, FinReq} = case filelib:is_regular(FullPath) of
@@ -208,8 +207,8 @@ build_response(ReqKey, Res) ->
     end.
 
 get_mimetype(Path) ->
-    [$. | Ext] = filename:extension(Path),
-    mimetypes:extension(Ext).
+    {Mime1, Mime2, _} = cow_mimetypes:all(list_to_binary(Path)),
+    binary_to_list(Mime1) ++ "/" ++ binary_to_list(Mime2).
 
 %% Just to strip leading slash, as cowboy tends to do this.
 %% If no leading slash, just return the path.
