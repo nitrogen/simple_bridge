@@ -108,10 +108,11 @@ post_params(ReqKey) ->
 
 request_body(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
-     %% We cache the body here because we can't request the body twice in cowboy or it'll crash
     {Body, NewReq} = case RequestCache#request_cache.body of
         not_loaded ->
-            case cowboy_req:body(Req, [{continue, false}, {length, 1000000}]) of
+            %% We start with 2MB here, as headers and form fields will almost
+            %% certainly be in the first 2mb of a request
+            case cowboy_req:body(Req, [{length, 2000000}]) of
                 {ok, B, R} -> {B, R};
                 {more, B, R} -> {B, R}
             end;
@@ -126,14 +127,12 @@ socket(_ReqKey) ->
 
 recv_from_socket(_Length, _Timeout, ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
-    case cowboy_req:body(Req, [{length, 1000000}]) of
+    case cowboy_req:body(Req, [{length, 8000000}]) of
         {ok, Data, NewReq} ->
             put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
-            io:format("ok ~p~n", [byte_size(Data)]),
             Data;
         {more, Data, NewReq} ->
             put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
-            io:format("more ~p~n", [byte_size(Data)]),
             Data;
         {error, Reason} ->
             exit({error, Reason}) %% exit(normal) instead?

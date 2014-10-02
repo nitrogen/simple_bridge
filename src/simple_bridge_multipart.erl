@@ -53,20 +53,11 @@ is_multipart_request(Req) ->
 
 parse_multipart(Req) ->
     try
-        % Get the boundary...
-        {_K, _V, Props} = parse_header(sbw:header(content_type, Req)),
-        Length = to_integer(sbw:header(content_length, Req)),
-        Boundary = simple_bridge_util:to_binary(proplists:get_value("boundary", Props)),
-
-        % Throw exception if the post is getting too big.
+        Boundary = get_multipart_boundary(Req),
+        Length = get_content_length(Req),
         ok = crash_if_too_big(Length),
-
-        % Get whatever the underlying server has already read...
-        Data = simple_bridge_util:to_binary(sbw:request_body(Req)),
-
-        % Create the state...
+        Data = get_opening_body(Req), 
         State = init_state(Req, Boundary, Length, Data),
-        
         State1 = read_boundary(Data, State),
         {Params, Files} = process_parts(State1#state.parts),
         {ok, Params, Files}
@@ -74,6 +65,19 @@ parse_multipart(Req) ->
         throw : post_too_big -> {error, post_too_big};
         throw : {file_too_big, FileName} -> {error, {file_too_big, FileName}}
     end.
+
+get_content_length(Req) ->
+    to_integer(sbw:header(content_length, Req)).
+
+get_opening_body(Req) ->
+    simple_bridge_util:to_binary(sbw:request_body(Req)).
+
+
+get_multipart_boundary(Req) ->
+    {_K, _V, Props} = parse_header(sbw:header(content_type, Req)),
+    Boundary = proplists:get_value("boundary", Props),
+    simple_bridge_util:to_binary(Boundary).
+
 
 init_state(Req, Boundary, Length, Data) ->
     #state{
@@ -213,16 +217,9 @@ get_next_line(Data, Acc, Part, State) when Data == undefined orelse Data == <<>>
 
 read_chunk(State = #state { req=Req, length=Length, bytes_read=BytesRead }) ->
     BytesToRead = lists:min([Length - BytesRead, ?CHUNKSIZE]),
-    io:format("Receiving From Socket~n"),
     Data = sbw:recv_from_socket(BytesToRead, ?IDLE_TIMEOUT, Req),
     NewBytesRead = BytesRead + size(Data),
-
-    % Throw exception if the post is getting too big...
-    case NewBytesRead > get_max_post_size() of
-        true -> throw(post_too_big);
-        false -> continue
-    end,
-
+    ok=crash_if_too_big(NewBytesRead),
     {Data, State#state { bytes_read=NewBytesRead }}.
 
 interpret_line(Line, Boundary) ->
