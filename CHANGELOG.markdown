@@ -23,7 +23,7 @@
   binary. If header is provided as an atom or a list, it will return a list.
 * Provided a quickstart demo to try out all backends with request, response,
   and websockets. `make run_BACKEND`, where BACKEND is `cowboy`, `inets`,
-  `mochiweb`, `webmachine`, or `yaws`
+  `mochiweb`, `webmachine`, or `yaws`.
 * Removed support for Misultin.
 
 # 1.4

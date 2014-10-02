@@ -1,6 +1,6 @@
 # SimpleBridge
 
-## VERSION 2.0.0 IS CURRENTLY IN ALPHA STAGE. IT HAS NOT BEEN TESTED THOROUGHLY ENOUGH. USE AT YOUR OWN RISK
+## VERSION 2.0.0 IS CURRENTLY IN BETA.
 
 SimpleBridge takes the pain out of coding to multiple Erlang HTTP servers by
 creating a standardized interface. It currently supports Cowboy, Inets,
