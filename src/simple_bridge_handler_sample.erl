@@ -9,8 +9,13 @@
 
 
 run(Bridge) ->
-    Bridge2 = Bridge:set_response_data(body(Bridge)),
-    Bridge2:build_response().
+    try
+        Bridge2 = Bridge:set_response_data(body(Bridge)),
+        Bridge2:build_response()
+    catch E:C ->
+        error_logger:error_msg("~p:~p: ~p",[E, C, erlang:get_stacktrace()]),
+        exit("Error building response")
+    end.
 
 ws_init(_Bridge) ->
     %erlang:send_after(1000, self(), "START"),
@@ -75,7 +80,7 @@ body(Bridge) ->
     ].
 
 connection_info(Bridge) ->
-    Fields = [socket, protocol, request_method, uri, path, headers, cookies, query_params, post_params, peer_ip, protocol_version],
+    Fields = [socket, protocol, request_method, uri, path, headers, cookies, query_params, post_params, deep_query_params, peer_ip, protocol_version],
     [
         <<"<table>">>,
         [draw_connection_info(Field, Bridge) || Field <- Fields],

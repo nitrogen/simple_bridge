@@ -50,6 +50,12 @@
 	param/2,
 	param/3,
 
+	deep_params/1,
+	deep_param/2,
+
+	deep_query_params/1,
+	deep_query_param/2,
+
 	deep_post_params/1,
 	deep_post_param/2,
 
@@ -238,7 +244,7 @@ cookie(Cookie, Wrapper) ->
 %% PARAM GROUPS
 
 param_group(Param, Wrapper) ->
-    param_group(Param, [], Wrapper).
+     param_group(Param, [], Wrapper).
 
 param_group(Param, DefaultValue, Wrapper) ->
 	query_param_group(Param, DefaultValue, Wrapper) ++ post_param_group(Param, DefaultValue, Wrapper).
@@ -315,6 +321,20 @@ find_param_group(Param, Default, ParamList) when is_list(Param); is_atom(Param) 
 
 %% DEEP PARAM STUFF
 
+deep_params(Wrapper) ->
+	Params = params(Wrapper),
+	parse_deep_post_params(Params, []).
+
+deep_param(Path, Wrapper) ->
+	find_deep_post_param(Path, deep_params(Wrapper)).
+
+deep_query_params(Wrapper) ->
+	Params = query_params(Wrapper),
+	parse_deep_post_params(Params, []).
+
+deep_query_param(Path, Wrapper) ->
+	find_deep_post_param(Path, deep_query_params(Wrapper)).
+
 deep_post_params(Wrapper) ->
     Params = post_params(Wrapper),
     parse_deep_post_params(Params, []).
@@ -332,12 +352,15 @@ find_deep_post_param([Index|Rest], Params) when is_list(Index) ->
 parse_deep_post_params([], Acc) ->
     Acc;
 parse_deep_post_params([{Key, Value}|Rest], Acc) ->
-    case re:run(Key, "^(\\w+)(?:\\[([\\w-\\[\\]]+)\\])?$", [{capture, all_but_first, list}]) of
+    case re:run(Key, "^(\\w+)(?:\\[([\\w-\\[\\]]*)\\])?$", [{capture, all_but_first, list}]) of
         {match, [Key]} ->
             parse_deep_post_params(Rest, [{Key, Value}|Acc]);
         {match, [KeyName, Path]} ->
             PathList = re:split(Path, "\\]\\[", [{return, list}]),
-            parse_deep_post_params(Rest, insert_into(Acc, [KeyName|PathList], Value))
+            parse_deep_post_params(Rest, insert_into(Acc, [KeyName|PathList], Value));
+		Other ->
+			error_logger:warning_msg("Unable to parse key: ~p. Returned: ~p", [Key, Other]),
+			parse_deep_post_params(Rest, Acc)
     end.
 
 insert_into(_List, [], Value) ->
