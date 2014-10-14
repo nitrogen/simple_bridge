@@ -161,7 +161,7 @@ websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, PongTimer, State,
                 %% received in the expected timeframe, so we kill the
                 %% connection. Any TCP message received would have cancelled
                 %% the timer.
-                send(Socket, {close, 1001}),
+                send(Socket, {close, 1006}),
                 gen_tcp:close(Socket),
                 closed;
             simple_bridge_send_ping ->
