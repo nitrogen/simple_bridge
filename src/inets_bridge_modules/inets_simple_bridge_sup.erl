@@ -56,6 +56,8 @@ build_config(HasMimetypes) ->
     {DocRoot, StaticPaths} = simple_bridge_util:get_docroot_and_static_paths(inets),
     io:format("Starting Inets Server at ~p:~p~n", [Address, Port]),
     io:format("Static Paths: ~p~nDocument Root for Static: ~s~n", [StaticPaths, DocRoot]),
+    LogPath = "./log/inets.log",
+    ok = filelib:ensure_dir(LogPath),
 
     Httpd = {httpd, [
         {bind_address, simple_bridge_util:parse_ip(Address)},
@@ -63,7 +65,7 @@ build_config(HasMimetypes) ->
         {server_name, "simple_bridge_inets"},
         {server_root, "."},
         {document_root, DocRoot},
-        {error_log, "./log/inets.log"},
+        {error_log, LogPath},
         {modules, [mod_log, mod_disk_log, simple_bridge_util:get_anchor_module(inets)]},
         {mime_types, build_mimetypes(HasMimetypes)}
     ]},
