@@ -45,7 +45,7 @@ websocket_init(_Transport, Req, _Opts) ->
 
     %% Keepalive stuff
     {KAInterval, KATimeout} = simple_bridge_util:get_websocket_keepalive_interval_timeout(cowboy),
-    CowboyTimeout = simple_bridge_websocket:calculate_cowboy_timeout(KAInterval, KATimeout),
+    CowboyTimeout = simple_bridge_websocket:keepalive_timeout(KAInterval, KATimeout),
     simple_bridge_websocket:schedule_keepalive_msg(KAInterval),
 
     %% START YOUR ENGINES, FOLKS!
