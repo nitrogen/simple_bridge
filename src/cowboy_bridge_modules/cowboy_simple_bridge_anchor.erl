@@ -38,32 +38,22 @@ terminate(_Reason, _Req, _State) ->
     ok.
 
 websocket_init(_Transport, Req, _Opts) ->
+    %% Init stuff
     {ok, Handler} = application:get_env(simple_bridge, handler),
-    {KAInterval, KATimeout} = simple_bridge_util:get_websocket_keepalive_interval_timeout(cowboy),
-    CowboyTimeout = calculate_cowboy_timeout(KAInterval, KATimeout),
     Bridge = simple_bridge:make(cowboy, {Req, ""}),
     UserState = simple_bridge_websocket:call_init(Handler, Bridge),
-    schedule_keepalive_msg(KAInterval),
+
+    %% Keepalive stuff
+    {KAInterval, KATimeout} = simple_bridge_util:get_websocket_keepalive_interval_timeout(cowboy),
+    CowboyTimeout = simple_bridge_websocket:calculate_cowboy_timeout(KAInterval, KATimeout),
+    simple_bridge_websocket:schedule_keepalive_msg(KAInterval),
+
+    %% START YOUR ENGINES, FOLKS!
     WSState = #ws_state{bridge=Bridge,
                         keepalive_interval=KAInterval,
                         handler=Handler,
                         state=UserState},
     {ok, Req, WSState, CowboyTimeout}.
-
-calculate_cowboy_timeout(infinity, _) -> infinity;
-calculate_cowboy_timeout(KAInterval, KATimeout) when is_integer(KAInterval), is_integer(KATimeout)->
-    %% For cowboy's timeout is at least a message every X milliseconds, so we
-    %% add Interval+Timeout, then trigger a ping every Interval seconds, that
-    %% way, we get timeout milliseconds to either get a new message (pong or
-    %% otherwise), and if we don't hear back from the ping within Timeout
-    %% milliseconds, it will be the whole timeframe and cowboy will kill the
-    %% connection.
-    KAInterval + KATimeout.
-
-schedule_keepalive_msg(infinity) ->
-    ok;
-schedule_keepalive_msg(KAInterval) ->
-    timer:send_after(KAInterval, simple_bridge_send_ping).
 
 websocket_handle({ping, _Data}, Req, WSState) ->
     %% We don't need to pong, cowboy does that automatically. So just carry on!
@@ -76,7 +66,7 @@ websocket_handle(Data, Req, WSState) ->
     massage_reply(Result, Req, WSState).
 
 websocket_info(simple_bridge_send_ping, Req, WSState=#ws_state{keepalive_interval=KAInterval}) ->
-    schedule_keepalive_msg(KAInterval),
+    simple_bridge_websocket:schedule_keepalive_msg(KAInterval),
     {reply, {ping, <<"Simple Bridge Ping">>}, Req, WSState};
     
 websocket_info(Data, Req, WSState) ->

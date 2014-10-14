@@ -2,7 +2,15 @@
 -module(simple_bridge_websocket).
 -export([
         attempt_hijacking/2,
-        call_init/2
+
+        %% These three are used by cowboy or yaws and should basically never be
+        %% called except from within the simple_bridge app
+        call_init/2,
+        keepalive_timeout/2,
+        schedule_keepalive_msg/1,
+
+        %% Exported for code-reloading
+        websocket_loop/8
     ]).
 
 %-compile(export_all).
@@ -67,12 +75,41 @@ attempt_hijacking(Bridge, Handler) ->
             spared      %% Spared from being hijacked
     end.
 
+call_init(Handler, Bridge) ->
+    case erlang:function_exported(Handler, ws_init, 1) of
+        true ->
+            case Handler:ws_init(Bridge) of
+                ok -> undefined;
+                {ok, State} -> State
+            end;
+        false -> undefined
+    end.
+
+keepalive_timeout(infinity, _) -> infinity;
+keepalive_timeout(KAInterval, KATimeout) when is_integer(KAInterval), is_integer(KATimeout)->
+    %% For a timeout at least a message every X milliseconds, so we add
+    %% Interval+Timeout, then trigger a ping every Interval seconds, that way,
+    %% we get timeout milliseconds to either get a new message (pong or
+    %% otherwise), and if we don't hear back from the ping within Timeout
+    %% milliseconds, it will be the whole timeframe and the server will kill
+    %% the connection.
+    KAInterval + KATimeout.
+
+schedule_keepalive_msg(infinity) ->
+    ok;
+schedule_keepalive_msg(KAInterval) ->
+    timer:send_after(KAInterval, simple_bridge_send_ping).
+
+cancel_pong_timer(undefined) ->
+    ok;
+cancel_pong_timer(TRef) ->
+    {ok, cancel} = timer:cancel(TRef).
+
 hijack_request_fail(Bridge) ->
     Bridge2 = sbw:set_status_code(400, Bridge),
     Bridge3 = sbw:set_header(Bridge2, "Sec-Websocket-Version", ?WS_VERSION),
     Bridge4 = sbw:set_response_data(["Invalid Websocket Upgrade Request. Please use Websocket version ",?WS_VERSION], Bridge3),
     Bridge4.
-
 
 prepare_response_key(WSKey) ->
     FullString = WSKey ++ ?WS_MAGIC,
@@ -87,18 +124,10 @@ hijack(Bridge, Handler) ->
     send_handshake_response(Socket, ResponseKey),
     inet:setopts(Socket, [{active, once}]),
     State = call_init(Handler, Bridge),
-    websocket_loop(Socket, Bridge, Handler, State, #partial_data{}).
-    
-call_init(Handler, Bridge) ->
-    case erlang:function_exported(Handler, ws_init, 1) of
-        true ->
-            case Handler:ws_init(Bridge) of
-                ok -> undefined;
-                {ok, State} -> State
-            end;
-        false -> undefined
-    end.
-
+    Backend = simple_bridge_util:get_env(backend),
+    {KAInterval, KATimeout} = simple_bridge_util:get_websocket_keepalive_interval_timeout(Backend),
+    schedule_keepalive_msg(KAInterval),
+    websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, undefined, State, #partial_data{}).
 
 send_handshake_response(Socket, ResponseKey) ->
     Handshake = [
@@ -110,11 +139,11 @@ send_handshake_response(Socket, ResponseKey) ->
                 ],
     gen_tcp:send(Socket, Handshake).
 
-
-websocket_loop(Socket, Bridge, Handler, State, PartialData) ->
+websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, PongTimer, State, PartialData) ->
     try
         receive 
             {tcp, Socket, Data} ->
+                cancel_pong_timer(PongTimer),
                 AttemptPacket = <<(PartialData#partial_data.data)/binary, Data/binary>>,
                 Frames = parse_frame(AttemptPacket),
                 
@@ -122,15 +151,29 @@ websocket_loop(Socket, Bridge, Handler, State, PartialData) ->
                 case process_frames(Frames, Socket, Bridge, Handler, State, PendingFrames) of
                     {PendingFrames2, RemainderData, NewState} ->
                         inet:setopts(Socket, [{active, once}]),
-                        websocket_loop(Socket, Bridge, Handler, NewState, #partial_data{data=RemainderData, message_frames=PendingFrames2});
+                        ?MODULE:websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, undefined, NewState, #partial_data{data=RemainderData, message_frames=PendingFrames2});
                     closed -> closed
                 end;
-            {tcp_closed, Socket} ->
+            {tcp_closed, _Socket} ->
                 closed;
+            simple_bridge_pong_timeout ->
+                %% If this message is received, it means no TCP message was
+                %% received in the expected timeframe, so we kill the
+                %% connection. Any TCP message received would have cancelled
+                %% the timer.
+                send(Socket, {close, 1001}),
+                gen_tcp:close(Socket),
+                closed;
+            simple_bridge_send_ping ->
+                Reply = {ping, <<"simple bridge websocket">>},
+                schedule_keepalive_msg(KAInterval),
+                send(Socket, Reply),
+                {ok, NewPongTimer} = timer:send_after(KATimeout, simple_bridge_pong_timeout),
+                ?MODULE:websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, NewPongTimer, State, PartialData);
             Msg ->
                 {Reply, NewState} = call_info(Handler, Bridge, Msg, State),
                 send(Socket, Reply),
-                websocket_loop(Socket, Bridge, Handler, NewState, PartialData)
+                ?MODULE:websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, PongTimer, NewState, PartialData)
         end
     catch
         exit:{websocket, ReasonCode, _Reason} ->
