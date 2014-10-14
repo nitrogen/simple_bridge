@@ -14,15 +14,34 @@ out(Arg) ->
     Bridge = simple_bridge:make(yaws, Arg),
     Handler = simple_bridge_util:get_env(handler),
     Upgrade = sbw:header_lower(upgrade, Bridge),
+    {KAInterval, KATimeout} = simple_bridge_util:get_websocket_keepalive_interval_timeout(yaws),
     case Upgrade of
         "websocket" ->
             %% Pass the Handler module and the Bridge as the initial State but
             %% use the current module as the actual Websocket handler
-            Opts = [{callback, {basic, #ws_state{handler=Handler, bridge=Bridge}}}],
+            Opts = setup_websocket_opts(Handler, Bridge, KAInterval, KATimeout),
             {websocket, ?MODULE, Opts};
         _ ->
             Handler:run(Bridge)
     end.
+
+setup_websocket_opts(Handler, Bridge, KAInterval, KATimeout) ->
+    KeepAlive = is_integer(KAInterval) andalso KAInterval > 0,
+    [
+        %% Standard Yaws websocket handler.
+        {callback, {basic, #ws_state{handler=Handler, bridge=Bridge}}},
+
+        %% Boolean turning on or off keepalive pings
+        {keepalive, KeepAlive},
+
+        %% The interval to send keepalive pings (even though it's
+        %% labeled 'keepalive_timeout').
+        {keepalive_timeout, KAInterval},
+
+        %% The actual timeout. If we don't hear back about our ping in
+        %% KATimeout milliseconds, yaws will kill the connection.
+        {keepalive_grace_period, KATimeout}
+    ].
 
 init([_Arg, WSState=#ws_state{handler=Handler, bridge=Bridge}]) ->
     NewState = simple_bridge_websocket:call_init(Handler, Bridge),
