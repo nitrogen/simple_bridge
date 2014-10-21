@@ -1,6 +1,7 @@
+%% vim: ts=4 sw=4 et
 % Simple Bridge
 % Copyright (c) 2008-2010 Rusty Klophaus
-% Copyright (c) 2013 Jesse Gumm
+% Copyright (c) 2013-2014 Jesse Gumm
 % See MIT-LICENSE for licensing information.
 
 -module (webmachine_simple_bridge).
@@ -100,9 +101,9 @@ build_response(Req, Res) ->
     Code = Res#response.status_code,
     case Res#response.data of
         {data, Body} ->
-			%% httpd_util:flatlength expects a list and body could be a binary,
-			%% so wrap it in a list, and we have ourselves an iolist. MUCH
-			%% EXCITE!
+            %% httpd_util:flatlength expects a list and body could be a binary,
+            %% so wrap it in a list, and we have ourselves an iolist. MUCH
+            %% EXCITE!
             Size = integer_to_list(httpd_util:flatlength([Body])),
 
             %% Assemble headers...
