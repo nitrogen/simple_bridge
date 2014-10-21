@@ -127,7 +127,11 @@ split_request_uri([H|T], Path) -> split_request_uri(T,[H|Path]).
 build_response(Req, Res) ->	
     ResponseCode = Res#response.status_code,
     case Res#response.data of
-        {data, Data} ->
+        {data, Data0} ->
+			%% We wrap Data in a list, as httpd_util:flatlength expects a list
+			%% and Data could conceivably be a binary, which would cause a
+			%% crash
+			Data = [Data0],
             Size = integer_to_list(httpd_util:flatlength(Data)),
 
             % Assemble headers...
