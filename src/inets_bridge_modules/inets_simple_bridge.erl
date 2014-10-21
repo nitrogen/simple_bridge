@@ -1,3 +1,4 @@
+% vim: ts=4 sw=4 et
 % Simple Bridge
 % Copyright (c) 2008-2010 Rusty Klophaus
 % See MIT-LICENSE for licensing information.
@@ -7,26 +8,26 @@
 -include("simple_bridge.hrl").
 -include_lib("inets/include/httpd.hrl").
 -export ([
-		init/1,
-		protocol/1,
-		request_method/1,
-		path/1,
-		uri/1,
-		peer_ip/1,
-		peer_port/1,
-		headers/1,
-		cookies/1,
-		query_params/1,
-		post_params/1,
-		request_body/1,
-		socket/1,
-		recv_from_socket/3,
-		protocol_version/1
-	]).
+        init/1,
+        protocol/1,
+        request_method/1,
+        path/1,
+        uri/1,
+        peer_ip/1,
+        peer_port/1,
+        headers/1,
+        cookies/1,
+        query_params/1,
+        post_params/1,
+        request_body/1,
+        socket/1,
+        recv_from_socket/3,
+        protocol_version/1
+    ]).
 
 -export([
-		build_response/2
-	]).
+        build_response/2
+    ]).
 
 
 init(Req) -> 
@@ -124,14 +125,14 @@ split_request_uri([], Path) -> {lists:reverse(Path), ""};
 split_request_uri([$?|QueryString], Path) -> {lists:reverse(Path), QueryString};
 split_request_uri([H|T], Path) -> split_request_uri(T,[H|Path]).
 
-build_response(Req, Res) ->	
+build_response(Req, Res) -> 
     ResponseCode = Res#response.status_code,
     case Res#response.data of
         {data, Data0} ->
-			%% We wrap Data in a list, as httpd_util:flatlength expects a list
-			%% and Data could conceivably be a binary, which would cause a
-			%% crash
-			Data = [Data0],
+            %% We wrap Data in a list, as httpd_util:flatlength expects a list
+            %% and Data could conceivably be a binary, which would cause a
+            %% crash
+            Data = [Data0],
             Size = integer_to_list(httpd_util:flatlength(Data)),
 
             % Assemble headers...
@@ -140,7 +141,7 @@ build_response(Req, Res) ->
                 {content_length, Size},
                 [{massage(X#header.name), X#header.value} || X <- Res#response.headers],
                 [create_cookie_header(X) || X <- Res#response.cookies]
-            ]),		
+            ]),     
 
             % Send the inets response...
             {break,[
