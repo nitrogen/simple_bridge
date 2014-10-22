@@ -29,7 +29,8 @@
     default_static_expires_header/0,
     ensure_expires_header/1,
     needs_expires_header/1,
-    parse_ip/1
+    parse_ip/1,
+    parse_cookie_header/1
 ]).
 
 -type header_key() :: string() | binary() | atom().
@@ -322,3 +323,15 @@ parse_ip(String) ->
 %% versions of erlang fail on it
 parse_address(String) ->
     inet_parse:address(String).
+
+parse_cookie_header(CookieData) ->
+    F = fun(Cookie) ->
+        case string:tokens(Cookie, "=") of
+            [] -> [];
+            L -> 
+                X = string:strip(hd(L)),
+                Y = string:join(tl(L), "="),
+                {X, Y}
+        end
+    end,
+    [F(X) || X <- string:tokens(CookieData, ";")].

@@ -99,13 +99,9 @@ headers(Arg) ->
 
 cookies(Req) ->
     Headers = yaws_api:arg_headers(Req),
-    CookieList = yaws_api:headers_cookie(Headers),
-    F = fun(Cookie) ->
-        Key = hd(string:tokens(Cookie, "=")),
-        Val = yaws_api:find_cookie_val(Key, [Cookie]),
-        {Key, Val}
-    end,
-    [F(X) || X <- CookieList].
+    CookieList0 = yaws_api:headers_cookie(Headers),
+    CookieList = string:join(CookieList0, ";"),
+    simple_bridge_util:parse_cookie_header(CookieList).
 
 query_params(Arg) ->
     yaws_api:parse_query(Arg).

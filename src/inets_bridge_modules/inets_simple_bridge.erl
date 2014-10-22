@@ -79,16 +79,7 @@ headers(Req) ->
 cookies(Req) ->
     Headers = Req#mod.parsed_header,
     CookieData = proplists:get_value("cookie", Headers, ""),
-    F = fun(Cookie) ->
-        case string:tokens(Cookie, "=") of
-            [] -> [];
-            L -> 
-                X = string:strip(hd(L)),
-                Y = string:join(tl(L), "="),
-                {X, Y}
-        end
-    end,
-    [F(X) || X <- string:tokens(CookieData, ";")].
+    simple_bridge_util:parse_cookie_header(CookieData).
 
 query_params(Req) ->
     {_Path, QueryString} = split_request_uri(Req#mod.request_uri, []),
