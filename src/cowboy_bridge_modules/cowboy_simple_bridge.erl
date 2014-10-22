@@ -36,8 +36,12 @@ new_key() ->
     {cowboy_bridge, erlang:make_ref()}.
 
 get_key(ReqKey) ->
-    RequestCache = #request_cache{request = Req} = cowboy_request_server:get(ReqKey),
-    {RequestCache, Req}.
+    try
+        RequestCache = #request_cache{request = Req} = cowboy_request_server:get(ReqKey),
+        {RequestCache, Req}
+    catch E:T ->
+        error_logger:info_msg("~p:~p~n~p", [E, T, erlang:get_stacktrace()])
+    end.
 
 put_key(ReqKey, NewRequestCache) ->
     cowboy_request_server:set(ReqKey, NewRequestCache).
@@ -69,7 +73,10 @@ path(ReqKey) ->
 uri(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
     {URL, Req} = cowboy_req:url(Req),
-    simple_bridge_util:to_list(URL).
+    case re:run(URL, "^https?://[^/]*(/.*)$", [{capture, all_but_first, list}]) of
+        {match, [Uri]} -> Uri;
+        _ -> ""
+    end.
 
 peer_ip(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
