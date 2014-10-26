@@ -51,13 +51,8 @@
 attempt_hijacking(Bridge, Handler) ->
     ProtocolVersion = sbw:protocol_version(Bridge),
     UpgradeHeader = sbw:header_lower(upgrade, Bridge),
-    ConnectionHeader = sbw:header_lower(connection, Bridge),
     WSVersionHead = sbw:header("Sec-WebSocket-Version", Bridge),
-    ConnectionHeaderHasUpgrade = case re:run(ConnectionHeader, "upgrade") of
-        nomatch -> false;
-        {match, _} -> true
-    end,
-
+    ConnectionHeaderHasUpgrade = does_connection_header_have_upgrade(Bridge),
     if
         ProtocolVersion     >= {1,1},
         UpgradeHeader       =:= "websocket",
@@ -74,6 +69,18 @@ attempt_hijacking(Bridge, Handler) ->
         ?else ->
             spared      %% Spared from being hijacked
     end.
+
+does_connection_header_have_upgrade(Bridge) ->
+    case sbw:header_lower(connection, Bridge) of
+        undefined ->
+            false;
+        ConnectionHeader ->
+            case re:run(ConnectionHeader, "upgrade") of
+                nomatch -> false;
+                {match, _} -> true
+            end
+    end.
+
 
 call_init(Handler, Bridge) ->
     case erlang:function_exported(Handler, ws_init, 1) of
