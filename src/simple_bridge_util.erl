@@ -4,6 +4,7 @@
 -export([
     get_env/1,
     get_env/2,
+    get_maybe_set_env/2,
     get_anchor_module/1,
     get_server_name/1,
     get_address_and_port/1,
@@ -54,6 +55,13 @@ get_env([{App,Key}|AppKeys], Default) ->
     end;
 get_env(Key, Default) when is_atom(Key) ->
     get_env([{simple_bridge, Key}], Default).
+
+-spec get_maybe_set_env(Var :: atom(), Value :: any()) -> any().
+get_maybe_set_env(Var, undefined) ->
+    get_env(Var);
+get_maybe_set_env(Var, Value) ->
+    application:set_env(simple_bridge, Var, Value),
+    Value.
 
 get_anchor_module(BackendApp) ->
     get_env([{simple_bridge, anchor},

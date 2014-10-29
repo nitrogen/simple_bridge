@@ -38,33 +38,38 @@ start(Backend) ->
 
 start(Backend, Handler) when is_atom(Backend) ->
     application:load(simple_bridge),
-    Handler2 = case Handler of
-        undefined ->
-            simple_bridge_util:get_env(handler);
-        _ ->
-            application:set_env(simple_bridge, handler, Handler),
-            Handler
-    end,
-    Backend2 = case Backend of
-        undefined ->
-            simple_bridge_util:get_env(backend);
-        _ ->
-            application:set_env(simple_bridge, backend, Backend),
-            Backend
-    end,
+    Handler2 = get_handler_set_env(Handler),
+    Backend2 = get_backend_set_env(Backend),
 
-    case {Handler2, Backend2} of
-        {undefined, _} -> throw("No backend defined for simple_bridge.");
-        {_, undefined} -> io:format("*** Warning: No handler module defined for simple_bridge. If this intentional,~n*** (like if you are using a custom dispatch table, for example), then this message~n*** can be safely ignored.");
-        {_,_} -> ok
-    end,
+    handler_check(Handler2),
+    backend_check(Backend2),
 
     Supervisor = make_supervisor_module(Backend2),
     Supervisor:start_link().
 
+handler_check(undefined) ->
+    error_logger:warning_msg("*** Warning: No handler module defined for simple_bridge. If this intentional,~n*** (like if you are using a custom dispatch table, for example), then this message~n*** can be safely ignored.");
+handler_check(Handler) ->
+    case code:ensure_loaded(Handler) of
+        {module, Handler} ->
+            ok;
+        {error, Error} ->
+            throw({'unable to load handler module', [{module, Handler}, {error, Error}]})
+    end.
+
+backend_check(undefined) ->
+    throw('no backend defined');
+backend_check(_) ->
+    ok.
+
 make_supervisor_module(Backend) ->
     list_to_atom(atom_to_list(Backend) ++ "_simple_bridge_sup").
 
+get_backend_set_env(Backend) ->
+    simple_bridge_util:get_maybe_set_env(backend, Backend).
+
+get_handler_set_env(Handler) ->
+    simple_bridge_util:get_maybe_set_env(handler, Handler).
 
 make(BridgeType, Req) ->
     make(BridgeType, Req, []).
