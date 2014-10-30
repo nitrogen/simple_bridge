@@ -12,8 +12,7 @@ do(Req) ->
 			Handler = simple_bridge_util:get_env(handler),
 			case simple_bridge_websocket:attempt_hijacking(Bridge, Handler) of
 				{hijacked, closed} ->
-					gen_tcp:close(Bridge:socket()),
-					exit(normal);
+					done;
 				{hijacked, Bridge2} ->
 					Bridge2:build_response();
 				spared ->

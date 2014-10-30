@@ -14,7 +14,7 @@
     ]).
 
 %-compile(export_all).
-
+-include("simple_bridge.hrl").
 -include("crypto_compat.hrl").
 
 -define(else, true).
@@ -48,6 +48,7 @@
 -record(frame, {fin=1, rsv=0, opcode, masked=0, payload_len=0, mask_key, data = <<>>}).
 -record(partial_data, {data = <<>>, message_frames=[]}).
 
+-spec attempt_hijacking(bridge(), Handler :: atom()) -> spared | {hijacked, closed} | {hijacked, bridge()}.
 attempt_hijacking(Bridge, Handler) ->
     ProtocolVersion = sbw:protocol_version(Bridge),
     UpgradeHeader = sbw:header_lower(upgrade, Bridge),
