@@ -83,7 +83,6 @@ does_connection_header_have_upgrade(Bridge) ->
 
 
 call_init(Handler, Bridge) ->
-    error_logger:info_msg("Calling ~p:ws_init/1",[Handler]),
     case erlang:function_exported(Handler, ws_init, 1) of
         true ->
             case Handler:ws_init(Bridge) of
