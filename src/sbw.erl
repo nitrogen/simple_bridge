@@ -233,7 +233,7 @@ cookies(Wrapper) ->
     Wrapper#sbw.cookies.
 
 cookie(Cookie, Wrapper) ->
-    BinCookie = simple_bridge_util:binarize_header(Cookie),
+    BinCookie = list_to_binary(string:to_lower(simple_bridge_util:to_list(Cookie))),
     case lists:keyfind(BinCookie, 1, Wrapper#sbw.cookies) of
         false -> undefined;
         {_, Val} ->
