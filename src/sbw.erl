@@ -68,6 +68,7 @@
 -export([
 	set_status_code/2,
 	set_header/3,
+	get_response_header/2,
 	clear_headers/1,
 	set_cookie/3,
 	set_cookie/5,
@@ -400,6 +401,15 @@ set_header(Name0, Value, Wrapper) ->
 		Headers2 = [Header|Headers1],
 		Res#response{headers=Headers2}
 	end, Wrapper).
+
+get_response_header(Name0, Wrapper) ->
+	Name = simple_bridge_util:binarize_header(Name0),
+	Res = Wrapper#sbw.response,
+	Headers = [H#header.value || H <- Res#response.headers, H#header.name == Name],
+	case Headers of
+		[] -> undefined;
+		[V] -> V
+	end.
 
 clear_headers(Wrapper) ->
 	update_response(fun(Res) ->
