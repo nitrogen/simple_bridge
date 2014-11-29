@@ -195,9 +195,13 @@ build_response(_Arg, Res) ->
 
 assemble_headers(Res) ->
     lists:flatten([
-                   [{header, {X#header.name, X#header.value}} || X <- Res#response.headers],
+                   [{header, {yaws_kosher_header(X#header.name), X#header.value}} || X <- Res#response.headers],
                    [create_cookie(X) || X <- Res#response.cookies]
                   ]).
+
+yaws_kosher_header(A) when is_atom(A) -> A;
+yaws_kosher_header(B) when is_binary(B) -> binary_to_list(B);
+yaws_kosher_header(L) when is_list(L) -> L.
 
 %% This is slightly different from the one in simple_bridge_util due to the
 %% formatting of the yaws headers isn't just a simple proplist.
