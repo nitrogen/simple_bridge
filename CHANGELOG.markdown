@@ -1,14 +1,15 @@
 # 2.0.0
 
-* Simple Bridge is no longer dependent on the parameter module system, however,
-  all relevant modules have retained the necessary structure to treat them as
-  parameter modules. The standard interface is now through a `sbw` module.
+* Simple Bridge is no longer dependent on the parameter module contruct,
+  however, all relevant modules have retained the necessary structure to treat
+  them as parameter modules. The standard interface is now through a module
+  called `sbw`.
 * All backends now provide a default supervisor for simplified starting and
   building backend-specific configurations.
 * All backends now provide an "anchor" module, which serves as an intermediary
   between the server and the "handler" module.
 * Merged Request and Response bridge into a single `Bridge` "object" using the
-  module "sbw" (simple bridge wrapper).
+  module `sbw` (simple bridge wrapper).
 * Added `simple_bridge:make(Backend)` function to replace having to make both
   request and response bridges.
 * Added a handler behaviour (`-behaviour(simple_bridge_handler)`) for each
