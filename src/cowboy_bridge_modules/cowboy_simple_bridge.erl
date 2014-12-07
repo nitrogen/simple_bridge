@@ -118,8 +118,10 @@ request_body(ReqKey) ->
     {Body, NewReq} = case RequestCache#request_cache.body of
         not_loaded ->
             %% We start with 2MB here, as headers and form fields will almost
-            %% certainly be in the first 2mb of a request
-            case cowboy_req:body(Req, [{length, 2000000}]) of
+            %% certainly be in the first 2mb of a request, and give the client
+            %% 120 seconds to send the chunk.
+            %% TODO, Make the read_timeout a configuration option for simple_bridge
+            case cowboy_req:body(Req, [{length, 2000000}, {read_timeout, 120000}]) of
                 {ok, B, R} -> {B, R};
                 {more, B, R} -> {B, R}
             end;
