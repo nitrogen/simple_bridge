@@ -236,9 +236,9 @@ send(Code, Headers, Cookies, Body, Req) ->
 
 prepare_cookies(Req, Cookies) ->
     lists:foldl(fun(C, R) ->
-        Name = C#cookie.name,
-        %% In case cookie value was set to an atom, we need to make sure it's
-        %% something usable, so let's just use binary
+        %% In case cookie name or value was set to an atom, we need to make
+        %% sure it's something usable, so let's just use binary
+        Name = simple_bridge_util:to_binary(C#cookie.name),
         Value = simple_bridge_util:to_binary(C#cookie.value),
         Path = C#cookie.path,
         SecsToLive = C#cookie.minutes_to_live * 60,
