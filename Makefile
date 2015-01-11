@@ -14,10 +14,14 @@ clean: clean-deps
 clean-deps:
 	rm -fr deps/*
 
-test: clean
-	./rebar --config "rebar.test.config" get-deps
-	./rebar --config "rebar.test.config" compile
-	./rebar --config "rebar.test.config" skip_deps=true ct
+test: test_inets
+
+test_inets: clean
+	(escript rebar_deps/merge_deps.escript rebar.test.config rebar_deps/$(BACKEND).deps rebar.test.$(BACKEND).config)
+	(cd test; sed "s/BACKEND/$(BACKEND)/" < app.config.src > app.config)
+	./rebar --config "rebar.test.$(BACKEND).config" get-deps
+	./rebar --config "rebar.test.$(BACKEND).config" compile
+	./rebar --config "rebar.test.$(BACKEND).config" skip_deps=true ct
 
 platform: clean
 	(escript rebar_deps/merge_deps.escript rebar.config rebar_deps/$(BACKEND).deps rebar.$(BACKEND).config)
