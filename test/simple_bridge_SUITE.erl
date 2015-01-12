@@ -30,7 +30,6 @@ groups() ->
 	}].
 
 init_per_group(main, Config) ->
-	io:format("CWD: ~p~n", [file:get_cwd()]),
 	inets:start(),
 	application:start(simple_bridge),
 	Config.
