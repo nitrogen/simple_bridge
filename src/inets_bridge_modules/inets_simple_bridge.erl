@@ -160,7 +160,7 @@ to_cookie_expire(SecondsToLive) ->
 %% Inets wants some headers as lowercase atoms, so we
 %% need to do some special massage here.
 massage(Header) ->
-    X = simple_bridge_utils:atomize_header(Header),
+    X = simple_bridge_util:atomize_header(Header),
     case lists:member(X, special_headers()) of
         true  -> X;
         false -> Header
