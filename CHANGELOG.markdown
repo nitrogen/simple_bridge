@@ -25,6 +25,7 @@
 * Provided a quickstart demo to try out all backends with request, response,
   and websockets. `make run_BACKEND`, where BACKEND is `cowboy`, `inets`,
   `mochiweb`, `webmachine`, or `yaws`.
+* Rewrote the test suite to use the same testing codebase for all backends.
 * Removed support for Misultin.
 
 # 1.4
