@@ -32,9 +32,7 @@ groups() ->
 init_per_group(main, Config) ->
 	io:format("CWD: ~p~n", [file:get_cwd()]),
 	inets:start(),
-	%% using 'undefined' will load it from the app.config
-	simple_bridge:start(undefined, simple_bridge_test_handler),
-	timer:sleep(10000),
+	application:start(simple_bridge),
 	Config.
 
 end_per_group(main, Config) ->

@@ -49,8 +49,7 @@ run:
 
 ##### COMMON TEST
 
-test: test_cowboy test_inets test_webmachine test_yaws
-#test: test_cowboy test_inets test_mochiweb test_webmachine test_yaws
+test: test_cowboy test_inets test_mochiweb test_webmachine test_yaws
 
 test_cowboy:
 	(make test_core BACKEND=cowboy)
@@ -67,8 +66,10 @@ test_webmachine:
 test_yaws:
 	(make test_core BACKEND=yaws)
 
+clean_test:
+	(rm rebar.test.*.config)
 
-test_core: clean
+test_core: clean clean_test
 	(escript rebar_deps/merge_deps.escript rebar.test.config rebar_deps/$(BACKEND).deps rebar.test.$(BACKEND).config)
 	(cd test; sed "s/BACKEND/$(BACKEND)/" < app.config.src > app.config)
 	./rebar --config "rebar.test.$(BACKEND).config" get-deps
