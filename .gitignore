@@ -8,3 +8,6 @@ test/logs/*
 logs
 crypto_compat.hrl
 log/
+test/app.config
+logs/
+rebar.test.*.config

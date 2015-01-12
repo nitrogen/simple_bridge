@@ -67,7 +67,7 @@ test_yaws:
 	(make test_core BACKEND=yaws)
 
 clean_test:
-	(rm rebar.test.*.config)
+	(rm -f rebar.test.*.config)
 
 test_core: clean clean_test
 	(escript rebar_deps/merge_deps.escript rebar.test.config rebar_deps/$(BACKEND).deps rebar.test.$(BACKEND).config)
