@@ -138,7 +138,7 @@ cache_post_params(Wrapper) ->
     Req = Wrapper#sbw.req,
     PostParams = Mod:post_params(Req),
     Wrapper#sbw{
-        post_params=[normalize_param(Param) || Param <- Mod:post_params(Req)]
+        post_params=[normalize_param(Param) || Param <- PostParams]
     }.
 
 cache_query_params(Wrapper) ->
