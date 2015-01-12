@@ -71,5 +71,8 @@ request(Path) ->
 
 post(Path, Body) ->
 	URL = "http://127.0.0.1:8000/" ++ Path,
-	{ok, {_, _, Val}} = httpc:request(post, {URL, [], "", Body}, [], []),
+	%% The content-type is particularly critical for mochiweb. Mochiweb won't
+	%% parse body values unless its content-type is set to
+	%% application/x-www-form-urlencoded
+	{ok, {_, _, Val}} = httpc:request(post, {URL, [], "application/x-www-form-urlencoded", Body}, [], []),
 	Val.

@@ -136,6 +136,7 @@ normalize_header({Key0, Val0}) ->
 cache_post_params(Wrapper) ->
     Mod = Wrapper#sbw.mod,
     Req = Wrapper#sbw.req,
+    PostParams = Mod:post_params(Req),
     Wrapper#sbw{
         post_params=[normalize_param(Param) || Param <- Mod:post_params(Req)]
     }.
