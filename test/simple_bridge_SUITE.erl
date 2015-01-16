@@ -5,8 +5,6 @@
 	groups/0,
 	init_per_group/2,
 	end_per_group/2
-%	init_per_testcase/2,
-%	end_per_testcase/2
 ]).
 
 -export([
@@ -24,8 +22,7 @@ all() -> [{group, main}].
 
 groups() ->
 	[{main, 
-		[],
-		%[parallel, {repeat, 10}],
+		[parallel, {repeat, 10}],
 		[peer_ip, request_method_get, request_method_post, protocol, path, query_params, post_params]
 	}].
 
