@@ -306,7 +306,9 @@ to_list(B) when is_binary(B) ->
 to_list(L) when is_list(L) ->
     L.
 
--spec to_binary(iolist() | atom()) -> binary().
+-spec to_binary(iolist() | atom() | binary()) -> binary().
+to_binary(B) when is_binary(B) ->
+    B;
 to_binary(A) when is_atom(A) ->
     list_to_binary(atom_to_list(A));
 to_binary(L) ->

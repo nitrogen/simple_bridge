@@ -173,8 +173,12 @@ error(Wrapper) ->
 ?PASSTHROUGH(peer_ip).
 ?PASSTHROUGH(peer_port).
 ?PASSTHROUGH(protocol_version).
-?PASSTHROUGH(request_body).
 ?PASSTHROUGH(socket).
+
+request_body(Wrapper) ->
+    Mod = Wrapper#sbw.mod,
+    Req = Wrapper#sbw.req,
+    simple_bridge_util:to_binary(Mod:request_body(Req)).
 
 request_method(Wrapper) ->
     Mod = Wrapper#sbw.mod,

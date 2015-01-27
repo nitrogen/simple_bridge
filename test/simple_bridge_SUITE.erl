@@ -14,6 +14,7 @@
 	uri/1,
 	request_method_get/1,
 	request_method_post/1,
+	request_body/1,
 	query_params/1,
 	post_params/1
 ]).
@@ -23,7 +24,7 @@ all() -> [{group, main}].
 groups() ->
 	[{main, 
 		[parallel, {repeat, 10}],
-		[peer_ip, request_method_get, request_method_post, protocol, path, query_params, post_params]
+		[peer_ip, request_method_get, request_method_post, request_body, protocol, path, query_params, post_params]
 	}].
 
 init_per_group(main, Config) ->
@@ -55,6 +56,9 @@ request_method_get(_) ->
 request_method_post(_) ->
 	"'POST'" = post("request_method_post", "").
 
+request_body(_) ->
+	"<<\"my body\">>" = post("request_body", "my body").
+	
 query_params(_) ->
 	"[{<<\"a\">>,<<\"1\">>},{<<\"b\">>,<<\"2\">>}]" = request("query_params?a=1&b=2").
 

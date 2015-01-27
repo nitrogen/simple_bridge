@@ -14,6 +14,7 @@ run("/path", Bridge) -> simple_call(path, Bridge);
 run("/uri", Bridge) -> simple_call(uri, Bridge);
 run("/request_method_get", Bridge) -> simple_call(request_method, Bridge);
 run("/request_method_post", Bridge) -> simple_call(request_method, Bridge);
+run("/request_body", Bridge) -> simple_call(request_body, Bridge);
 run("/query_params", Bridge) -> simple_call(query_params, Bridge);
 run("/post_params", Bridge) -> simple_call(post_params, Bridge);
 run(Path, _Bridge) -> io_lib:format("Unhandled Path: ~p", [Path]).
