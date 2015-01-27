@@ -178,7 +178,8 @@ error(Wrapper) ->
 request_body(Wrapper) ->
     Mod = Wrapper#sbw.mod,
     Req = Wrapper#sbw.req,
-    simple_bridge_util:to_binary(Mod:request_body(Req)).
+    Body = Mod:request_body(Req),
+    simple_bridge_util:to_binary(Body).
 
 request_method(Wrapper) ->
     Mod = Wrapper#sbw.mod,
