@@ -108,9 +108,8 @@ query_params(ReqKey) ->
     QsVals.
 
 post_params(ReqKey) ->
-    {RequestCache, Req} = get_key(ReqKey),
-    {ok, BodyQs, NewReq} = cowboy_req:body_qs(Req, [{length, 2000000}]),
-    put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
+    Body = request_body(ReqKey),
+    BodyQs = cow_qs:parse_qs(Body),
     BodyQs.
 
 request_body(ReqKey) ->
