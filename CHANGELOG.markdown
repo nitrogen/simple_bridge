@@ -28,6 +28,15 @@
 * Rewrote the test suite to use the same testing codebase for all backends.
 * Removed support for Misultin.
 
+# 1.4.1
+
+* Added protocol() for cowboy.
+* Use `erlang/pmod_transform` instead of `choptastic/pmod_transform` for
+  backwards compatible pmod transforms
+* Added `x-forwarded-proto` header
+* Fixed `peer_name` and `peer_port` for yaws
+* Fix Cowboy's bridge so `request_body` just returns a binary
+
 # 1.4
 
 * Add ability to store temp files in memory if they are small enough,
