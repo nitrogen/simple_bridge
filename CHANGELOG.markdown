@@ -1,9 +1,9 @@
 # 2.0.0
 
-* Simple Bridge is no longer dependent on the parameter module contruct,
-  however, all relevant modules have retained the necessary structure to treat
-  them as parameter modules. The standard interface is now through a module
-  called `sbw`.
+* Simple Bridge is no longer dependent on the deprecated parameter module
+  contruct, however, all relevant modules have retained the necessary structure
+  to treat them as parameter modules, if you so choose. The standard interface
+  is now through a module called `sbw`.
 * All backends now provide a default supervisor for simplified starting and
   building backend-specific configurations.
 * All backends now provide an "anchor" module, which serves as an intermediary
