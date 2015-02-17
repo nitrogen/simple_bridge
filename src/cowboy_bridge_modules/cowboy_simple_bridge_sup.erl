@@ -8,9 +8,6 @@
     init/1
 ]).
 
-%% Helper macro for declaring children of supervisor
--define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
-
 %% ===================================================================
 %% API functions
 %% ===================================================================
@@ -33,13 +30,21 @@ init([]) ->
               [Address, Port]),
 
     Dispatch = generate_dispatch(),
-    io:format("Using Cowboy Dispatch Table: ~p~n",[Dispatch]),
-    {ok, _} = cowboy:start_http(http, 100, [{port, Port}], [
-        {env, [{dispatch, Dispatch}]},
-        {max_keepalive, 50}
-    ]),
+    io:format("Using Cowboy Dispatch Table:~n  ~p~n",[Dispatch]),
 
-    {ok, { {one_for_one, 5, 10}, []} }.
+    Opts = [
+        {env, [{dispatch, Dispatch}]},
+        {max_keepalive, 100}
+    ],
+
+    Args = [http, 100, [{port, Port}], Opts],
+    Restart = permanent,
+    Shutdown = infinity,
+    Type = worker,
+    Modules = [cowboy],
+
+    ChildSpec = {cowboy, {cowboy, start_http, Args}, Restart, Shutdown, Type, Modules},
+    {ok, { {one_for_one, 5, 10}, [ChildSpec]}}.
 
 
 %% @doc Generates the dispatch based on the desired environment
