@@ -157,8 +157,9 @@ to_cookie_expire(SecondsToLive) ->
     httpd_util:rfc1123_date(DateTime).
 
 
-%% Inets wants some headers as lowercase atoms, so we
-%% need to do some special massage here.
+% Inets wants some headers as lowercase atoms, and the rest as lists. So let's fix these up.
+massage(Header) when is_binary(Header) ->
+    massage(binary_to_list(Header));
 massage(Header) ->
     X = simple_bridge_util:atomize_header(Header),
     case lists:member(X, special_headers()) of
