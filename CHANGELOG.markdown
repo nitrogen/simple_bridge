@@ -1,3 +1,8 @@
+# 2.0.1
+
+* Allow binary headers for the inets bridge
+* Set up supervision properly for cowboy
+
 # 2.0.0
 
 * Simple Bridge is no longer dependent on the deprecated parameter module
