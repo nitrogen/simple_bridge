@@ -27,7 +27,7 @@ init([]) ->
     case application:get_env(inets, services) of
         undefined -> build_config(HasMimetypes);
         {ok, Services} ->
-            case proplists:get_value(Services, httpd) of
+            case proplists:get_value(httpd, Services) of
                 undefined ->
                     build_config(HasMimetypes);
                 _ -> ok
