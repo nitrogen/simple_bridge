@@ -1,3 +1,7 @@
+# 2.0.2 (In development)
+
+* Fix a bug looking for a custom inets.config
+
 # 2.0.1
 
 * Allow binary headers for the inets bridge
