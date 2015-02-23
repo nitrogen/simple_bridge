@@ -84,10 +84,10 @@ DEPS=erts kernel stdlib crypto sasl
 $(DEPS_PLT):
 	@echo Building local plt at $(DEPS_PLT)
 	@echo 
-	## We don't do -r ./deps for this at least until we have a separate
-	## dialyzer test for each backend, mostly because webmachine's mochiweb
-	## version and mochiweb 2.9 conflict.
-	@(dialyzer --output_plt $(DEPS_PLT) --build_plt --apps $(DEPS) -r ./deps)
+	@## We don't do -r ./deps for this at least until we have a separate
+	@## dialyzer test for each backend, mostly because webmachine's mochiweb
+	@## version and mochiweb 2.9 conflict.
+	@(dialyzer --output_plt $(DEPS_PLT) --build_plt --apps $(DEPS))
 
 dialyzer: $(DEPS_PLT)
 	@(dialyzer --fullpath --plt $(DEPS_PLT) -Wrace_conditions -r ./ebin)
