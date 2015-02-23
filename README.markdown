@@ -1,5 +1,7 @@
 # SimpleBridge
 
+[![Build Status](https://travis-ci.org/nitrogen/simple_bridge.svg?branch=master)](https://travis-ci.org/nitrogen/simple_bridge)
+
 SimpleBridge takes the pain out of coding to multiple Erlang HTTP servers by
 creating a standardized interface. It currently supports Cowboy, Inets,
 Mochiweb, Webmachine, and Yaws.
