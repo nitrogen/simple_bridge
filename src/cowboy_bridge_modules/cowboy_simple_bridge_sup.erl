@@ -39,7 +39,7 @@ init([]) ->
 
     Args = [http, 100, [{port, Port}], Opts],
     Restart = permanent,
-    Shutdown = infinity,
+    Shutdown = 5000,
     Type = worker,
     Modules = [cowboy],
 
