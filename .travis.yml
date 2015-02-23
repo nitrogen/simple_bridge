@@ -6,6 +6,6 @@ otp_release:
   - 17.0
   - R16B03-1
   - R16B
-  - R15B02
+  - R15B03
   - R15B
 before_script: "sudo apt-get --yes --force-yes install libpam0g-dev"
