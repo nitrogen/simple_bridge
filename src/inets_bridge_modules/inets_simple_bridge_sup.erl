@@ -73,7 +73,7 @@ build_config(HasMimetypes) ->
     case application:get_env(inets, services) of
         undefined ->
             application:set_env(inets, services, [Httpd]);
-        Services ->
+        {ok, Services} ->
             NewServices = [Httpd | Services],
             application:set_env(inets, services, NewServices)
     end.

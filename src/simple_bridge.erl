@@ -18,16 +18,16 @@
 
 -include("simple_bridge.hrl").
 
--callback init(bridge())                        -> bridge().
--callback protocol(bridge())                    -> http | https | ws | wss | undefined.
--callback request_method(bridge())              -> 'GET' | 'POST' | 'DELETE' | atom().
--callback uri(bridge())                         -> binary().
--callback path(bridge())                        -> binary().
--callback headers(bridge())                     -> [{key(), value()}].
--callback query_params(bridge())                -> [{key(), value()}].
--callback post_params(bridge())                 -> [{key(), value()}].
--callback peer_ip(bridge())                     -> ipv4() | ipv8().
--callback build_response(any(), #response{})    -> any().
+-callback init(req())                        -> req().
+-callback protocol(req())                    -> http | https | ws | wss | undefined.
+-callback request_method(req())              -> 'GET' | 'POST' | 'DELETE' | atom().
+-callback uri(req())                         -> string().
+-callback path(req())                        -> string().
+-callback headers(req())                     -> [{key(), value()}].
+-callback query_params(req())                -> [{key(), value()}].
+-callback post_params(req())                 -> [{key(), value()}].
+-callback peer_ip(req())                     -> ipv4() | ipv8().
+-callback build_response(req(), #response{}) -> any().
 
 start() ->
     start(undefined).
@@ -102,9 +102,7 @@ make_nocatch(Module, RequestData) ->
             %% lookup
             sbw:cache_post_params(Bridge);
         {error, Error} -> 
-            Bridge:set_error(Error);
-        Other -> 
-            throw({unexpected, Other})
+            Bridge:set_error(Error)
     end.
 
 
