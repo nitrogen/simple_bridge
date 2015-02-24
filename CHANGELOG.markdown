@@ -1,6 +1,9 @@
 # 2.0.2 (In development)
 
 * Fix a bug looking for a custom inets.config
+* Add dialyzer and travis rules to Makefile
+* Fix a handful of issues found by dialyzer
+* Set the cowboy supervisor to not `infinity`.
 
 # 2.0.1
 
