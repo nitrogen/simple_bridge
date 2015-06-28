@@ -1,5 +1,6 @@
 # 2.0.2 (In development)
 
+* Fix tail-call bug in simple_bridge_websocket
 * Fix a bug looking for a custom inets.config
 * Add dialyzer and travis rules to Makefile
 * Fix a handful of issues found by dialyzer
