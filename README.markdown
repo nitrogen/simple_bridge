@@ -436,7 +436,6 @@ etc). See the "DEPRECATION NOTICE" a few sections above.
 * Ensure that internally, `sbw:function` is used everywhere instead of
   `Bridge:function`.
 * Test with dialyzer after being converted to `sbw:function`
-* Re-implement test suite
 
 #### Beyond 2.0
 
