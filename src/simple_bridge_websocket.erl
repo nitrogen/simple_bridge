@@ -135,7 +135,7 @@ hijack(Bridge, Handler) ->
     Backend = simple_bridge_util:get_env(backend),
     {KAInterval, KATimeout} = simple_bridge_util:get_websocket_keepalive_interval_timeout(Backend),
     schedule_keepalive_msg(KAInterval),
-    websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, undefined, State, #partial_data{}).
+    websocket_loop_init(Socket, Bridge, Handler, KAInterval, KATimeout, undefined, State, #partial_data{}).
 
 send_handshake_response(Socket, ResponseKey) ->
     Handshake = [
@@ -147,48 +147,50 @@ send_handshake_response(Socket, ResponseKey) ->
                 ],
     gen_tcp:send(Socket, Handshake).
 
-websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, PongTimer, State, PartialData) ->
-    try
-        receive 
-            {tcp, Socket, Data} ->
-                cancel_pong_timer(PongTimer),
-                AttemptPacket = <<(PartialData#partial_data.data)/binary, Data/binary>>,
-                Frames = parse_frame(AttemptPacket),
-                
-                PendingFrames = PartialData#partial_data.message_frames,
-                case process_frames(Frames, Socket, Bridge, Handler, State, PendingFrames) of
-                    {PendingFrames2, RemainderData, NewState} ->
-                        inet:setopts(Socket, [{active, once}]),
-                        ?MODULE:websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, undefined, NewState, #partial_data{data=RemainderData, message_frames=PendingFrames2});
-                    closed -> closed
-                end;
-            {tcp_closed, _Socket} ->
-                closed;
-            simple_bridge_pong_timeout ->
-                %% If this message is received, it means no TCP message was
-                %% received in the expected timeframe, so we kill the
-                %% connection. Any TCP message received would have cancelled
-                %% the timer.
-                send(Socket, {close, 1006}),
-                gen_tcp:close(Socket),
-                closed;
-            simple_bridge_send_ping ->
-                Reply = {ping, <<"simple bridge websocket">>},
-                schedule_keepalive_msg(KAInterval),
-                send(Socket, Reply),
-                {ok, NewPongTimer} = timer:send_after(KATimeout, simple_bridge_pong_timeout),
-                ?MODULE:websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, NewPongTimer, State, PartialData);
-            Msg ->
-                {Reply, NewState} = call_info(Handler, Bridge, Msg, State),
-                send(Socket, Reply),
-                ?MODULE:websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, PongTimer, NewState, PartialData)
-        end
+websocket_loop_init(Socket, Bridge, Handler, KAInterval, KATimeout, PongTimer, State, PartialData) ->
+    try websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, PongTimer, State, PartialData)
     catch
         exit:{websocket, ReasonCode, _Reason} ->
             send(Socket, {close, ReasonCode}),
             gen_tcp:close(Socket),
             %% cascade the error up
             exit(normal)
+    end.
+
+websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, PongTimer, State, PartialData) ->
+    receive 
+        {tcp, Socket, Data} ->
+            cancel_pong_timer(PongTimer),
+            AttemptPacket = <<(PartialData#partial_data.data)/binary, Data/binary>>,
+            Frames = parse_frame(AttemptPacket),
+            
+            PendingFrames = PartialData#partial_data.message_frames,
+            case process_frames(Frames, Socket, Bridge, Handler, State, PendingFrames) of
+                {PendingFrames2, RemainderData, NewState} ->
+                    inet:setopts(Socket, [{active, once}]),
+                    ?MODULE:websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, undefined, NewState, #partial_data{data=RemainderData, message_frames=PendingFrames2});
+                closed -> closed
+            end;
+        {tcp_closed, _Socket} ->
+            closed;
+        simple_bridge_pong_timeout ->
+            %% If this message is received, it means no TCP message was
+            %% received in the expected timeframe, so we kill the
+            %% connection. Any TCP message received would have cancelled
+            %% the timer.
+            send(Socket, {close, 1006}),
+            gen_tcp:close(Socket),
+            closed;
+        simple_bridge_send_ping ->
+            Reply = {ping, <<"simple bridge websocket">>},
+            schedule_keepalive_msg(KAInterval),
+            send(Socket, Reply),
+            {ok, NewPongTimer} = timer:send_after(KATimeout, simple_bridge_pong_timeout),
+            ?MODULE:websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, NewPongTimer, State, PartialData);
+        Msg ->
+            {Reply, NewState} = call_info(Handler, Bridge, Msg, State),
+            send(Socket, Reply),
+            ?MODULE:websocket_loop(Socket, Bridge, Handler, KAInterval, KATimeout, PongTimer, NewState, PartialData)
     end.
 
 call_info(Handler, Bridge, Msg, State) ->
