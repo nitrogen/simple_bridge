@@ -191,7 +191,7 @@ handle_complete_file(State) -> State.
 
 get_tempfilename() ->
 	Dir = simple_bridge_util:get_scratch_dir(?SCRATCH_DIR),
-    Parts = [integer_to_list(X) || X <- binary_to_list(erlang:md5(term_to_binary(erlang:now())))],
+    Parts = [integer_to_list(X) || X <- binary_to_list(erlang:md5(term_to_binary(os:timestamp())))],
     filename:join([Dir, string:join(Parts, "-")]).
 
 
