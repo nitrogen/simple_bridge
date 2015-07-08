@@ -1,5 +1,6 @@
 # 2.0.2 (In development)
 
+* Remove uses of `erlang:now()` for Erlang 18 support
 * Fix tail-call bug in simple_bridge_websocket
 * Fix a bug looking for a custom inets.config
 * Add dialyzer and travis rules to Makefile
