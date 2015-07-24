@@ -27,7 +27,7 @@
         {port, 8000},               
         %% Port to bind
 
-        {document_root, "../../test/static"}, 
+        {document_root, "../../test/"}, 
         %% The path on the local machine to handle static files
 
         {static_paths, ["static/"]},
