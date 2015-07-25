@@ -6,6 +6,7 @@
 * Add dialyzer and travis rules to Makefile
 * Fix a handful of issues found by dialyzer
 * Set the cowboy supervisor to not `infinity`.
+* Add a few more tests.
 
 # 2.0.1
 
