@@ -22,9 +22,7 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    application:start(inets),
-    application:start(crypto),
-    application:load(webmachine),
+    webmachine_util:ensure_all_started(webmachine),
 
     {Address, Port} = simple_bridge_util:get_address_and_port(webmachine),
     Dispatch = generate_dispatch(),
@@ -38,10 +36,9 @@ init([]) ->
     ],
     Web = {webmachine_mochiweb,
             {webmachine_mochiweb, start, [Options]},
-            permanent, 5000, worker, [mochiweb_socket_server]},
+            permanent, 5000, worker, dynamic},
     Processes = [Web],
-    application:start(mochiweb),
-    application:start(webmachine),
+    
     {ok, { {one_for_one, 5, 10}, Processes} }.
 
 generate_dispatch() ->

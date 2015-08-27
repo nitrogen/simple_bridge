@@ -72,20 +72,7 @@ request_body(Req) ->
     wrq:req_body(Req).
 
 socket(Req) ->
-    %% If https://github.com/basho/webmachine/pull/175 is accepted, change to:
-    %% wrq:socket(Req).
-
-    %% 7th element of wm_reqdata record is wm_state, which contains another
-    %% record, but which can be interacted with through
-    %% webmachine_request:socket
-    %% 
-    %% If this suddenly starts breaking, then we need to verify the record
-    %% structure of wm_reqdata.hrl
-    %%
-    %% https://github.com/basho/webmachine/blob/master/include/wm_reqdata.hrl
-    ReqState = element(7, Req), 
-    {Socket, _} = webmachine_request:socket(ReqState),
-    Socket.
+    wrq:socket(Req).
 
 recv_from_socket(Length, Timeout, Req) ->
     Socket = socket(Req),

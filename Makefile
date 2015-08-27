@@ -14,8 +14,10 @@ clean: clean-deps
 clean-deps:
 	rm -fr deps/*
 
-platform: clean
+rebar_conf:
 	(escript rebar_deps/merge_deps.escript rebar.config rebar_deps/$(BACKEND).deps rebar.$(BACKEND).config)
+
+platform: clean rebar_conf
 	(./rebar --config "rebar.$(BACKEND).config" get-deps)
 	(./rebar --config "rebar.$(BACKEND).config" compile)
 	(rm -f rebar.$(BACKEND).config)
