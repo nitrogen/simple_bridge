@@ -1,3 +1,6 @@
+# 2.1.0 (In development)
+* Update to Webmachine 1.10.9
+
 # 2.0.2 (In development)
 
 * Remove uses of `erlang:now()` for Erlang 18 support
