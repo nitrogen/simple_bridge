@@ -7,7 +7,9 @@
 -type reply()               ::  ws_data() | [ws_data()].
 -type reason()              ::  integer().
 -type state()               ::  any().
--type full_reply()          ::  noreply
+-type full_reply()          ::  ok
+                                | {ok, state()}
+                                | noreply
                                 | {noreply, state()}
                                 | {reply, reply()}
                                 | {reply, reply(), state()}
