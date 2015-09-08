@@ -77,34 +77,21 @@ test_core: clean clean_test
 	./rebar --config "rebar.test.$(BACKEND).config" skip_deps=true ct
 
 
-DEPS_PLT=$(CURDIR)/.deps_plt
-DEPS=erts kernel stdlib crypto sasl
-# removed 'sasl' in attempt to minimize memory usage for Travis
+## dialyzer
+PLT_FILE = ~/simple_bridge.plt
+PLT_APPS ?= kernel stdlib erts compiler crypto ssl deps/*
+DIALYZER_OPTS ?= -Werror_handling -Wrace_conditions -Wunmatched_returns \
+		-Wunderspecs --verbose --fullpath -n
 
-$(DEPS_PLT):
-	@echo Building local plt at $(DEPS_PLT)
-	@echo 
-	@## We don't do -r ./deps for this at least until we have a separate
-	@## dialyzer test for each backend, mostly because webmachine's mochiweb
-	@## version and mochiweb 2.9 conflict.
-	@(dialyzer --output_plt $(DEPS_PLT) --build_plt --apps $(DEPS))
+.PHONY: dialyze
+dialyze: all
+	@[ -f $(PLT_FILE) ] || $(MAKE) plt
+	@dialyzer --plt $(PLT_FILE) $(DIALYZER_OPTS) ebin || [ $$? -eq 2 ];
 
-dialyzer: $(DEPS_PLT)
-	@(dialyzer --fullpath --plt $(DEPS_PLT) -Wrace_conditions -r ./ebin)
-
-dialyzer-no-race: $(DEPS_PLT)
-	@(dialyzer --fullpath --plt $(DEPS_PLT) -r ./ebin)
-
-# TRAVIS-CI STUFF
-
-ERLANG_VERSION_CHECK := erl -eval "io:format(\"~s\",[erlang:system_info(otp_release)]), halt()."  -noshell
-ERLANG_VERSION = $(shell $(ERLANG_VERSION_CHECK))
-
-# This is primarily for Travis build testing, as each build instruction will overwrite the previous
-travis: compile $(ERLANG_VERSION)
-
-R15B: dialyzer
-R15B03: dialyzer
-R16B: dialyzer
-R16B03-1: dialyzer
-17: dialyzer
+## In case you are missing a plt file for dialyzer,
+## you can run/adapt this command
+.PHONY: plt
+plt:
+	@echo "Building PLT, may take a few minutes"
+	@dialyzer --build_plt --output_plt $(PLT_FILE) --apps \
+		$(PLT_APPS) || [ $$? -eq 2 ];

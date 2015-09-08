@@ -1,11 +1,24 @@
 language: erlang
-script: "make travis"
+sudo: required
 otp_release:
-  - 17.4
-  - 17.1
-  - 17.0
-  - R16B03-1
-  - R16B
-  - R15B03
-  - R15B
+# Test on all supported releases
+   - 18.0
+   - 17.5
+   - 17.4
+   - 17.1
+   - 17.0
+   - R16B03-1
+   - R16B
+   - R15B03
+   - R15B
+
 before_script: "sudo apt-get --yes --force-yes install libpam0g-dev"
+
+script:
+  - make
+  - make test
+#  - rebar eunit -v skip_deps=true
+  - make plt
+  - make dialyze
+notifications:
+  email: false

@@ -12,3 +12,7 @@ test/app.config
 logs/
 rebar.test.*.config
 .deps_plt
+/.settings/
+/.project
+/ebin/
+/.rebar/
