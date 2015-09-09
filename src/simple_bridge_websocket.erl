@@ -204,8 +204,6 @@ call_info(Handler, Bridge, Msg, State) ->
 
 extract_reply_state(State, InfoMsgReturn) ->
     case InfoMsgReturn of
-        ok -> {noreply, State};
-        {ok, NewState} -> {noreply, NewState};
         noreply -> {noreply, State};
         {noreply, NewState} -> {noreply, NewState};
         {reply, Reply} -> {{reply, Reply}, State};
