@@ -40,8 +40,8 @@ start_embedded_yaws() ->
     RealAddress = simple_bridge_util:parse_ip(Address),
     Servername = simple_bridge_util:to_list(simple_bridge_util:get_server_name(yaws)),
     Anchor = simple_bridge_util:get_anchor_module(yaws),
-	%% Max post is in MB but yaws wants bytes
-	MaxPost = simple_bridge_util:get_max_post_size(yaws) * 1048576,
+    %% Max post is in MB but yaws wants bytes
+    MaxPost = simple_bridge_util:get_max_post_size(yaws) * 1048576,
     ExcludePaths = [filename:split(P) || P <- StaticPaths],
     Appmods = [{"/", Anchor, ExcludePaths}],
 
