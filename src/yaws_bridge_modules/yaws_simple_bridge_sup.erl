@@ -51,13 +51,13 @@ start_embedded_yaws() ->
         {listen, RealAddress},
         {port, Port},
         {allowed_scripts, []},
-		{partial_post_size, MaxPost},
+        {partial_post_size, MaxPost},
         {index_files, ["index.html"]},
         {appmods, Appmods}
     ],
 
     GConf = [{id, Servername},
-			 {keepalive_timeout, Timeout}],
+             {keepalive_timeout, Timeout}],
     io:format("Starting Yaws Server at ~s:~p~n", [Address, Port]),
     io:format("Static Paths: ~p~nDocument Root for Static: ~s~n", [StaticPaths, DocRoot]),
     yaws:start_embedded(DocRoot, SConf, GConf, Servername).
