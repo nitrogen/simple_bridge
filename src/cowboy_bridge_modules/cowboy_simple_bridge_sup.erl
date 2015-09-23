@@ -38,14 +38,9 @@ init([]) ->
         {max_keepalive, 100}
     ],
 
-    Args = [http, 100, [{ip, IP}, {port, Port}], Opts],
-    Restart = permanent,
-    Shutdown = 5000,
-    Type = worker,
-    Modules = [cowboy],
+    cowboy:start_http(http, 100, [{ip, IP}, {port, Port}], Opts),
 
-    ChildSpec = {cowboy, {cowboy, start_http, Args}, Restart, Shutdown, Type, Modules},
-    {ok, { {one_for_one, 5, 10}, [ChildSpec]}}.
+    {ok, { {one_for_one, 5, 10}, []}}.
 
 
 %% @doc Generates the dispatch based on the desired environment
