@@ -25,9 +25,10 @@ init([]) ->
     application:start(cowlib),
     application:start(cowboy),
     {Address, Port} = simple_bridge_util:get_address_and_port(cowboy),
+    IP = simple_bridge_util:parse_ip(Address),
 
-    io:format("Starting Cowboy Server on ~s:~p~n",
-              [Address, Port]),
+    io:format("Starting Cowboy Server on ~p:~p~n",
+              [IP, Port]),
 
     Dispatch = generate_dispatch(),
     io:format("Using Cowboy Dispatch Table:~n  ~p~n",[Dispatch]),
@@ -37,14 +38,9 @@ init([]) ->
         {max_keepalive, 100}
     ],
 
-    Args = [http, 100, [{port, Port}], Opts],
-    Restart = permanent,
-    Shutdown = 5000,
-    Type = worker,
-    Modules = [cowboy],
+    cowboy:start_http(http, 100, [{ip, IP}, {port, Port}], Opts),
 
-    ChildSpec = {cowboy, {cowboy, start_http, Args}, Restart, Shutdown, Type, Modules},
-    {ok, { {one_for_one, 5, 10}, [ChildSpec]}}.
+    {ok, { {one_for_one, 5, 10}, []}}.
 
 
 %% @doc Generates the dispatch based on the desired environment

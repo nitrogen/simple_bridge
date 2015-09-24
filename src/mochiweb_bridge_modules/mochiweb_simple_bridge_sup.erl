@@ -33,7 +33,7 @@ init([]) ->
 
     Anchor = simple_bridge_util:get_anchor_module(mochiweb),
 
-    io:format("Starting Mochiweb Server on ~s:~p~n", [Address, Port]),
+    io:format("Starting Mochiweb Server on ~p:~p~n", [Address, Port]),
     io:format("Static Paths: ~p~nDocument Root for Static: ~s~n", [StaticPaths, DocRoot]),
 
     % Start Mochiweb...

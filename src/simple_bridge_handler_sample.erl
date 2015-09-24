@@ -24,10 +24,10 @@ ws_init(_Bridge) ->
 ws_message({text, <<"frag">>}, _State, _Bridge) ->
     Reply = [{text, [Msg," "]} || Msg <- ["A","spoon","full","of","sugar"]],
     {reply, Reply};
-ws_message({text, Data}, _State, _Bridge) ->
+ws_message({text, Data}, _Bridge, _State) ->
     %Reply = io_lib:format("~s", [Data]),
     {reply, {text, Data}};
-ws_message({binary, Data}, _State, _Bridge) ->
+ws_message({binary, Data}, _Bridge, _State) ->
     {reply, {binary, Data}}.
 
 ws_info(Data, _Bridge, _State) ->
