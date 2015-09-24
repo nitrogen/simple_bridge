@@ -36,9 +36,12 @@ init([]) ->
 start_embedded_yaws() ->
     {DocRoot, StaticPaths} = simple_bridge_util:get_docroot_and_static_paths(yaws),
     {Address, Port} = simple_bridge_util:get_address_and_port(yaws),
+    {_KeepAliveInterval, Timeout} =  simple_bridge_util:get_websocket_keepalive_interval_timeout(yaws),
     RealAddress = simple_bridge_util:parse_ip(Address),
     Servername = simple_bridge_util:to_list(simple_bridge_util:get_server_name(yaws)),
     Anchor = simple_bridge_util:get_anchor_module(yaws),
+    %% Max post is in MB but yaws wants bytes
+    MaxPost = simple_bridge_util:get_max_post_size(yaws) * 1048576,
     ExcludePaths = [filename:split(P) || P <- StaticPaths],
     Appmods = [{"/", Anchor, ExcludePaths}],
 
@@ -48,11 +51,13 @@ start_embedded_yaws() ->
         {listen, RealAddress},
         {port, Port},
         {allowed_scripts, []},
+        {partial_post_size, MaxPost},
         {index_files, ["index.html"]},
         {appmods, Appmods}
     ],
 
-    GConf = [{id, Servername}],
+    GConf = [{id, Servername},
+             {keepalive_timeout, Timeout}],
     io:format("Starting Yaws Server at ~p:~p~n", [Address, Port]),
     io:format("Static Paths: ~p~nDocument Root for Static: ~s~n", [StaticPaths, DocRoot]),
     yaws:start_embedded(DocRoot, SConf, GConf, Servername).
