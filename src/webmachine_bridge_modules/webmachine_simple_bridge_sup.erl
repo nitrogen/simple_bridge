@@ -29,7 +29,7 @@ init([]) ->
     {Address, Port} = simple_bridge_util:get_address_and_port(webmachine),
     Dispatch = generate_dispatch(),
 
-    io:format("Starting Webmachine Server on ~s:~p~n", [Address, Port]),
+    io:format("Starting Webmachine Server on ~p:~p~n", [Address, Port]),
 
     Options = [
         {ip, Address}, 
