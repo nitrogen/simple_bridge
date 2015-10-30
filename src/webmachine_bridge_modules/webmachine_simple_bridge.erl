@@ -151,14 +151,14 @@ create_cookie_header(Cookie) ->
             undefined ->
                 "";
             Domain ->
-                ["; Domain=", quote(Domain)]
+                ["; Domain=", Domain]
         end,
     PathPart =
         case Cookie#cookie.path of
             undefined ->
                 "";
             Path ->
-                ["; Path=", quote(Path)]
+                ["; Path=", Path]
         end,
     HttpOnlyPart =
         case Cookie#cookie.http_only of
