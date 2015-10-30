@@ -326,7 +326,7 @@ The Bridge modules export the following functions:
   * **sbw:set_header(Name, Value, Bridge)** - set an HTTP header.
   * **sbw:clear_headers(Bridge)** - clear all previously set headers.
   * **sbw:set_cookie(Name, Value, Bridge)** - set a cookie for path "/" with expiration in
-    20 minutes.
+    1 hour.
   * **sbw:set_cookie(Name, Value, Options, Bridge)** - set a cookie with an Options list
   [
                    {domain, undefined},
