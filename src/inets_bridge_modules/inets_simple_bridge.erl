@@ -144,12 +144,42 @@ build_response(Req, Res) ->
     end.
 
 create_cookie_header(Cookie) ->
-    SecondsToLive = Cookie#cookie.minutes_to_live * 60,
+    SecondsToLive = Cookie#cookie.max_age,
     Expire = to_cookie_expire(SecondsToLive),
     Name = Cookie#cookie.name,
     Value = Cookie#cookie.value,
-    Path = Cookie#cookie.path,
-    {"Set-Cookie", io_lib:format("~s=~s; Path=~s; Expires=~s", [Name, Value, Path, Expire])}.
+	
+    % copied from mochiweb_cookies, should consider use their function instead of this one.
+    SecurePart =
+        case Cookie#cookie.secure of
+            true ->
+                "; Secure";
+            _ ->
+                ""
+        end,
+    DomainPart =
+        case Cookie#cookie.domain of
+            undefined ->
+                "";
+            Domain ->
+                ["; Domain=", quote(Domain)]
+        end,
+    PathPart =
+        case Cookie#cookie.path of
+            undefined ->
+                "";
+            Path ->
+                ["; Path=", quote(Path)]
+        end,
+    HttpOnlyPart =
+        case Cookie#cookie.http_only of
+            true ->
+                "; HttpOnly";
+            _ ->
+                ""
+        end,
+	
+    {"Set-Cookie", io_lib:format("~s=~s; Expires=~s~s~s~s~s", [Name, Value, Expire, SecurePart, DomainPart, PathPart, HttpOnlyPart])}.
 
 to_cookie_expire(SecondsToLive) ->
     Seconds = calendar:datetime_to_gregorian_seconds(calendar:local_time()),

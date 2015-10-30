@@ -236,10 +236,14 @@ coalesce([H|_T]) -> H.
 create_cookie(Cookie) ->
     Name = Cookie#cookie.name,
     Value = Cookie#cookie.value,
-    Path = Cookie#cookie.path,
-    SecondsToLive = Cookie#cookie.minutes_to_live * 60,
-    Expire = to_cookie_expire(SecondsToLive),
-    yaws_api:setcookie(Name, Value, Path, Expire).
+    Options = [
+               {domain, Cookie#cookie.domain},
+               {path, Cookie#cookie.path},
+               {max_age, Cookie#cookie.max_age},
+               {secure, Cookie#cookie.secure},
+               {http_only, Cookie#cookie.http_only}
+              ],
+    yaws_api:set_cookie(Name, Value, Options).
 
 to_cookie_expire(SecondsToLive) ->
     Seconds = calendar:datetime_to_gregorian_seconds(calendar:local_time()),

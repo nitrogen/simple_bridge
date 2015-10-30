@@ -239,9 +239,13 @@ prepare_cookies(Req, Cookies) ->
         %% sure it's something usable, so let's just use binary
         Name = simple_bridge_util:to_binary(C#cookie.name),
         Value = simple_bridge_util:to_binary(C#cookie.value),
-        Path = C#cookie.path,
-        SecsToLive = C#cookie.minutes_to_live * 60,
-        Options = [{path, Path}, {max_age, SecsToLive}],
+        Options = [
+                   {domain, C#cookie.domain},
+                   {path, C#cookie.path},
+                   {max_age, C#cookie.max_age},
+                   {secure, C#cookie.secure},
+                   {http_only, C#cookie.http_only}
+                  ],
         cowboy_req:set_resp_cookie(Name, Value, Options, R)
     end, Req, Cookies).
 
