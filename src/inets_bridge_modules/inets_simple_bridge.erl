@@ -145,7 +145,7 @@ build_response(Req, Res) ->
 
 create_cookie_header(Cookie) ->
     SecondsToLive = Cookie#cookie.max_age,
-    Expire = to_cookie_expire(SecondsToLive),
+    Expire = simple_bridge_util:make_expires_from_seconds(SecondsToLive),
     Name = Cookie#cookie.name,
     Value = Cookie#cookie.value,
 	
@@ -180,12 +180,6 @@ create_cookie_header(Cookie) ->
         end,
 	
     {"Set-Cookie", io_lib:format("~s=~s; Expires=~s~s~s~s~s", [Name, Value, Expire, SecurePart, DomainPart, PathPart, HttpOnlyPart])}.
-
-to_cookie_expire(SecondsToLive) ->
-    Seconds = calendar:datetime_to_gregorian_seconds(calendar:local_time()),
-    DateTime = calendar:gregorian_seconds_to_datetime(Seconds + SecondsToLive),
-    httpd_util:rfc1123_date(DateTime).
-
 
 % Inets wants some headers as lowercase atoms, and the rest as lists. So let's fix these up.
 massage(Header) when is_binary(Header) ->

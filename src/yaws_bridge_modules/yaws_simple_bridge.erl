@@ -244,8 +244,3 @@ create_cookie(Cookie) ->
                {http_only, Cookie#cookie.http_only}
               ],
     yaws_api:set_cookie(Name, Value, Options).
-
-to_cookie_expire(SecondsToLive) ->
-    Seconds = calendar:datetime_to_gregorian_seconds(calendar:local_time()),
-    DateTime = calendar:gregorian_seconds_to_datetime(Seconds + SecondsToLive),
-    httpd_util:rfc1123_date(DateTime).

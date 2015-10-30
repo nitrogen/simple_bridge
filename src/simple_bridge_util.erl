@@ -20,6 +20,7 @@
     binarize_header/1,
     is_static_path/2,
     expires/2,
+    make_expires_from_seconds/1,
     to_list/1,
     to_binary/1,
     has_header/2,
