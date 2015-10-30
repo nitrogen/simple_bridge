@@ -2,6 +2,7 @@ language: erlang
 sudo: required
 otp_release:
 # Test on all supported releases
+   - 18.1
    - 18.0
    - 17.5
    - 17.4
@@ -9,8 +10,6 @@ otp_release:
    - 17.0
    - R16B03-1
    - R16B
-   - R15B03
-   - R15B
 
 before_script: "sudo apt-get --yes --force-yes install libpam0g-dev"
 
