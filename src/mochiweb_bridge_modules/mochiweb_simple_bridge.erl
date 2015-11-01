@@ -150,8 +150,13 @@ build_response(Req, Res) ->
 
 
 create_cookie_header(Cookie) ->
-    SecondsToLive = Cookie#cookie.minutes_to_live * 60,
     Name = Cookie#cookie.name,
     Value = Cookie#cookie.value,
-    Path = Cookie#cookie.path,
-    mochiweb_cookies:cookie(Name, Value, [{path, Path}, {max_age, SecondsToLive}]).
+    Options = [
+               {domain, Cookie#cookie.domain},
+               {path, Cookie#cookie.path},
+               {max_age, Cookie#cookie.max_age},
+               {secure, Cookie#cookie.secure},
+               {http_only, Cookie#cookie.http_only}
+              ],
+    mochiweb_cookies:cookie(Name, Value, Options).

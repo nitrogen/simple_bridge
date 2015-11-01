@@ -6,7 +6,7 @@
 -ifndef(simple_bridge_hrl).
 -define(simple_bridge_hrl, true).
 
--record(cookie, { name, value, path="/", minutes_to_live=20 }).
+-record(cookie, { name, value, domain=undefined, path="/", max_age=3600, secure=false, http_only=false }).
 -record(header, { name, value }).
 -record(response, { status_code=200, headers=[], cookies=[], data=[] }).
 

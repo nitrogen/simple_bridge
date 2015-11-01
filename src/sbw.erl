@@ -72,6 +72,7 @@
     get_response_header/2,
     clear_headers/1,
     set_cookie/3,
+    set_cookie/4,
     set_cookie/5,
     clear_cookies/1,
     set_response_data/2,
@@ -423,16 +424,26 @@ clear_headers(Wrapper) ->
     end, Wrapper).
 
 set_cookie(Name, Value, Wrapper) ->
-    set_cookie(Name, Value, "/", 20, Wrapper).
+    set_cookie(Name, Value, [], Wrapper).
 
-set_cookie(Name, Value, Path, MinutesToLive, Wrapper) ->
+set_cookie(Name, Value, Options, Wrapper) ->
     update_response(fun(Res) ->
-        Cookie = #cookie { name=Name, value=Value, path=Path, minutes_to_live=MinutesToLive },
+        Cookie = #cookie { name=Name,
+                           value=Value,
+                           domain=proplists:get_value(domain, Options),
+                           path=proplists:get_value(path, Options, "/"),
+                           max_age=proplists:get_value(max_age, Options, 3600),
+                           secure=proplists:get_value(secure, Options, false),
+                           http_only=proplists:get_value(http_only, Options, false)
+                         },
         Cookies = Res#response.cookies,
         Cookies1 = [X || X <- Cookies, X#cookie.name /= Name],
         Cookies2 = [Cookie|Cookies1],
         Res#response{cookies=Cookies2}
     end, Wrapper).
+
+set_cookie(Name, Value, Path, MinutesToLive, Wrapper) ->
+    set_cookie(Name, Value, [{path, Path}, {max_age, MinutesToLive*60}], Wrapper).
 
 clear_cookies(Wrapper) ->
     update_response(fun(Res) ->
