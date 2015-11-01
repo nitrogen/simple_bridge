@@ -335,6 +335,9 @@ The Bridge modules export the following functions:
                    {secure, false},
                    {http_only, false}
                   ]
+  * **sbw:set_cookie(Name, Value, Path, MinutesToLive, Bridge)**
+    *(deprecated)* - set a cookie for the defined `Path` with `MinutesToLive` to
+    define the max age of the cookie. Deprecated in favor of `sbw:set_cookie/4`.
   * **sbw:clear_cookies(Bridge)** - clear all previously set cookies.
   * **sbw:set_response_data(Data, Bridge)** - set the data to return in the response. Usually HTML
     goes here.
