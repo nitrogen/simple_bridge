@@ -237,10 +237,34 @@ create_cookie(Cookie) ->
     Name = Cookie#cookie.name,
     Value = Cookie#cookie.value,
     Options = [
-               {domain, Cookie#cookie.domain},
-               {path, Cookie#cookie.path},
-               {max_age, Cookie#cookie.max_age},
-               {secure, Cookie#cookie.secure},
-               {http_only, Cookie#cookie.http_only}
+               {max_age, Cookie#cookie.max_age}
               ],
-    yaws_api:set_cookie(Name, Value, Options).
+    Options2 =
+        case Cookie#cookie.secure of
+            true ->
+                [secure | Options];
+            _ ->
+                Options
+        end,
+    Options3 =
+        case Cookie#cookie.domain of
+            undefined ->
+                Options2;
+            Domain ->
+                [{domain, Domain} | Options2]
+        end,
+    Options4 =
+        case Cookie#cookie.path of
+            undefined ->
+                Options3;
+            Path ->
+                [{path, Path} | Options3]
+        end,
+    Options5 =
+        case Cookie#cookie.http_only of
+            true ->
+                [http_only | Options4];
+            _ ->
+                Options4
+        end,
+    yaws_api:set_cookie(Name, Value, Options5).
