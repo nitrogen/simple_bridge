@@ -32,6 +32,12 @@
         build_response/2
     ]).
 
+%% HELPER STREAMING EXPORTS
+-export([
+    stream_fun/1,
+    stream_body/1
+]).
+
 new_key() ->
     {cowboy_bridge, erlang:make_ref()}.
 
@@ -199,18 +205,24 @@ build_response(ReqKey, Res) ->
                 false ->
                     send(404, [], [], "Not Found", Req);
                 true -> 
-                    Size = filelib:file_size(FullPath),
-                    StreamFun = fun(Socket, Transport) ->
-                        case Transport:sendfile(Socket, FullPath) of
-                            {ok, _} -> ok;
-                            {error, closed} -> ok
-                        end
-                    end,
-                    Body = {stream, Size, StreamFun},
+                    Body = stream_body(FullPath),
                     send(200, Headers3, [], Body, Req)
             end,
             cowboy_request_server:set(ReqKey, RequestCache#request_cache{request = FinReq}),
             {ok, FinReq}
+    end.
+
+stream_body(FullPath) ->
+    Size = filelib:file_size(FullPath),
+    StreamFun = stream_fun(FullPath),
+    {stream, Size, StreamFun}.
+
+stream_fun(FullPath) ->
+    fun(Socket, Transport) ->
+        case Transport:sendfile(Socket, FullPath) of
+            {ok, _} -> ok;
+            {error, closed} -> ok
+        end
     end.
 
 get_mimetype(Path) ->
