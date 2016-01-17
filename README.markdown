@@ -54,14 +54,14 @@ start() ->
 run(Bridge) ->
     HTML = [
         "<h1>Hello, World!</h1>",
-        io_lib:format("METHOD: ~p~n<br><br>", [Request:request_method()]),
-        io_lib:format("COOKIES: ~p~n<br><br>", [Request:cookies()]),
-        io_lib:format("HEADERS: ~p~n<br><br>", [Request:headers()]),
-        io_lib:format("QUERY PARAMETERS: ~p~n<br><br>", [Request:query_params()])       
+        io_lib:format("METHOD: ~p~n<br><br>", [Bridge:request_method()]),
+        io_lib:format("COOKIES: ~p~n<br><br>", [Bridge:cookies()]),
+        io_lib:format("HEADERS: ~p~n<br><br>", [Bridge:headers()]),
+        io_lib:format("QUERY PARAMETERS: ~p~n<br><br>", [Bridge:query_params()])       
     ],
-    Bridge2 = Response:set_status_code(200),
-    Bridge3 = Response:set_header("Content-Type", "text/html"),
-    Bridge4 = Response2:set_response_data(HTML),
+    Bridge2 = Bridge:set_status_code(200),
+    Bridge3 = Bridge2:set_header("Content-Type", "text/html"),
+    Bridge4 = Bridge3:set_response_data(HTML),
     Bridge4:build_response().
 ```
 
