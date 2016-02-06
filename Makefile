@@ -101,10 +101,11 @@ ERLANG_VERSION_CHECK := erl -eval "io:format(\"~s\",[erlang:system_info(otp_rele
 ERLANG_VERSION = $(shell $(ERLANG_VERSION_CHECK))
 
 # This is primarily for Travis build testing, as each build instruction will overwrite the previous
-travis: compile $(ERLANG_VERSION)
+travis: compile $(ERLANG_VERSION) test
 
 R15B: dialyzer
 R15B03: dialyzer
 R16B: dialyzer
 R16B03-1: dialyzer
 17: dialyzer
+18: dialyzer
