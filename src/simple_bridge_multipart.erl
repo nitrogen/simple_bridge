@@ -231,7 +231,8 @@ interpret_line(Line, Boundary) ->
     end.
 
 
-parse_header(B) when is_binary(B) -> parse_header(binary_to_list(B));
+parse_header(B) when is_binary(B) ->
+    parse_header(unicode:characters_to_list(B));
 parse_header(String) ->
     [First|Rest] = [string:strip(S) || S <- string:tokens(String, ";")],
     {Name, Value} = parse_keyvalue($:, First),
