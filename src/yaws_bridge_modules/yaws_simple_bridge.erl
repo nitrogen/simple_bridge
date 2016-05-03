@@ -234,37 +234,30 @@ coalesce([undefined|T]) -> coalesce(T);
 coalesce([H|_T]) -> H.
 
 create_cookie(Cookie) ->
-    Name = Cookie#cookie.name,
-    Value = Cookie#cookie.value,
-    Options = [
-               {max_age, Cookie#cookie.max_age}
-              ],
-    Options2 =
-        case Cookie#cookie.secure of
-            true ->
-                [secure | Options];
-            _ ->
-                Options
-        end,
-    Options3 =
-        case Cookie#cookie.domain of
-            undefined ->
-                Options2;
-            Domain ->
-                [{domain, Domain} | Options2]
-        end,
-    Options4 =
-        case Cookie#cookie.path of
-            undefined ->
-                Options3;
-            Path ->
-                [{path, Path} | Options3]
-        end,
-    Options5 =
-        case Cookie#cookie.http_only of
-            true ->
-                [http_only | Options4];
-            _ ->
-                Options4
-        end,
-    yaws_api:set_cookie(Name, Value, Options5).
+    Name = simple_bridge_util:to_list(Cookie#cookie.name),
+    Value = simple_bridge_util:to_list(Cookie#cookie.value),
+    FieldsAndValues = [
+        {max_age, Cookie#cookie.max_age},
+        {secure, Cookie#cookie.secure},
+        {path, Cookie#cookie.path},
+        {http_only, Cookie#cookie.http_only},
+        {domain, Cookie#cookie.domain}
+    ],
+    Options = lists:foldl(fun({Field, Val}, Acc) ->
+        cookie_opt(Field, Val) ++ Acc
+    end, [], FieldsAndValues),
+    yaws_api:set_cookie(Name, Value, Options).
+
+cookie_opt(max_age, MaxAge) ->
+    [{max_age, MaxAge}];
+cookie_opt(secure, true) ->
+    [secure];
+cookie_opt(http_only, true) ->
+    [http_only];
+cookie_opt(domain, Domain) when Domain=/=undefined, Domain=/="", Domain =/= <<"">> ->
+    [{domain, simple_bridge_util:to_list(Domain)}];
+cookie_opt(path, Path) when Path=/=undefined, Path=/="", Path =/= <<"">> ->
+    [{path, simple_bridge_util:to_list(Path)}];
+cookie_opt(_, _) ->
+    [].
+
