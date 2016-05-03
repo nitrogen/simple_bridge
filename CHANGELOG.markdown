@@ -1,10 +1,14 @@
-# 2.0.2 (In development)
+# 2.1.0 (In development)
 
+* Deprecated `sbw:set_cookie/5` in favor of a new, more flexible,
+  `sbw:set_cookie/4`, which takes an `Options` argument for specifying
+  `http_only`, `max_age`, `secure`, etc. (Thanks Dmitry Polyanovsky)
 * Remove uses of `erlang:now()` for Erlang 18 support
 * Fix tail-call bug in simple_bridge_websocket
 * Fix a bug looking for a custom inets.config
 * Add dialyzer and travis rules to Makefile
 * Fix a handful of issues found by dialyzer
+* Fix a number of yaws-related issues (max post size, keepalive)
 * Set the cowboy supervisor to not `infinity`.
 * Add a few more tests.
 
