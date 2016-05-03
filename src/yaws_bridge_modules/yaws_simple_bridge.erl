@@ -1,6 +1,7 @@
 % vim: ts=4 sw=4 et
 % Simple Bridge
 % Copyright (c) 2008-2010 Rusty Klophaus
+% Copyright (c) 2011-2016 Jesse Gumm
 % See MIT-LICENSE for licensing information.
 
 -module(yaws_simple_bridge).
