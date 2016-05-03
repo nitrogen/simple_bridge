@@ -33,7 +33,7 @@ do_cookies(Bridge) ->
     _Type = sbw:query_param(type, Bridge),
     Cookies = sbw:cookies(Bridge),
     Bridge2 = lists:foldl(fun({K,V}, Br) ->
-        sbw:set_cookie(K,V, Br)
+        sbw:set_cookie(K, V, Br)
     end, Bridge, Cookies),
     sbw:set_response_data("ok", Bridge2).
 

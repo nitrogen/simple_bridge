@@ -246,8 +246,23 @@ prepare_cookies(Req, Cookies) ->
                    {secure, C#cookie.secure},
                    {http_only, C#cookie.http_only}
                   ],
-        cowboy_req:set_resp_cookie(Name, Value, Options, R)
+        %% cowlib 1.0.0 (which is the dependency for cowboy 1.0.4) has a bug
+        %% that freaks out with {secure, false} or {http_only, false} so this
+        %% is a workaround.
+        FilteredOptions = filter_cookie_options(Options),
+        cowboy_req:set_resp_cookie(Name, Value, FilteredOptions, R)
     end, Req, Cookies).
+
+filter_cookie_options([]) ->
+    [];
+filter_cookie_options([{secure, Any} | Opts]) when Any =/= true ->
+    filter_cookie_options(Opts);
+filter_cookie_options([{http_only, Any} | Opts]) when Any =/= true ->
+    filter_cookie_options(Opts);
+filter_cookie_options([{_, undefined} | Opts]) ->
+    filter_cookie_options(Opts);
+filter_cookie_options([Opt | Opts]) ->
+    [Opt | filter_cookie_options(Opts)].
 
 prepare_headers(Req, Headers) ->
     lists:foldl(fun({Header, Value}, R) -> cowboy_req:set_resp_header(Header, Value, R) end, Req, Headers).
