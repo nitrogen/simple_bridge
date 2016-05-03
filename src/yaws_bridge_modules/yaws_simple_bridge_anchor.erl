@@ -40,7 +40,10 @@ setup_websocket_opts(Handler, Bridge, KAInterval, KATimeout) ->
 
         %% The actual timeout. If we don't hear back about our ping in
         %% KATimeout milliseconds, yaws will kill the connection.
-        {keepalive_grace_period, KATimeout}
+        {keepalive_grace_period, KATimeout},
+
+	%% If the websocket times out, should we drop the websocket connection?
+	{drop_on_timeout, true}
     ].
 
 init([_Arg, WSState=#ws_state{handler=Handler, bridge=Bridge}]) ->
