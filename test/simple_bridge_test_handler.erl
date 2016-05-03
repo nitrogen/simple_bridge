@@ -8,8 +8,7 @@
 
 run(Bridge) ->
 	Path = sbw:path(Bridge),
-	Body = run(Path, Bridge),
-	Bridge2 = sbw:set_response_data(Body, Bridge),
+    Bridge2 = run(Path, Bridge),
 	sbw:build_response(Bridge2).
 
 run("/peer_ip", Bridge) -> simple_call(peer_ip, Bridge);
@@ -21,11 +20,22 @@ run("/request_method_post", Bridge) -> simple_call(request_method, Bridge);
 run("/request_body", Bridge) -> simple_call(request_body, Bridge);
 run("/query_params", Bridge) -> simple_call(query_params, Bridge);
 run("/post_params", Bridge) -> simple_call(post_params, Bridge);
-run(Path, _Bridge) -> io_lib:format("Unhandled Path: ~p", [Path]).
+run("/cookie", Bridge) -> do_cookies(Bridge);
+run(Path, Bridge) ->
+    sbw:set_response_data(io_lib:format("Unhandled Path: ~p", [Path]), Bridge).
 
 simple_call(Call, Bridge) ->
 	Val = sbw:Call(Bridge),
-	io_lib:format("~p", [Val]).
+	Body = io_lib:format("~p", [Val]),
+    sbw:set_response_data(Body, Bridge).
+
+do_cookies(Bridge) ->
+    _Type = sbw:query_param(type, Bridge),
+    Cookies = sbw:cookies(Bridge),
+    Bridge2 = lists:foldl(fun({K,V}, Br) ->
+        sbw:set_cookie(K,V, Br)
+    end, Bridge, Cookies),
+    sbw:set_response_data("ok", Bridge2).
 
 %% WebSockets
 %% stubs, no real tests
