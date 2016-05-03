@@ -143,43 +143,8 @@ build_response(Req, Res) ->
             mod_get:do(Req)
     end.
 
-create_cookie_header(Cookie) ->
-    SecondsToLive = Cookie#cookie.max_age,
-    Expire = simple_bridge_util:make_expires_from_seconds(SecondsToLive),
-    Name = Cookie#cookie.name,
-    Value = Cookie#cookie.value,
-	
-    % copied from mochiweb_cookies, should consider use their function instead of this one.
-    SecurePart =
-        case Cookie#cookie.secure of
-            true ->
-                "; Secure";
-            _ ->
-                ""
-        end,
-    DomainPart =
-        case Cookie#cookie.domain of
-            undefined ->
-                "";
-            Domain ->
-                ["; Domain=", Domain]
-        end,
-    PathPart =
-        case Cookie#cookie.path of
-            undefined ->
-                "";
-            Path ->
-                ["; Path=", Path]
-        end,
-    HttpOnlyPart =
-        case Cookie#cookie.http_only of
-            true ->
-                "; HttpOnly";
-            _ ->
-                ""
-        end,
-	
-    {"Set-Cookie", io_lib:format("~s=~s; Expires=~s~s~s~s~s", [Name, Value, Expire, SecurePart, DomainPart, PathPart, HttpOnlyPart])}.
+create_cookie_header(Cookie = #cookie{}) ->
+    simple_bridge_util:create_cookie_header(Cookie).
 
 % Inets wants some headers as lowercase atoms, and the rest as lists. So let's fix these up.
 massage(Header) when is_binary(Header) ->

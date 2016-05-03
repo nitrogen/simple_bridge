@@ -32,7 +32,8 @@
     ensure_expires_header/1,
     needs_expires_header/1,
     parse_ip/1,
-    parse_cookie_header/1
+    parse_cookie_header/1,
+    create_cookie_header/1
 ]).
 
 -type header_key() :: string() | binary() | atom().
@@ -316,8 +317,6 @@ to_binary(L) ->
     iolist_to_binary(L).
 
 
-
-%% This is borrowed from Nitrogen
 parse_ip(IP = {_,_,_,_}) ->
     IP;
 parse_ip(IP = {_,_,_,_,_,_,_,_}) ->
@@ -346,3 +345,32 @@ parse_cookie_header(CookieData) ->
         end
     end,
     [F(X) || X <- string:tokens(CookieData, ";")].
+
+create_cookie_header(#cookie{name=Name, value=Value, max_age=MaxAge,
+                            secure=Secure, domain=Domain, path=Path,
+                            http_only=HttpOnly}) ->
+    HeaderVal = [
+        Name,<<"=">>,Value,
+        create_cookie_expires(MaxAge),
+        create_cookie_secure(Secure),
+        create_cookie_domain(Domain),
+        create_cookie_path(Path),
+        create_cookie_http_only(HttpOnly)
+    ],
+    {"Set-Cookie", HeaderVal}.
+
+create_cookie_expires(MaxAge) ->
+    Expires = make_expires_from_seconds(MaxAge),
+    [<<"; Expires=">>,Expires].
+
+create_cookie_secure(true) -> <<"; Secure">>;
+create_cookie_secure(_) -> "".
+
+create_cookie_domain(undefined) -> <<"">>;
+create_cookie_domain(Domain) -> [<<"; Domain=">>, Domain].
+
+create_cookie_path(undefined) -> <<"">>;
+create_cookie_path(Path) -> [<<"; Path=">>, Path].
+
+create_cookie_http_only(true) -> <<"; HttpOnly">>;
+create_cookie_http_only(_) -> <<"">>.
