@@ -327,14 +327,20 @@ The Bridge modules export the following functions:
   * **sbw:clear_headers(Bridge)** - clear all previously set headers.
   * **sbw:set_cookie(Name, Value, Bridge)** - set a cookie for path "/" with expiration in
     1 hour.
-  * **sbw:set_cookie(Name, Value, Options, Bridge)** - set a cookie with an Options list
-  [
-                   {domain, undefined},
-                   {path, "/"},
-                   {max_age, 3600}, %% time in seconds
-                   {secure, false},
-                   {http_only, false}
-                  ]
+  * **sbw:set_cookie(Name, Value, Options, Bridge)** - set a cookie, setting
+    HTTP Options. Options is a proplist looking something supporting the
+    options `domain`, `path`, `max_age`, `secure`, and `http_only`. Any or all can
+    be specified like below.
+	```erlang
+		Options = [
+		   {domain, undefined},
+		   {path, "/"},
+		   {max_age, 3600}, %% time in seconds
+		   {secure, false},
+		   {http_only, false}
+		],
+		sbw:set_cookie("mycookie", "mycookievalue", Options, Bridge).
+	```
   * **sbw:set_cookie(Name, Value, Path, MinutesToLive, Bridge)**
     *(deprecated)* - set a cookie for the defined `Path` with `MinutesToLive` to
     define the max age of the cookie. Deprecated in favor of `sbw:set_cookie/4`.
