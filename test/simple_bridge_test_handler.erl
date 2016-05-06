@@ -30,12 +30,21 @@ simple_call(Call, Bridge) ->
     sbw:set_response_data(Body, Bridge).
 
 do_cookies(Bridge) ->
-    _Type = sbw:query_param(type, Bridge),
+    Type = sbw:query_param(type, Bridge),
     Cookies = sbw:cookies(Bridge),
     Bridge2 = lists:foldl(fun({K,V}, Br) ->
-        sbw:set_cookie(K, V, Br)
+        set_cookie(Type, K, V, Br)
     end, Bridge, Cookies),
     sbw:set_response_data("ok", Bridge2).
+
+set_cookie("list", K, V, Bridge) ->
+    K2 = simple_bridge_util:to_list(K),
+    V2 = simple_bridge_util:to_list(V),
+    sbw:set_cookie(K2, V2, Bridge);
+set_cookie("binary", K, V, Bridge) ->
+    K2 = simple_bridge_util:to_binary(K),
+    V2 = simple_bridge_util:to_binary(V),
+    sbw:set_cookie(K2, V2, Bridge).
 
 %% WebSockets
 %% stubs, no real tests
