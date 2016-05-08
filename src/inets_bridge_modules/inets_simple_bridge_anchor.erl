@@ -3,7 +3,7 @@
 	
 do(Req) ->
 	Bridge = simple_bridge:make(inets, Req),
-	ReqPath = Bridge:path(),
+	ReqPath = sbw:path(Bridge),
 	case simple_bridge_util:is_static_path(inets, ReqPath) of
 		true ->
 			Bridge2 = sbw:set_response_file(ReqPath, Bridge),
