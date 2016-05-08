@@ -350,7 +350,7 @@ create_cookie_header(#cookie{name=Name, value=Value, max_age=MaxAge,
                             secure=Secure, domain=Domain, path=Path,
                             http_only=HttpOnly}) ->
     HeaderVal = [
-        Name,<<"=">>,Value,
+        to_binary(Name),"=",to_binary(Value),
         create_cookie_expires(MaxAge),
         create_cookie_secure(Secure),
         create_cookie_domain(Domain),
