@@ -300,7 +300,9 @@ make_expires_from_seconds(Seconds) ->
     httpd_util:rfc1123_date(ExpiresDate).
 
 
--spec to_list(any()) -> string().
+-spec to_list(any()) -> string()|undefined.
+to_list(undefined) ->
+    undefined;
 to_list(A) when is_atom(A) ->
     atom_to_list(A);
 to_list(B) when is_binary(B) ->
@@ -308,7 +310,9 @@ to_list(B) when is_binary(B) ->
 to_list(L) when is_list(L) ->
     L.
 
--spec to_binary(iolist() | atom() | binary()) -> binary().
+-spec to_binary(iolist() | atom() | binary()) -> binary()|undefined.
+to_binary(undefined) ->
+    undefined;
 to_binary(B) when is_binary(B) ->
     B;
 to_binary(A) when is_atom(A) ->
