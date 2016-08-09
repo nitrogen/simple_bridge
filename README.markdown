@@ -248,7 +248,7 @@ response bridge in your application. A single bridge will do, pig.)
     conveniently interfaced with the `sb_uploaded_file` module, documented below
     in the "Uploaded File Interface" section.
   * **sbw:request_body(Bridge)** - returns the request body that has been read
-    so far, as a list.
+    so far, as binary or `undefined`.
   * **sbw:error(Bridge)** - returns an Erlang term describing any errors that
     happened while parsing a multipart post.
 

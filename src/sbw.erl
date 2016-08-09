@@ -179,7 +179,7 @@ request_body(Wrapper) ->
     Mod = Wrapper#sbw.mod,
     Req = Wrapper#sbw.req,
     Body = Mod:request_body(Req),
-    simple_bridge_util:to_binary(Body).
+    simple_bridge_util:maybe_to_binary(Body).
 
 request_method(Wrapper) ->
     Mod = Wrapper#sbw.mod,
@@ -314,7 +314,7 @@ find_param(Param, Default, ParamList) when is_binary(Param) ->
     end;
 find_param(Param, Default, ParamList) when is_atom(Param); is_list(Param) ->
     Param1 = simple_bridge_util:to_binary(Param),
-    simple_bridge_util:to_list(find_param(Param1, Default, ParamList)).
+    simple_bridge_util:maybe_to_list(find_param(Param1, Default, ParamList)).
 
 
 find_param_group(Param, Default, ParamList) when is_binary(Param) ->

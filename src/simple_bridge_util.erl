@@ -21,6 +21,8 @@
     is_static_path/2,
     expires/2,
     make_expires_from_seconds/1,
+    maybe_to_list/1,
+    maybe_to_binary/1,
     to_list/1,
     to_binary/1,
     has_header/2,
@@ -299,6 +301,18 @@ make_expires_from_seconds(Seconds) ->
     ExpiresDate = calendar:now_to_local_time({NowMegaSec,NowSec+Seconds,0}),
     httpd_util:rfc1123_date(ExpiresDate).
 
+
+-spec maybe_to_list(any()) -> string() | undefined.
+maybe_to_list(undefined) ->
+    undefined;
+maybe_to_list(Val) ->
+    to_list(Val).
+
+-spec maybe_to_binary(iolist() | atom() | binary()) -> binary() | undefined.
+maybe_to_binary(undefined) ->
+    undefined;
+maybe_to_binary(Val) ->
+    to_binary(Val).
 
 -spec to_list(any()) -> string().
 to_list(A) when is_atom(A) ->

@@ -15,3 +15,5 @@ rebar.test.*.config
 /ebin/
 /.settings/
 /.project
+.idea
+
