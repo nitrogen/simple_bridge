@@ -179,7 +179,7 @@ request_body(Wrapper) ->
     Mod = Wrapper#sbw.mod,
     Req = Wrapper#sbw.req,
     Body = Mod:request_body(Req),
-    simple_bridge_util:maybe_to_binary(Body).
+    simple_bridge_util:to_binary(Body).
 
 request_method(Wrapper) ->
     Mod = Wrapper#sbw.mod,
