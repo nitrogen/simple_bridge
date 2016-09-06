@@ -240,6 +240,10 @@ send(Code, Headers, Cookies, Body, Req) ->
     Req3 = case Body of
         {stream, Size, Fun} -> 
             cowboy_req:set_resp_body_fun(Size, Fun, Req2);
+        {stream, Fun} ->
+            cowboy_req:set_resp_body_fun(Fun, Req2);
+        {chunked, Fun} ->
+            cowboy_req:set_resp_body_fun(chunked, Fun, Req2);
         _ ->
             cowboy_req:set_resp_body(Body, Req2)
     end,
