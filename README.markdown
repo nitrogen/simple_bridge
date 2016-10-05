@@ -287,6 +287,8 @@ As with the Bridge module above, all `sb_uploaded_file` objects can be reference
     element from the page.
   * **sb_uploaded_file:data(UploadedFile)** - The entire data of uploaded file. Returns `undefined`
     if file is stored as temporary file on disk.
+    
+#### Storing uploaded files in RAM rather than on disk
 
 By default uploaded files are always stored in temporary file
 `sb_uploaded_file:temp_file(UploadedFile)`.  If you want to keep the uploaded
