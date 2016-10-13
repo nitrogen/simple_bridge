@@ -27,8 +27,15 @@ init([]) ->
     {Address, Port} = simple_bridge_util:get_address_and_port(cowboy),
     IP = simple_bridge_util:parse_ip(Address),
 
-    io:format("Starting Cowboy Server on ~p:~p~n",
-              [IP, Port]),
+    {Schema, F, TOpts} = case simple_bridge_util:get_env(tls) of
+			  undefined -> {http, start_http, []};
+			  [_|_] = O -> {https, start_https, O}
+		      end,
+
+
+   io:format("Starting Cowboy ~p Server on ~p:~p~n",
+              [Schema, IP, Port]),
+
 
     Dispatch = generate_dispatch(),
     io:format("Using Cowboy Dispatch Table:~n  ~p~n",[Dispatch]),
@@ -38,7 +45,7 @@ init([]) ->
         {max_keepalive, 100}
     ],
 
-    cowboy:start_http(http, 100, [{ip, IP}, {port, Port}], Opts),
+    cowboy:F(Schema, 100, [{ip, IP}, {port, Port}| TOpts], Opts),
 
     {ok, { {one_for_one, 5, 10}, []}}.
 
