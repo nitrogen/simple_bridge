@@ -16,4 +16,4 @@ rebar.test.*.config
 /.settings/
 /.project
 .idea
-
+.rebar

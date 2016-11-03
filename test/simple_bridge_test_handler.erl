@@ -18,6 +18,7 @@ run("/uri", Bridge) -> simple_call(uri, Bridge);
 run("/request_method_get", Bridge) -> simple_call(request_method, Bridge);
 run("/request_method_post", Bridge) -> simple_call(request_method, Bridge);
 run("/request_body", Bridge) -> simple_call(request_body, Bridge);
+run("/uploaded_files", Bridge) -> get_uploaded_files(Bridge);
 run("/query_params", Bridge) -> simple_call(query_params, Bridge);
 run("/post_params", Bridge) -> simple_call(post_params, Bridge);
 run("/cookie", Bridge) -> do_cookies(Bridge);
@@ -28,6 +29,13 @@ simple_call(Call, Bridge) ->
 	Val = sbw:Call(Bridge),
 	Body = io_lib:format("~p", [Val]),
     sbw:set_response_data(Body, Bridge).
+
+get_uploaded_files(Bridge) ->
+    Files = sbw:post_files(Bridge),
+    Errors = sbw:error(Bridge),
+    sbw:set_response_data(term_to_binary({lists:map(fun(File) ->
+        {sb_uploaded_file:original_name(File), File}
+    end, Files), Errors}), Bridge).
 
 do_cookies(Bridge) ->
     Type = sbw:query_param(type, Bridge),

@@ -43,11 +43,11 @@
         %% FILE UPLOAD SETTINGS
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        {max_post_size, 100},
+        {max_post_size, 3},
         %% No multipart request greater than above will be accepted. Units are
         %% MB
         
-        {max_file_size, 100},
+        {max_file_size, 2},
         %% No single uploaded file will be accepted greater than  the above.
         %% Units are MB.
 
