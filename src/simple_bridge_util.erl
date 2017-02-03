@@ -293,7 +293,7 @@ expires(seconds,X) when is_integer(X) ->
 
 -spec make_expires_from_seconds(integer()) -> string().
 make_expires_from_seconds(Seconds) ->
-    {NowMegaSec,NowSec,_} = now(),
+    {NowMegaSec,NowSec,_} = os:timestamp(),
     ExpiresDate = calendar:now_to_local_time({NowMegaSec,NowSec+Seconds,0}),
     httpd_util:rfc1123_date(ExpiresDate).
 
