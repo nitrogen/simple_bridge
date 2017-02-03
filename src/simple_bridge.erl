@@ -102,9 +102,7 @@ make_nocatch(Module, RequestData) ->
             %% lookup
             sbw:cache_post_params(Bridge);
         {error, Error} -> 
-            Bridge:set_error(Error);
-        Other -> 
-            throw({unexpected, Other})
+            Bridge:set_error(Error)
     end.
 
 
