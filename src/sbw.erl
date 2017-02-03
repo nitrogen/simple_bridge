@@ -323,7 +323,7 @@ find_param_group(Param, Default, ParamList) when is_binary(Param) ->
         L -> L
     end;
 find_param_group(Param, Default, ParamList) when is_list(Param); is_atom(Param) ->
-    Param1 = simple_bridge_util:to_list(Param),
+    Param1 = simple_bridge_util:to_binary(Param),
     ResultList = find_param_group(Param1, Default, ParamList),
     [simple_bridge_util:to_list(V) || V <- ResultList].
 
