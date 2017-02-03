@@ -115,7 +115,7 @@ cancel_pong_timer(TRef) ->
 
 hijack_request_fail(Bridge) ->
     Bridge2 = sbw:set_status_code(400, Bridge),
-    Bridge3 = sbw:set_header(Bridge2, "Sec-Websocket-Version", ?WS_VERSION),
+    Bridge3 = sbw:set_header("Sec-Websocket-Version", ?WS_VERSION, Bridge2),
     Bridge4 = sbw:set_response_data(["Invalid Websocket Upgrade Request. Please use Websocket version ",?WS_VERSION], Bridge3),
     Bridge4.
 
