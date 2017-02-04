@@ -11,8 +11,6 @@
 
         %% Exported for code-reloading
         websocket_loop/8
-
-        , dialyzer_fix/0
     ]).
 
 %-compile(export_all).
@@ -440,11 +438,8 @@ append_frame_data_and_parse_remainder(F = #frame{payload_len=PayloadLen, mask_ke
             [F#frame{data=Unmasked} | parse_frame(RemainingData)]
     end.
 
-%%apply_mask(<<Mask:32>>, Data) ->
-%%    apply_mask(Mask, Data);
 apply_mask(Mask, Data) ->
-    {_Time, Unmasked} = timer:tc(fun apply_mask/3, [Mask, Data,<<>>]),
-    Unmasked.
+    apply_mask(Mask, Data, <<>>).
 
 apply_mask(_, <<>>, Acc) ->
     Acc;
@@ -502,6 +497,3 @@ is_utf8(<< 2#11110100:8, 2#10:2, High:6, _/bits >>) when High >= 2#10000 ->
 %% Invalid.
 is_utf8(_) ->
         false.
-
-dialyzer_fix() ->
-    apply_mask(<<15:32>>, 0).
