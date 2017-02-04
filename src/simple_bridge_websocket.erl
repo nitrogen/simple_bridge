@@ -11,6 +11,8 @@
 
         %% Exported for code-reloading
         websocket_loop/8
+
+        , dialyzer_fix/0
     ]).
 
 %-compile(export_all).
@@ -500,3 +502,6 @@ is_utf8(<< 2#11110100:8, 2#10:2, High:6, _/bits >>) when High >= 2#10000 ->
 %% Invalid.
 is_utf8(_) ->
         false.
+
+dialyzer_fix() ->
+    apply_mask(<<15:32>>, 0).
