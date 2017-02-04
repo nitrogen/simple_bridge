@@ -1,0 +1,10 @@
+{
+	"outdir": "reports",
+	"servers": [
+		{
+			"agent": "simple_bridge",
+			"url":"ws://127.0.0.1:8000"
+		} 
+	],
+	"cases":["*"]
+}
