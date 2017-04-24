@@ -136,8 +136,9 @@ request_body(ReqKey) ->
     put_key(ReqKey, RequestCache#request_cache{body = Body, request = NewReq}),
     Body.
 
-socket(_ReqKey) ->
-    undefined.
+socket(ReqKey) ->
+    {_, Req} = get_key(ReqKey),
+    cowboy_req:get(socket, Req).
 
 recv_from_socket(_Length, _Timeout, ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
