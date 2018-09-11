@@ -40,8 +40,7 @@ init([]) ->
             {webmachine_mochiweb, start, [Options]},
             permanent, 5000, worker, [mochiweb_socket_server]},
     Processes = [Web],
-    application:start(mochiweb),
-    application:start(webmachine),
+    {ok, _} = application:ensure_all_started(webmachine),
     {ok, { {one_for_one, 5, 10}, Processes} }.
 
 generate_dispatch() ->
