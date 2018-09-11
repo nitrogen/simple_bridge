@@ -1,1 +1,2 @@
-    {webmachine,    "1.*",  {git, "git://github.com/basho/webmachine.git",  {tag, "1.10.6"}}}
+    {mochiweb,      "2.*",  {git, "git://github.com/mochi/mochiweb.git",    {tag, "v2.18.0"}}},
+    {webmachine,    "1.*",  {git, "git://github.com/webmachine/webmachine.git",  {tag, "1.11.1"}}}

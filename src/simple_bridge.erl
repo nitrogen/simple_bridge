@@ -86,6 +86,8 @@ inner_make(Module, RequestData) ->
         make_nocatch(Module, RequestData)
     catch Type : Error ->
         error_logger:error_msg("Error in simple_bridge:make/2 - ~p - ~p~n~p", [Type, Error, erlang:get_stacktrace()]),
+        error_logger:info_msg("Type: ~p",[Type]),
+        error_logger:info_msg("Error: ~p",[Error]),
         erlang:Type(Error)
     end.
 
@@ -102,7 +104,9 @@ make_nocatch(Module, RequestData) ->
             %% lookup
             sbw:cache_post_params(Bridge);
         {error, Error} -> 
-            Bridge:set_error(Error)
+            error_logger:error_msg("Error in Multipart: ~p",[Error]),
+
+            sbw:set_error(Error, Bridge)
     end.
 
 

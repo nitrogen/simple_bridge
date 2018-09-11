@@ -14,9 +14,9 @@
 ]).
 
 -export([
-    post_mutlipart/1,
-    post_mutlipart_post_too_big/1,
-    post_mutlipart_file_too_big/1
+    post_multipart/1,
+    post_multipart_post_too_big/1,
+    post_multipart_file_too_big/1
 ]).
 
 all() -> [{group, multipart}].
@@ -24,7 +24,7 @@ all() -> [{group, multipart}].
 groups() -> [
     {multipart,
         [sequence, {repeat, 1}],
-        [post_mutlipart, post_mutlipart_post_too_big, post_mutlipart_file_too_big]
+        [post_multipart, post_multipart_post_too_big, post_multipart_file_too_big]
     }].
 
 init_per_group(_Group, Config) ->
@@ -40,14 +40,14 @@ end_per_group(_Group, Config) ->
 end_per_testcase(_TestCase, _Config) ->
     lists:foreach(fun(File) -> file:delete(File) end, filelib:wildcard("./scratch/*")).
 
-post_mutlipart(Config) ->
+post_multipart(Config) ->
     BinStream1 = crypto:strong_rand_bytes(1024000),
     BinStream2 = crypto:strong_rand_bytes(2048000),
     Data1 = binary_to_list(BinStream1),
     Data2 = binary_to_list(BinStream2),
     Files = [{data, "data1", Data1}, {data, "data2", Data2}],
 
-    {UploadedFiles, Errors} = binary_to_term(post_mutlipart("uploaded_files", Files)),
+    {UploadedFiles, Errors} = binary_to_term(post_multipart("uploaded_files", Files)),
 
     2 = length(UploadedFiles),
     none = Errors,
@@ -65,24 +65,24 @@ post_mutlipart(Config) ->
         Binary = BinaryFileContent
     end, Files).
 
-post_mutlipart_post_too_big(Config) ->
+post_multipart_post_too_big(_Config) ->
     BinStream1 = crypto:strong_rand_bytes(2048000),
     BinStream2 = crypto:strong_rand_bytes(2048000),
     Data1 = binary_to_list(BinStream1),
     Data2 = binary_to_list(BinStream2),
     Files = [{data, "data1", Data1}, {data, "data2", Data2}],
 
-    {[], post_too_big} = binary_to_term(post_mutlipart("uploaded_files", Files)),
+    {[], post_too_big} = binary_to_term(post_multipart("uploaded_files", Files)),
     [] = get_all_files_from_scratch_dir().
 
-post_mutlipart_file_too_big(_) ->
+post_multipart_file_too_big(_) ->
     BinStream1 = crypto:strong_rand_bytes(1024),
     BinStream2 = crypto:strong_rand_bytes(3072000),
     Data1 = binary_to_list(BinStream1),
     Data2 = binary_to_list(BinStream2),
     Files = [{data, "data1", Data1}, {data, "data2", Data2}, {data, "data3", Data1}],
 
-    {[], {file_too_big,"data2"}} = binary_to_term(post_mutlipart("uploaded_files", Files)),
+    {[], {file_too_big,"data2"}} = binary_to_term(post_multipart("uploaded_files", Files)),
     [] = get_all_files_from_scratch_dir().
 
 %%%===================================================================
@@ -113,12 +113,13 @@ format_multipart_formdata(Boundary, Fields, Files) ->
     Parts = lists:append([FieldParts2, FileParts2, EndingParts]),
     string:join(Parts, "\r\n").
 
-post_mutlipart(Path, Files) ->
+post_multipart(Path, Files) ->
     Boundary = "------WebKitFormBoundaryUscTgwn7KiuepIr1",
     ReqBody = format_multipart_formdata(Boundary, [], Files),
     ContentType = lists:concat(["multipart/form-data; boundary=", Boundary]),
     ReqHeader = [{"Content-Length", integer_to_list(length(ReqBody))}],
 
-    {ok, {_, _, Val}} = httpc:request(post,{"http://127.0.0.1:8000/" ++ Path, ReqHeader, ContentType, ReqBody},
+    FullRes = {ok, {_, _, Val}} = httpc:request(post,{"http://127.0.0.1:8000/" ++ Path, ReqHeader, ContentType, ReqBody},
                                       [], [{body_format, binary}]),
+    error_logger:info_msg("Returned Value: ~p",[FullRes]),
     Val.
