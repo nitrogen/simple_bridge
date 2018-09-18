@@ -34,9 +34,8 @@
 
 %% HELPER STREAMING EXPORTS
 -export([
-    stream_fun/1,
-    stream_body/1
-]).
+	 stream_body/1
+	]).
 
 new_key() ->
     {cowboy_bridge, erlang:make_ref()}.
@@ -60,63 +59,62 @@ init({Req, DocRoot}) ->
 
 protocol(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
-    Transport = cowboy_req:get(transport, Req),
-    case Transport:name() of
-        tcp -> http;
-        ssl -> https
+    case cowboy_req:scheme(Req) of
+        <<"http">> -> http;
+        <<"https">> -> https
     end.
+
 
 request_method(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
-    {Method, Req} = cowboy_req:method(Req),
+    Method = cowboy_req:method(Req),
     list_to_atom(simple_bridge_util:to_list(Method)).
 
 path(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
-    {Path, Req} = cowboy_req:path(Req),
+    Path = cowboy_req:path(Req),
     simple_bridge_util:to_list(Path).
 
 uri(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
-    {URL, Req} = cowboy_req:url(Req),
+    URL = cowboy_req:uri(Req),
     case re:run(URL, "^https?://[^/]*(/.*)$", [{capture, all_but_first, list}]) of
-        {match, [Uri]} -> Uri;
-        _ -> ""
+	{match, [Uri]} -> Uri;
+	_ -> ""
     end.
 
 peer_ip(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
-    {{IP, _Port}, NewReq} = cowboy_req:peer(Req),
-    put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
+    {IP, _Port} = cowboy_req:peer(Req),
+    put_key(ReqKey, RequestCache#request_cache{request = Req}),
     IP.
 
 peer_port(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
-    {{_IP, Port}, NewReq} = cowboy_req:peer(Req),
-    put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
+    {_IP, Port} = cowboy_req:peer(Req),
+    put_key(ReqKey, RequestCache#request_cache{request = Req}),
     Port.
 
 headers(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
-    {Headers, Req} = cowboy_req:headers(Req),
-    Headers.
+    cowboy_req:headers(Req).
+
 
 cookies(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
-    {Cookies, NewReq} = cowboy_req:cookies(Req),
-    put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
+    Cookies = cowboy_req:parse_cookies(Req),
+    put_key(ReqKey, RequestCache#request_cache{request = Req}),
     Cookies.
 
 query_params(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
-    {QsVals, NewReq} = cowboy_req:qs_vals(Req),
-    put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
+    QsVals = cowboy_req:parse_qs(Req),
+    put_key(ReqKey, RequestCache#request_cache{request = Req}),
     QsVals.
 
 post_params(ReqKey) ->
     Body = request_body(ReqKey),
-    BodyQs = cow_qs:parse_qs(Body),
-    BodyQs.
+    cow_qs:parse_qs(Body).
 
 request_body(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
@@ -125,8 +123,8 @@ request_body(ReqKey) ->
             %% We start with 2MB here, as headers and form fields will almost
             %% certainly be in the first 2mb of a request, and give the client
             %% 120 seconds to send the chunk.
-            %% TODO, Make the read_timeout a configuration option for simple_bridge
-            case cowboy_req:body(Req, [{length, 2000000}, {read_timeout, 120000}]) of
+            %% TODO, Make the period a configuration option for simple_bridge
+            case cowboy_req:read_body(Req,#{length => 2000000,period =>120000}) of 
                 {ok, B, R} -> {B, R};
                 {more, B, R} -> {B, R}
             end;
@@ -141,7 +139,7 @@ socket(_ReqKey) ->
 
 recv_from_socket(_Length, _Timeout, ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
-    case cowboy_req:body(Req, [{length, 8000000}]) of
+    case cowboy_req:read_body(Req,#{length => 8000000}) of
         {ok, Data, NewReq} ->
             put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
             Data;
@@ -155,7 +153,7 @@ recv_from_socket(_Length, _Timeout, ReqKey) ->
 
 protocol_version(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
-    {Version, Req} = cowboy_req:version(Req),
+    Version = cowboy_req:version(Req),
     case Version of
         'HTTP/1.1' -> {1, 1};
         'HTTP/1.0' -> {1, 0};
@@ -175,10 +173,10 @@ build_response(ReqKey, Res) ->
     case Res#response.data of
         {data, Body} ->
             % Assemble headers...
-            Headers2 = simple_bridge_util:ensure_header(Headers,"Content-Type","text/html"),
+            Headers2 = simple_bridge_util:ensure_header(Headers,<<"content-type">>,<<"text/html">>),
 
             % Send the cowboy cookies
-            {ok, FinReq} = send(Code, Headers2, Res#response.cookies, Body, Req),
+            FinReq = send(Code, Headers2, Res#response.cookies, Body, Req),
             cowboy_request_server:set(ReqKey, RequestCache#request_cache{request = FinReq}),
             {ok, FinReq};
 
@@ -198,32 +196,23 @@ build_response(ReqKey, Res) ->
  
             Path = strip_leading_slash(P),
             Mimetype = get_mimetype(Path),
-            Headers2 = simple_bridge_util:ensure_header(Headers,{"Content-Type", Mimetype}),
+            Headers2 = simple_bridge_util:ensure_header(Headers,{<<"content-type">>, Mimetype}),
             Headers3 = simple_bridge_util:ensure_expires_header(Headers2),
             FullPath = filename:join(DocRoot, Path),
-            {ok, FinReq} = case filelib:is_regular(FullPath) of
-                false ->
-                    send(404, [], [], "Not Found", Req);
-                true -> 
-                    Body = stream_body(FullPath),
-                    send(200, Headers3, [], Body, Req)
-            end,
+            FinReq = case filelib:is_regular(FullPath) of
+			 false ->
+			     send(404, [], [], "Not Found", Req);
+			 true -> 
+			     Body = stream_body(FullPath),
+			     send(200, Headers3, [], Body, Req)
+		     end,
             cowboy_request_server:set(ReqKey, RequestCache#request_cache{request = FinReq}),
             {ok, FinReq}
     end.
 
 stream_body(FullPath) ->
     Size = filelib:file_size(FullPath),
-    StreamFun = stream_fun(FullPath),
-    {stream, Size, StreamFun}.
-
-stream_fun(FullPath) ->
-    fun(Socket, Transport) ->
-        case Transport:sendfile(Socket, FullPath) of
-            {ok, _} -> ok;
-            {error, closed} -> ok
-        end
-    end.
+    {sendfile, 0, Size, FullPath}.
 
 get_mimetype(Path) ->
     {Mime1, Mime2, _} = cow_mimetypes:all(list_to_binary(Path)),
@@ -238,47 +227,46 @@ send(Code, Headers, Cookies, Body, Req) ->
     Req1 = prepare_cookies(Req, Cookies),
     Req2 = prepare_headers(Req1, Headers),
     Req3 = case Body of
-        {stream, Size, Fun} -> 
-            cowboy_req:set_resp_body_fun(Size, Fun, Req2);
-        {stream, Fun} ->
-            cowboy_req:set_resp_body_fun(Fun, Req2);
-        {chunked, Fun} ->
-            cowboy_req:set_resp_body_fun(chunked, Fun, Req2);
-        _ ->
-            cowboy_req:set_resp_body(Body, Req2)
-    end,
-    {ok, _ReqFinal} = cowboy_req:reply(Code, Req3).
+	       {sendfile, _, _Size, _FullPath} -> %%{stream, _Size, Fun} -> 
+		   cowboy_req:set_resp_body(Body, Req2);
+	       {stream, Fun} ->
+		   cowboy_req:set_resp_body(Fun, Req2);
+	       {chunked, Fun} ->
+		   cowboy_req:set_resp_body(Fun, Req2);
+	       _ ->
+		   cowboy_req:set_resp_body(Body, Req2)
+	   end,
+    cowboy_req:reply(Code, Req3).
+
 
 prepare_cookies(Req, Cookies) ->
     lists:foldl(fun(C, R) ->
-        %% In case cookie name or value was set to an atom, we need to make
-        %% sure it's something usable, so let's just use binary
-        Name = simple_bridge_util:to_binary(C#cookie.name),
-        Value = simple_bridge_util:to_binary(C#cookie.value),
-        Options = [
-                   {domain, C#cookie.domain},
-                   {path, C#cookie.path},
-                   {max_age, C#cookie.max_age},
-                   {secure, C#cookie.secure},
-                   {http_only, C#cookie.http_only}
-                  ],
-        %% cowlib 1.0.0 (which is the dependency for cowboy 1.0.4) has a bug
-        %% that freaks out with {secure, false} or {http_only, false} so this
-        %% is a workaround.
-        FilteredOptions = filter_cookie_options(Options),
-        cowboy_req:set_resp_cookie(Name, Value, FilteredOptions, R)
-    end, Req, Cookies).
+			%% In case cookie name or value was set to an atom, we need to make
+			%% sure it's something usable, so let's just use binary
+			Name = simple_bridge_util:to_binary(C#cookie.name),
+			Value = simple_bridge_util:to_binary(C#cookie.value),
+			Options = #{
+			  domain => C#cookie.domain,
+			  path => C#cookie.path,
+			  max_age => C#cookie.max_age,
+			  secure => C#cookie.secure,
+			  http_only => C#cookie.http_only
+			 },
+			%% cowlib 1.0.0 (which is the dependency for cowboy 1.0.4) has a bug
+			%% that freaks out with {secure, false} or {http_only, false} so this
+			%% is a workaround.
 
-filter_cookie_options([]) ->
-    [];
-filter_cookie_options([{secure, Any} | Opts]) when Any =/= true ->
-    filter_cookie_options(Opts);
-filter_cookie_options([{http_only, Any} | Opts]) when Any =/= true ->
-    filter_cookie_options(Opts);
-filter_cookie_options([{_, undefined} | Opts]) ->
-    filter_cookie_options(Opts);
-filter_cookie_options([Opt | Opts]) ->
-    [Opt | filter_cookie_options(Opts)].
+			Pred = fun(K,V) ->
+				       case K of
+					   secure when V  =/= true -> false;
+					   http_only when V =/= true -> false;
+					   _ when V==undefined -> false;
+					   _ -> true
+				       end
+			       end,
+			FilteredOptions = maps:filter(Pred,Options),
+			cowboy_req:set_resp_cookie(Name, Value, R, FilteredOptions)
+		end, Req, Cookies).
 
 prepare_headers(Req, Headers) ->
     lists:foldl(fun({Header, Value}, R) -> cowboy_req:set_resp_header(Header, Value, R) end, Req, Headers).
