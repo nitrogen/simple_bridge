@@ -33,12 +33,10 @@ init([]) ->
     Dispatch = generate_dispatch(),
     io:format("Using Cowboy Dispatch Table:~n  ~p~n",[Dispatch]),
 
-    Opts = [
-        {env, [{dispatch, Dispatch}]},
-        {max_keepalive, 100}
-    ],
+    Opts = #{env => #{dispatch => Dispatch},
+             max_keepalive => 100},
 
-    cowboy:start_http(http, 100, [{ip, IP}, {port, Port}], Opts),
+    cowboy:start_clear(http, [{ip, IP}, {port, Port}], Opts),
 
     {ok, { {one_for_one, 5, 10}, []}}.
 
