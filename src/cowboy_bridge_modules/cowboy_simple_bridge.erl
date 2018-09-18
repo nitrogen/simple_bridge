@@ -59,7 +59,6 @@ init({Req, DocRoot}) ->
 
 protocol(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
-    %Transport = cowboy_req:get(transport, Req),
     case cowboy_req:scheme(Req) of
         <<"http">> -> http;
         <<"https">> -> https
