@@ -146,7 +146,7 @@ cache_query_params(Wrapper) ->
     Mod = Wrapper#sbw.mod,
     Req = Wrapper#sbw.req,
     Wrapper#sbw{
-      query_params=[normalize_param({K,V}) || {K,V} <- Mod:query_params(Req)],
+      query_params=[normalize_param({K,V}) || {K,V} <- Mod:query_params(Req)]
     }.
 
 
