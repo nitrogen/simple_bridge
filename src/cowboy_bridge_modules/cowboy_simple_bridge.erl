@@ -34,9 +34,8 @@
 
 %% HELPER STREAMING EXPORTS
 -export([
-    %stream_fun/1,
-    stream_body/1
-]).
+	 stream_body/1
+	]).
 
 new_key() ->
     {cowboy_bridge, erlang:make_ref()}.
@@ -46,7 +45,7 @@ get_key(ReqKey) ->
         RequestCache = #request_cache{request = Req} = cowboy_request_server:get(ReqKey),
         {RequestCache, Req}
     catch E:T ->
-        error_logger:info_msg("~p:~p~n~p", [E, T, undefined])
+        error_logger:info_msg("~p:~p~n~p", [E, T, erlang:get_stacktrace()])
     end.
 
 put_key(ReqKey, NewRequestCache) ->
@@ -125,8 +124,8 @@ request_body(ReqKey) ->
             %% We start with 2MB here, as headers and form fields will almost
             %% certainly be in the first 2mb of a request, and give the client
             %% 120 seconds to send the chunk.
-            %% TODO, Make the read_timeout a configuration option for simple_bridge
-            case cowboy_req:read_body(Req) of %%, [{length, 2000000}, {read_timeout, 120000}]
+            %% TODO, Make the period a configuration option for simple_bridge
+            case cowboy_req:read_body(Req,#{length => 2000000,period =>120000}) of 
                 {ok, B, R} -> {B, R};
                 {more, B, R} -> {B, R}
             end;
@@ -141,7 +140,7 @@ socket(_ReqKey) ->
 
 recv_from_socket(_Length, _Timeout, ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
-    case cowboy_req:read_body(Req) of %, [{length, 8000000}]
+    case cowboy_req:read_body(Req,#{length => 8000000}) of
         {ok, Data, NewReq} ->
             put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
             Data;
@@ -214,17 +213,7 @@ build_response(ReqKey, Res) ->
 
 stream_body(FullPath) ->
     Size = filelib:file_size(FullPath),
-    %StreamFun = stream_fun(FullPath),
-    %%{stream, Size, StreamFun}.
     {sendfile, 0, Size, FullPath}.
-
-%% stream_fun(FullPath) ->
-%%     fun(Socket, Transport) ->
-%%         case Transport:sendfile(Socket, FullPath) of
-%%             {ok, _} -> ok;
-%%             {error, closed} -> ok
-%%         end
-%%     end.
 
 get_mimetype(Path) ->
     {Mime1, Mime2, _} = cow_mimetypes:all(list_to_binary(Path)),
@@ -267,7 +256,6 @@ prepare_cookies(Req, Cookies) ->
 			%% cowlib 1.0.0 (which is the dependency for cowboy 1.0.4) has a bug
 			%% that freaks out with {secure, false} or {http_only, false} so this
 			%% is a workaround.
-			%FilteredOptions = filter_cookie_options(Options),
 
 			Pred = fun(K,V) ->
 				       case K of
@@ -280,17 +268,6 @@ prepare_cookies(Req, Cookies) ->
 			FilteredOptions = maps:filter(Pred,Options),
 			cowboy_req:set_resp_cookie(Name, Value, R, FilteredOptions)
 		end, Req, Cookies).
-
-%% filter_cookie_options([]) ->
-%%     [];
-%% filter_cookie_options([{secure, Any} | Opts]) when Any =/= true ->
-%%     filter_cookie_options(Opts);
-%% filter_cookie_options([{http_only, Any} | Opts]) when Any =/= true ->
-%%     filter_cookie_options(Opts);
-%% filter_cookie_options([{_, undefined} | Opts]) ->
-%%     filter_cookie_options(Opts);
-%% filter_cookie_options([Opt | Opts]) ->
-%%     [Opt | filter_cookie_options(Opts)].
 
 prepare_headers(Req, Headers) ->
     lists:foldl(fun({Header, Value}, R) -> cowboy_req:set_resp_header(Header, Value, R) end, Req, Headers).
