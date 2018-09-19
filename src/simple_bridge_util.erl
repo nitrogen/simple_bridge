@@ -124,7 +124,7 @@ get_websocket_keepalive_interval(BackendApp) ->
 
 get_websocket_keepalive_timeout(BackendApp) ->
     get_env([{simple_bridge, websocket_timeout},
-             {BackendApp, websocket_timeout}], 20000).
+             {BackendApp, websocket_timeout}], 5000).
 
 get_scratch_dir(Default) ->
     get_env_or_init(scratch_dir, simple_bridge_scratch_dir, Default).
