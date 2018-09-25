@@ -24,7 +24,8 @@
         request_body/1,
         socket/1,
         recv_from_socket/3,
-        protocol_version/1
+        protocol_version/1,
+        native_header_type/0
     ]).
 
 %% RESPONSE EXPORTS
@@ -36,6 +37,9 @@
 -export([
 	 stream_body/1
 	]).
+
+native_header_type() ->
+    map.
 
 new_key() ->
     {cowboy_bridge, erlang:make_ref()}.
@@ -98,7 +102,6 @@ peer_port(ReqKey) ->
 headers(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
     cowboy_req:headers(Req).
-
 
 cookies(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),

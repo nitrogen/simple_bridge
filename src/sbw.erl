@@ -26,6 +26,8 @@
     request_method/1,
 
     headers/1,
+    headers_list/1,
+    headers_map/1,
     header/2,
     header_lower/2,
 
@@ -114,13 +116,39 @@ set_multipart(PostParams, PostFiles, Wrapper) ->
 %% PRECACHING HEADERS, POST PARAMS AND QUERY PARAMS
 %% So we don't have to convert to and from binary/lists/atom for different
 %% backends. We do it once per request.
-
+%% Experimenting with caching the headers as maps
+%% Something to consider here is that the normalize_headers function looks at binaries/lists 
 cache_headers(Wrapper) ->
     Mod = Wrapper#sbw.mod,
     Req = Wrapper#sbw.req,
-    Fun = fun(K,V) when V=/=undefined -> normalize_header({K,V}) end,
-    FormattedHeaders = maps:map(Fun,Mod:headers(Req)),
+    FormattedHeaders = cache_headers_by_type(Req, Mod),
     Wrapper#sbw{headers=FormattedHeaders}.
+
+cache_headers_by_type(Req, Mod) ->
+    case Mod:native_header_type() of
+        map ->
+            cache_headers_map(Req, Mod);
+        list ->
+            cache_headers_list(Req, Mod)
+    end.
+
+cache_headers_map(Req, Mod) ->
+    Headers = Mod:headers(Req),
+    HeadersList = maps:to_list(Headers),
+    normalize_headers(HeadersList).
+    %error_logger:info_msg("Raw Header: ~p",[Headers]),
+    %%% filter out undefineds, we don't care about them
+    %Filtered = maps:filter(fun(_K, V) -> V =/= undefined end, Headers),
+    %%% format the headers
+    %maps:map(fun(K,V) -> normalize_header({K,V}) end, Filtered).
+
+cache_headers_list(Req, Mod) ->
+    Headers = Mod:headers(Req),
+    normalize_headers(Headers).
+
+normalize_headers(Headers) ->
+    ListHeaders = [normalize_header(Header) || Header={_K,V} <- Headers, V =/= undefined],
+    maps:from_list(ListHeaders).
 
 cache_cookies(Wrapper) ->
     Mod = Wrapper#sbw.mod,
@@ -148,7 +176,6 @@ cache_query_params(Wrapper) ->
     Wrapper#sbw{
       query_params=[normalize_param({K,V}) || {K,V} <- Mod:query_params(Req)]
     }.
-
 
 normalize_param({K, V}) ->  
     {simple_bridge_util:to_binary(K), simple_bridge_util:to_binary(V)}.
@@ -211,13 +238,19 @@ post_files(Wrapper) ->
 %% REQUEST HEADERS
 
 headers(Wrapper) ->
+    headers_map(Wrapper).
+
+headers_map(Wrapper) ->
     Wrapper#sbw.headers.
+
+headers_list(Wrapper) ->
+    maps:to_list(Wrapper#sbw.headers).
 
 header(Header, Wrapper) ->
     BinHeader = simple_bridge_util:binarize_header(Header),
     case maps:find(BinHeader, Wrapper#sbw.headers) of
         error -> undefined;
-        {ok, {_Key,Val}} ->
+        {ok, Val} ->
             if  is_list(Header);
                 is_atom(Header)   -> binary_to_list(Val);
                 is_binary(Header) -> Val

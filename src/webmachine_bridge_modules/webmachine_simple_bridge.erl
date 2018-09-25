@@ -23,7 +23,8 @@
         request_body/1,
         socket/1,
         recv_from_socket/3,
-        protocol_version/1
+        protocol_version/1,
+        native_header_type/0
     ]).
 
 -export([
@@ -55,6 +56,9 @@ peer_port(Req) ->
 headers(Req) ->
     Mochiheaders = wrq:req_headers(Req),
     mochiweb_headers:to_list(Mochiheaders).
+
+native_header_type() ->
+    list.
 
 cookies(Req) ->
     wrq:req_cookie(Req).

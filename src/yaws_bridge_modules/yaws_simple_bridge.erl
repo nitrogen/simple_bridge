@@ -14,6 +14,7 @@
     request_method/1, protocol/1, path/1, uri/1,
     peer_ip/1, peer_port/1,
     headers/1, cookies/1,
+    native_header_type/0,
     query_params/1, post_params/1, request_body/1,
     socket/1, recv_from_socket/3, protocol_version/1
 ]).
@@ -66,37 +67,43 @@ peer_port(Arg) ->
         end,
     Port.
 
+native_header_type() ->
+    map.
+
 headers(Arg) ->
     Headers = yaws_api:arg_headers(Arg),
-    
+
+    HeadersMap = #{
+        <<"connection">> => yaws_api:headers_connection(Headers),
+        <<"accept">> => yaws_api:headers_accept(Headers),
+        <<"host">> => yaws_api:headers_host(Headers),
+        <<"if-modified-since">> => yaws_api:headers_if_modified_since(Headers),
+        <<"if-match">> => yaws_api:headers_if_match(Headers),
+        <<"if-none-match">> => yaws_api:headers_if_none_match(Headers),
+        <<"if-range">> => yaws_api:headers_if_range(Headers),
+        <<"if-unmodified-since">> => yaws_api:headers_if_unmodified_since(Headers),
+        <<"range">> => yaws_api:headers_range(Headers),
+        <<"referer">> => yaws_api:headers_referer(Headers),
+        <<"user-agent">> => yaws_api:headers_user_agent(Headers),
+        <<"accept-ranges">> => yaws_api:headers_accept_ranges(Headers),
+        <<"cookie">> => yaws_api:headers_cookie(Headers),
+        <<"keep-alive">> => yaws_api:headers_keep_alive(Headers),
+        <<"location">> => yaws_api:headers_location(Headers),
+        <<"content-length">> => yaws_api:headers_content_length(Headers),
+        <<"content-type">> => yaws_api:headers_content_type(Headers),
+        <<"content-encoding">> => yaws_api:headers_content_encoding(Headers),
+        <<"authorization">> => yaws_api:headers_authorization(Headers),
+        <<"transfer-encoding">> => yaws_api:headers_transfer_encoding(Headers),
+        <<"x-forwarded-for">> => yaws_api:headers_x_forwarded_for(Headers) 
+    },
+
     %% Get the other headers and format them to fit the paradigm we're using above
     Others = yaws_api:headers_other(Headers),
-    Others2 = [{Header,Value} || {http_header,_Num,Header,_,Value} <- Others],
 
-    [
-        {<<"Connection">>, yaws_api:headers_connection(Headers)},
-        {<<"Accept">>, yaws_api:headers_accept(Headers)},
-        {<<"Host">>, yaws_api:headers_host(Headers)},
-        {<<"If-Modified-Since">>, yaws_api:headers_if_modified_since(Headers)},
-        {<<"If-Match">>, yaws_api:headers_if_match(Headers)},
-        {<<"If-None-Match">>, yaws_api:headers_if_none_match(Headers)},
-        {<<"If-Range">>, yaws_api:headers_if_range(Headers)},
-        {<<"If-Unmodified-Since">>, yaws_api:headers_if_unmodified_since(Headers)},
-        {<<"Range">>, yaws_api:headers_range(Headers)},
-        {<<"Referer">>, yaws_api:headers_referer(Headers)},
-        {<<"User-Agent">>, yaws_api:headers_user_agent(Headers)},
-        {<<"Accept-Ranges">>, yaws_api:headers_accept_ranges(Headers)},
-        {<<"Cookie">>, yaws_api:headers_cookie(Headers)},
-        {<<"Keep-Alive">>, yaws_api:headers_keep_alive(Headers)},
-        {<<"Location">>, yaws_api:headers_location(Headers)},
-        {<<"Content-Length">>, yaws_api:headers_content_length(Headers)},
-        {<<"Content-Type">>, yaws_api:headers_content_type(Headers)},
-        {<<"Content-Encoding">>, yaws_api:headers_content_encoding(Headers)},
-        {<<"Authorization">>, yaws_api:headers_authorization(Headers)},
-        {<<"Transfer-Encoding">>, yaws_api:headers_transfer_encoding(Headers)},
-        {<<"X-Forwarded-For">>, yaws_api:headers_x_forwarded_for(Headers)} 
-        | Others2
-    ].
+    %% Stick those headers into the map
+    lists:foldl(fun({http_header, _Num, K, _, V}, Hdrs) ->
+        maps:put(K, V, Hdrs)
+    end, HeadersMap, Others).
 
 cookies(Req) ->
     Headers = yaws_api:arg_headers(Req),

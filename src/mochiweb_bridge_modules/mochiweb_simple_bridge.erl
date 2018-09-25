@@ -21,7 +21,8 @@
     request_body/1,
     socket/1,
     recv_from_socket/3,
-    protocol_version/1
+    protocol_version/1,
+    native_header_type/0
 ]).
 
 -export([
@@ -76,7 +77,9 @@ peer_port(Req) ->
     Socket = mochiweb_request:get(socket, Req),
     {ok, {_IP, Port}} = mochiweb_socket:peername(Socket),
     Port.
-    
+
+native_header_type() -> list.
+
 headers(Req) ->
     Headers = mochiweb_request:get(headers, Req),
     mochiweb_headers:to_list(Headers).

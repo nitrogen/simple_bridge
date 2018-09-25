@@ -28,6 +28,7 @@
 -callback post_params(req())                 -> [{key(), value()}].
 -callback peer_ip(req())                     -> ipv4() | ipv8().
 -callback build_response(req(), #response{}) -> any().
+-callback native_header_type()               -> map | list.
 
 start() ->
     start(undefined).

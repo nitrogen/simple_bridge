@@ -16,26 +16,26 @@
 init(Req, State) ->
     Upgrade = cowboy_req:header(<<"upgrade">>, Req),
     Upgrade2 = case Upgrade of
-		   undefined -> undefined;
-		   Other -> simple_bridge_util:binarize_header(Other)
-	       end,
+        undefined -> undefined;
+        Other -> simple_bridge_util:binarize_header(Other)
+    end,
     case Upgrade2 == <<"websocket">> of
-	true ->
-	    %% Keepalive stuff
-	    {KAInterval, KATimeout} = simple_bridge_util:get_websocket_keepalive_interval_timeout(cowboy),
-	    CowboyTimeout = simple_bridge_websocket:keepalive_timeout(KAInterval, KATimeout),
-	    
-	    %% START YOUR ENGINES, FOLKS!
-	    WSState = #ws_state{init_req = Req,
-			       	keepalive_interval=KAInterval},
-	    {cowboy_websocket, Req, WSState, #{idle_timeout => CowboyTimeout}};
-	false ->
-	    DocRoot = simple_bridge_util:get_env(document_root),
-	    Handler = simple_bridge_util:get_env(handler),
-	    Bridge = simple_bridge:make(cowboy, {Req, DocRoot}),
-	    {ok, NewReq} = Handler:run(Bridge),
-	    {ok, NewReq, State}
-    end.
+        true ->
+            %% Keepalive stuff
+            {KAInterval, KATimeout} = simple_bridge_util:get_websocket_keepalive_interval_timeout(cowboy),
+            CowboyTimeout = simple_bridge_websocket:keepalive_timeout(KAInterval, KATimeout),
+            
+            %% START YOUR ENGINES, FOLKS!
+            WSState = #ws_state{init_req = Req,
+                        keepalive_interval=KAInterval},
+            {cowboy_websocket, Req, WSState, #{idle_timeout => CowboyTimeout}};
+        false ->
+            DocRoot = simple_bridge_util:get_env(document_root),
+            Handler = simple_bridge_util:get_env(handler),
+            Bridge = simple_bridge:make(cowboy, {Req, DocRoot}),
+            {ok, NewReq} = Handler:run(Bridge),
+            {ok, NewReq, State}
+        end.
  
 
 handle(Req, State) ->

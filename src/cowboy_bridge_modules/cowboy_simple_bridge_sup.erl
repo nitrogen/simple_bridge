@@ -20,10 +20,7 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    application:start(crypto),
-    application:start(ranch),
-    application:start(cowlib),
-    application:start(cowboy),
+    application:ensure_all_started(cowboy),
     {Address, Port} = simple_bridge_util:get_address_and_port(cowboy),
     IP = simple_bridge_util:parse_ip(Address),
 

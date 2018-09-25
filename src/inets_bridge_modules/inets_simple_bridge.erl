@@ -22,7 +22,8 @@
         request_body/1,
         socket/1,
         recv_from_socket/3,
-        protocol_version/1
+        protocol_version/1,
+        native_header_type/0
     ]).
 
 -export([
@@ -72,6 +73,9 @@ peer_port(Req) ->
                 inet:peername(Socket)
         end,
     Port.
+
+native_header_type() ->
+    list.
 
 headers(Req) ->
     Req#mod.parsed_header.
