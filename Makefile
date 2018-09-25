@@ -72,6 +72,7 @@ test_yaws:
 
 clean_test:
 	(rm -f rebar.test.*.config)
+	(rm -f test/*.beam)
 
 test_core: clean clean_test
 	(escript rebar_deps/merge_deps.escript rebar.test.config rebar_deps/$(BACKEND).deps rebar.test.$(BACKEND).config)
