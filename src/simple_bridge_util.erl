@@ -225,7 +225,7 @@ ensure_expires_header(HeaderList) ->
     
 -spec needs_expires_header(header_list()) -> boolean().
 needs_expires_header(HeaderList) ->
-    not(has_any_header(HeaderList,["Expires","Cache-Control"])).
+    not(has_any_header(HeaderList,[<<"expires">>,<<"cache-control">>])).
 
 -spec has_header(header_list(), header_key()) -> boolean().
 has_header(HeaderList,Header) ->
@@ -258,11 +258,11 @@ to_lower(Header) when is_list(Header) ->
 default_static_expires_header() ->
     case application:get_env(simple_bridge,default_expires) of
         {ok, immediate} ->
-            {"Cache-control","no-cache"};
+            {<<"cache-control">>,<<"no-cache">>};
 
         {ok, Seconds} when is_integer(Seconds) ->
             Expires = expires(seconds,Seconds),
-            {"Expires", Expires};
+            {<<"expires">>, Expires};
 
         {ok, {Unit, Value}} when Unit==years orelse 
                                  Unit==months orelse
@@ -272,10 +272,10 @@ default_static_expires_header() ->
                                  Unit==minutes orelse
                                  Unit==seconds ->
             Expires = expires(Unit,Value),
-            {"Expires", Expires};
+            {<<"expires">>, Expires};
         _ -> 
             Expires = expires(years,10),
-            {"Expires", Expires}
+            {<<"expires">>, Expires}
     end.
 
 -type unit_of_time() :: years|months|weeks|days|hours|minuites|seconds.
@@ -371,20 +371,20 @@ create_cookie_header(#cookie{name=Name, value=Value, max_age=MaxAge,
         create_cookie_path(Path),
         create_cookie_http_only(HttpOnly)
     ],
-    {"Set-Cookie", HeaderVal}.
+    {<<"set-cookie">>, HeaderVal}.
 
 create_cookie_expires(MaxAge) ->
     Expires = make_expires_from_seconds(MaxAge),
-    [<<"; Expires=">>,Expires].
+    [<<"; expires=">>,Expires].
 
-create_cookie_secure(true) -> <<"; Secure">>;
+create_cookie_secure(true) -> <<"; secure">>;
 create_cookie_secure(_) -> "".
 
 create_cookie_domain(undefined) -> <<"">>;
-create_cookie_domain(Domain) -> [<<"; Domain=">>, Domain].
+create_cookie_domain(Domain) -> [<<"; domain=">>, Domain].
 
 create_cookie_path(undefined) -> <<"">>;
-create_cookie_path(Path) -> [<<"; Path=">>, Path].
+create_cookie_path(Path) -> [<<"; path=">>, Path].
 
-create_cookie_http_only(true) -> <<"; HttpOnly">>;
+create_cookie_http_only(true) -> <<"; httponly">>;
 create_cookie_http_only(_) -> <<"">>.

@@ -101,7 +101,7 @@ new(Mod, Req) ->
     %% do it for us. See simple_bridge:make_nocatch/2
     Bridge2 = cache_headers(Bridge),
     Bridge3 = cache_query_params(Bridge2),
-    _Bridge4 = cache_cookies(Bridge3).
+    cache_cookies(Bridge3).
 
 
 set_multipart(PostParams, PostFiles, Wrapper) ->
@@ -118,7 +118,8 @@ set_multipart(PostParams, PostFiles, Wrapper) ->
 cache_headers(Wrapper) ->
     Mod = Wrapper#sbw.mod,
     Req = Wrapper#sbw.req,
-    FormattedHeaders = [normalize_header({K,V}) || {K,V} <- Mod:headers(Req), V=/=undefined],
+    Fun = fun(K,V) when V=/=undefined -> normalize_header({K,V}) end,
+    FormattedHeaders = maps:map(Fun,Mod:headers(Req)),
     Wrapper#sbw{headers=FormattedHeaders}.
 
 cache_cookies(Wrapper) ->
@@ -145,7 +146,7 @@ cache_query_params(Wrapper) ->
     Mod = Wrapper#sbw.mod,
     Req = Wrapper#sbw.req,
     Wrapper#sbw{
-        query_params=[normalize_param(Param) || Param <- Mod:query_params(Req)]
+      query_params=[normalize_param({K,V}) || {K,V} <- Mod:query_params(Req)]
     }.
 
 
@@ -214,9 +215,9 @@ headers(Wrapper) ->
 
 header(Header, Wrapper) ->
     BinHeader = simple_bridge_util:binarize_header(Header),
-    case lists:keyfind(BinHeader, 1, Wrapper#sbw.headers) of
-        false -> undefined;
-        {_, Val} ->
+    case maps:find(BinHeader, Wrapper#sbw.headers) of
+        error -> undefined;
+        {ok, {_Key,Val}} ->
             if  is_list(Header);
                 is_atom(Header)   -> binary_to_list(Val);
                 is_binary(Header) -> Val
