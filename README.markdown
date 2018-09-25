@@ -59,10 +59,10 @@ run(Bridge) ->
         io_lib:format("HEADERS: ~p~n<br><br>", [Bridge:headers()]),
         io_lib:format("QUERY PARAMETERS: ~p~n<br><br>", [Bridge:query_params()])       
     ],
-    Bridge2 = Bridge:set_status_code(200),
-    Bridge3 = Bridge2:set_header("Content-Type", "text/html"),
-    Bridge4 = Bridge3:set_response_data(HTML),
-    Bridge4:build_response().
+    Bridge2 = sbw:set_status_code(200, Bridge),
+    Bridge3 = sbw:set_header("Content-Type", "text/html", Bridge2),
+    Bridge4 = sbw:set_response_data(HTML, Bridge3),
+    sbw:build_response(Bridge4).
 ```
 
 ## A more complete example:
@@ -205,11 +205,23 @@ You can interface with it using either of two mechanisms:
 
   + Standard Erlang Calls: `sbw:function_name(Bridge)` - "sbw" is an acronym
     for (S)imple (B)ridge (W)rapper.
-  + Parameter Module Style Calls: `Bridge:function_name()`
+  + Tuple Module Calls: `Bridge:function_name()`
 
-Additionally, a Bridge provides both the Request and Response interface in a
-single object (which means you no longer have to track both a request and a
-response bridge in your application. A single bridge will do, pig.)
+**NOTE:** Tuple Module style calls were officially disabled in Erlang 21 and
+*require* you to enable tuple calls as a compile option in your module with:
+
+`-compile(tuple_calls).`
+
+This option can also be specified in your rebar.config file in the `erl_opts`
+variable with:
+
+`{erl_opts, [tuple_calls]}.`
+
+**Backwards Compatibility Note**: Simple Bridge 1.x required a separate Request
+and Response Object.  This has gone away and now a single Bridge "object"
+provides both the Request and Response interface in a single object. This means
+you no longer have to track both a request and a response bridge in your
+application. A single bridge will do, pig.
 
 ### Request Bridge Interface
 
