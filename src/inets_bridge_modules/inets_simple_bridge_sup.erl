@@ -39,7 +39,10 @@ init([]) ->
         {error, {already_started, inets}} ->
             {ok, SrvConfig} = application:get_env(inets, services),
             Httpd = proplists:get_value(httpd, SrvConfig),
-            {ok, _Pid} = inets:start(httpd, Httpd)
+            case inets:start(httpd, Httpd) of
+                {ok, _Pid} -> ok;
+                {error, {already_started, _Pid}} -> ok
+            end
     end,
     {ok, { {one_for_one, 5, 10}, []} }.
 

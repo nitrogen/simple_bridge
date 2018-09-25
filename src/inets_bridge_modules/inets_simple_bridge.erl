@@ -148,7 +148,9 @@ build_response(Req, Res) ->
     end.
 
 create_cookie_header(Cookie = #cookie{}) ->
-    simple_bridge_util:create_cookie_header(Cookie).
+    {K, V} = simple_bridge_util:create_cookie_header(Cookie),
+    {binary_to_list(K), V}.
+
 
 % Inets wants some headers as lowercase atoms, and the rest as lists. So let's fix these up.
 massage(Header) when is_binary(Header) ->
