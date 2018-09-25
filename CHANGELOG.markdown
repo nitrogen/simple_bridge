@@ -1,16 +1,19 @@
 # 2.1.0 (In development)
 
+* Converted to cowboy 2.0 (Thanks Eric, @etxemag75)
 * Deprecated `sbw:set_cookie/5` in favor of a new, more flexible,
   `sbw:set_cookie/4`, which takes an `Options` argument for specifying
   `http_only`, `max_age`, `secure`, etc. (Thanks Dmitry Polyanovsky)
 * Remove uses of `erlang:now()` for Erlang 18 support
-* Fix tail-call bug in simple_bridge_websocket
+* Fix tail-call bug in `simple_bridge_websocket`
 * Fix a bug looking for a custom inets.config
 * Add dialyzer and travis rules to Makefile
 * Fix a handful of issues found by dialyzer
 * Fix a number of yaws-related issues (max post size, keepalive)
 * Set the cowboy supervisor to not `infinity`.
 * Add a few more tests.
+* Converted the pre-cached headers to a map.
+* Ensure support up to Erlang 21.
 
 # 2.0.1
 
