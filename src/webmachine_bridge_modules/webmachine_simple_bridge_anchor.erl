@@ -1,3 +1,4 @@
+%% vim: ts=4 sw=4 et sts=4
 -module(webmachine_simple_bridge_anchor).
 -include("simple_bridge.hrl").
 -export([
@@ -6,14 +7,14 @@
     allowed_methods/2,
     post_is_create/2,
     process_post/2,
-	ping/2
+    ping/2
 ]).
 
 
 %% Resource Functions %%
 
 ping(Req, State) ->
-	{pong, Req, State}.
+    {pong, Req, State}.
 
 init(_Handler = Handler) -> 
     {ok, Handler}.
@@ -34,9 +35,13 @@ process_post(Req, Handler) ->
     {true, Req2, Handler}.
 
 do_bridge(Handler, Req) ->
-	Bridge = simple_bridge:make(webmachine, Req),
-	case simple_bridge_websocket:attempt_hijacking(Bridge, Handler) of
-		{hijacked, closed} -> gen_tcp:close(sbw:socket(Bridge));
-		{hijacked, Bridge2} -> sbw:build_response(Bridge2);
-		spared -> Handler:run(Bridge)
-	end.
+    Bridge = simple_bridge:make(webmachine, Req),
+    case simple_bridge_websocket:attempt_hijacking(Bridge, Handler) of
+        {hijacked, closed} ->
+            mochiweb_socket:close(sbw:socket(Bridge)),
+            {ok, "", Req};
+        {hijacked, Bridge2} ->
+            sbw:build_response(Bridge2);
+        spared ->
+            Handler:run(Bridge)
+    end.

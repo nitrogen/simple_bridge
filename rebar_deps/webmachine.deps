@@ -1,3 +1,3 @@
     %% Mochiweb 2.18.0 does not support Erlang 21 properly. This commit works 
-    {mochiweb,      "2.*",  {git, "git://github.com/mochi/mochiweb.git",    {tag, "c06e08ee2"}}},
+    {mochiweb,      "2.*",  {git, "git://github.com/mochi/mochiweb.git",    {tag, "9608d786"}}},
     {webmachine,    "1.*",  {git, "git://github.com/webmachine/webmachine.git",  {tag, "1.11.1"}}}
