@@ -70,6 +70,8 @@
 %% RESPONSE BRIDGE EXPORTS
 -export([
     set_status_code/2,
+    get_status_code/1,
+
     set_header/3,
     get_response_header/2,
     clear_headers/1,
@@ -432,6 +434,9 @@ set_status_code(StatusCode, Wrapper) ->
     update_response(fun(Res) ->
         Res#response{status_code=StatusCode}
     end, Wrapper).
+
+get_status_code(Wrapper) ->
+    (Wrapper#sbw.response)#response.status_code.
 
 set_header(Name0, Value, Wrapper) ->
     Name = simple_bridge_util:binarize_header(Name0),
