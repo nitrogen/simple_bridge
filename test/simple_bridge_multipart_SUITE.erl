@@ -40,7 +40,7 @@ end_per_group(_Group, Config) ->
 end_per_testcase(_TestCase, _Config) ->
     lists:foreach(fun(File) -> file:delete(File) end, filelib:wildcard("./scratch/*")).
 
-post_multipart(Config) ->
+post_multipart(_Config) ->
     BinStream1 = crypto:strong_rand_bytes(1024000),
     BinStream2 = crypto:strong_rand_bytes(2048000),
     Data1 = binary_to_list(BinStream1),

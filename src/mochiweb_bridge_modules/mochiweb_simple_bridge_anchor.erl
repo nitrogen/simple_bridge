@@ -1,5 +1,6 @@
 %% vim: ts=4 sw=4 et
 -module(mochiweb_simple_bridge_anchor).
+-include("simple_bridge.hrl").
 -export ([
         loop/1
     ]).

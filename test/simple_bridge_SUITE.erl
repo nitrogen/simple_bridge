@@ -105,8 +105,8 @@ extract_cookie_value(Headers, FindKey) ->
     end, undefined, RawCookies).
 
 make_cookie_headers() ->
-    Cookiename = "cookie" ++ integer_to_list(crypto:rand_uniform(1, 99999)),
-    Val = integer_to_list(crypto:rand_uniform(1, 999999)),
+    Cookiename = "cookie" ++ integer_to_list(rand:uniform(99999)),
+    Val = integer_to_list(rand:uniform(999999)),
     Headers = [{"Cookie", Cookiename ++ "=" ++ Val}],
     {Cookiename, Val, Headers}.
 
