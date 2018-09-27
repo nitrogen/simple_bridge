@@ -2,10 +2,10 @@ language: erlang
 script: "make travis"
 otp_release:
   - 21.0.5
-  - 20.3.8.6
+  - 20.3
   - 19.3.6
-  - 18.3.4
-  - 17.5.3
+  - 18.3
+  - 17.5
 
 addons:
     apt:
