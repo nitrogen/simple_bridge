@@ -1,3 +1,5 @@
+[
     %% 2.18.0 does not support Erlang 21 properly yet.  For now, we'll hard code to this commit which does have support
     %{mochiweb,      "2.*",  {git, "git://github.com/mochi/mochiweb.git",    {tag, "v2.18.0"}}}
     {mochiweb,      "2.*",  {git, "git://github.com/mochi/mochiweb.git",    {tag, "9608d786"}}}
+].
