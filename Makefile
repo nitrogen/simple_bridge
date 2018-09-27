@@ -49,9 +49,9 @@ run:
 
 ##### COMMON TEST
 
-test: test_cowboy test_inets test_mochiweb test_webmachine test_yaws
+test: test_cowboy test_nocowboy
 
-## Cowboy doesn't support <= Erlang 16
+## Cowboy doesn't support < Erlang 19
 test_nocowboy: test_inets test_mochiweb test_webmachine test_yaws
 
 
@@ -108,8 +108,8 @@ ERLANG_VERSION = $(shell $(ERLANG_VERSION_CHECK))
 # This is primarily for Travis build testing, as each build instruction will overwrite the previous
 travis: compile $(ERLANG_VERSION)
 
-17: test dialyzer
-18: test dialyzer
+17: test_nocowboy dialyzer
+18: test_nocowboy dialyzer
 19: test dialyzer
 20: test dialyzer
 21: test dialyzer
