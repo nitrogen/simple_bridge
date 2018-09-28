@@ -10,6 +10,7 @@
     groups/0,
     init_per_group/2,
     end_per_group/2,
+    init_per_testcase/2,
     end_per_testcase/2
 ]).
 
@@ -23,12 +24,13 @@ all() -> [{group, multipart}].
 
 groups() -> [
     {multipart,
-        [sequence, {repeat, 1}],
+        [sequence, {repeat, 2}],
         [post_multipart, post_multipart_post_too_big, post_multipart_file_too_big]
     }].
 
 init_per_group(_Group, Config) ->
     inets:start(),
+    application:ensure_all_started(ibrowse),
     application:start(simple_bridge),
     Config.
 
@@ -37,8 +39,14 @@ end_per_group(_Group, Config) ->
     application:stop(simple_bridge),
     Config.
 
-end_per_testcase(_TestCase, _Config) ->
-    lists:foreach(fun(File) -> file:delete(File) end, filelib:wildcard("./scratch/*")).
+init_per_testcase(_TestCase, Config) ->
+    inets:start(),
+    Config.
+
+end_per_testcase(_TestCase, Config) ->
+    lists:foreach(fun(File) -> file:delete(File) end, filelib:wildcard("./scratch/*")),
+    inets:stop(),
+    Config.
 
 post_multipart(_Config) ->
     BinStream1 = crypto:strong_rand_bytes(1024000),
@@ -119,7 +127,14 @@ post_multipart(Path, Files) ->
     ContentType = lists:concat(["multipart/form-data; boundary=", Boundary]),
     ReqHeader = [{"Content-Length", integer_to_list(length(ReqBody))}],
 
-    FullRes = {ok, {_, _, Val}} = httpc:request(post,{"http://127.0.0.1:8000/" ++ Path, ReqHeader, ContentType, ReqBody},
+    URL = "http://127.0.0.1:8000/" ++ Path,
+    FullRes = {ok, {_, _, BodyBin}} = httpc:request(post,{URL, ReqHeader, ContentType, ReqBody},
                                       [], [{body_format, binary}]),
+
+    %Headers = ReqHeader ++ [{"Content-Type", ContentType}],
+    %FullRes = {ok, _StatusCode, _Headers, ResBody} = ibrowse:send_req(URL, Headers, post, ReqBody),
+    %BodyBin = iolist_to_binary(ResBody),
+    
     error_logger:info_msg("Returned Value: ~p",[FullRes]),
-    Val.
+
+    BodyBin.

@@ -105,7 +105,7 @@ make_nocatch(Module, RequestData) ->
             %% lookup
             sbw:cache_post_params(Bridge);
         {error, Error} -> 
-            %error_logger:error_msg("Error in Multipart: ~p",[Error]),
+            error_logger:error_msg("Error in Multipart: ~p",[Error]),
             sbw:set_error(Error, Bridge)
     end.
 

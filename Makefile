@@ -74,6 +74,12 @@ clean_test:
 	(rm -f rebar.test.*.config)
 	(rm -f test/*.beam)
 
+test_quick:
+	./rebar --config "rebar.test.$(BACKEND).config" clean
+	./rebar --config "rebar.test.$(BACKEND).config" get-deps
+	./rebar --config "rebar.test.$(BACKEND).config" compile
+	./rebar --config "rebar.test.$(BACKEND).config" skip_deps=true ct
+
 test_core: clean clean_test
 	(escript rebar_deps/merge_deps.escript rebar.test.config rebar_deps/$(BACKEND).deps rebar.test.$(BACKEND).config)
 	(cd test; sed "s/BACKEND/$(BACKEND)/" < app.config.src > app.config)

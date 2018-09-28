@@ -29,8 +29,6 @@
     build_response/2
 ]).
 
-%% TODO: CONVERT ALL CALLS TO NON-PMOD CALLS
-
 %% Max Body of 10MB by default
 %% NOTE: It seems to be common for folks to manually override this directly in
 %% the code here.  That, however, is not necessary.  It's far simpler to set
@@ -142,15 +140,15 @@ build_response(Req, Res) ->
         {data, Body} ->
             % Send the mochiweb response...
             Headers2 = simple_bridge_util:ensure_header(Headers,{"Content-Type","text/html"}),
-            mochiweb_request:respond({Code, Headers2, Body}, Req);
+            Response = {Code, Headers2, Body},
+            mochiweb_request:respond(Response, Req);
         {file, Path} ->
             %% Create the response telling Mochiweb to serve the file...
             Headers2 = simple_bridge_util:ensure_expires_header(Headers),
             DocRoot = simple_bridge_util:get_docroot(mochiweb),
             mochiweb_request:serve_file(tl(Path), DocRoot, Headers2, Req)
-    end.
-
-
+    end,
+    ok.
 
 create_cookie_header(Cookie) ->
     Name = Cookie#cookie.name,

@@ -33,9 +33,13 @@ simple_call(Call, Bridge) ->
 get_uploaded_files(Bridge) ->
     Files = sbw:post_files(Bridge),
     Errors = sbw:error(Bridge),
-    sbw:set_response_data(term_to_binary({lists:map(fun(File) ->
+    RawResponse = term_to_binary({lists:map(fun(File) ->
         {sb_uploaded_file:original_name(File), File}
-    end, Files), Errors}), Bridge).
+    end, Files), Errors}),
+    EncodedResponse = RawResponse,
+
+    %base64:encode(RawResponse),
+    sbw:set_response_data(EncodedResponse, Bridge).
 
 do_cookies(Bridge) ->
     Type = sbw:query_param(type, Bridge),
