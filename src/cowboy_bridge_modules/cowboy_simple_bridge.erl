@@ -267,9 +267,10 @@ prepare_cookies(Req, Cookies) ->
 					   _ -> true
 				       end
 			       end,
-			FilteredOptions = maps:filter(Pred,Options),
+			FilteredOptions = ?MAPS_FILTER(Pred,Options),
 			cowboy_req:set_resp_cookie(Name, Value, R, FilteredOptions)
 		end, Req, Cookies).
+
 
 prepare_headers(Req, Headers) ->
     lists:foldl(fun({Header, Value}, R) -> cowboy_req:set_resp_header(Header, Value, R) end, Req, Headers).

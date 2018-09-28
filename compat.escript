@@ -4,14 +4,17 @@
 main([]) ->
     crypto:start(),
 
-	Filename = "include/crypto_compat.hrl",
-	io:format("Generating crypto compatibility for simple_bridge...\n"),
+	Filename = "include/compat.hrl",
+	io:format("Generating compatibility for simple_bridge...\n"),
 	Hash = hash(),
+    MapsFilter = maps_filter(),
 
-	io:format("...Using: ~p~n",[Hash]),
+	io:format("...?HASH/1 => ~p~n",[Hash]),
+    io:format("...?MAPS_FILTER/2 => ~p~n",[MapsFilter]),
 
 	Contents = [
 		"-define(HASH(Data), ",Hash,").\n"
+        "-define(MAPS_FILTER(Pred, Map), ",MapsFilter,").\n"
 	],
 
     ContentsBin = iolist_to_binary(Contents),
@@ -23,6 +26,8 @@ main([]) ->
             file:write_file(Filename, Contents)
     end.
 
+
+
 hash() ->
 	case erlang:function_exported(crypto, hash, 2) of
 		true ->
@@ -30,3 +35,12 @@ hash() ->
 		false ->
 			"crypto:sha(Data)"
 	end.
+
+maps_filter() ->
+    case erlang:function_exported(maps, filter, 2) of
+        true ->
+            "maps:filter(Pred, Map)";
+        false ->
+            "maps:from_list(lists:filter(fun({K,V}) -> Pred(K,V) end, maps:to_list(Map)))"
+    end.
+                

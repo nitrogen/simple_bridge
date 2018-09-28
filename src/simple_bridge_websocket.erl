@@ -15,7 +15,6 @@
 
 %-compile(export_all).
 -include("simple_bridge.hrl").
--include("crypto_compat.hrl").
 
 -define(else, true).
 
