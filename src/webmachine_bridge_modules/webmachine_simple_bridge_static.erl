@@ -19,7 +19,6 @@
          generate_etag/2]).
 
 -record(context, {root,response_body=undefined,metadata=[]}).
--include("crypto_compat.hrl").
 
 ping(Req, State) ->
 	{pong, Req, State}.
