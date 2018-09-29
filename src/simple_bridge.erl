@@ -30,6 +30,9 @@
 -callback build_response(req(), #response{}) -> any().
 -callback native_header_type()               -> map | list.
 
+%% This type is defined in simple_bridge.hrl
+-export_type([bridge/0]).
+
 start() ->
     start(undefined).
 
