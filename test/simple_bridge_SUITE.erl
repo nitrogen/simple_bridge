@@ -1,5 +1,7 @@
 -module(simple_bridge_SUITE).
 -include_lib("common_test/include/ct.hrl").
+-include("simple_bridge.hrl").
+
 -export([
 	all/0,
 	groups/0,
@@ -105,8 +107,8 @@ extract_cookie_value(Headers, FindKey) ->
     end, undefined, RawCookies).
 
 make_cookie_headers() ->
-    Cookiename = "cookie" ++ integer_to_list(rand:uniform(99999)),
-    Val = integer_to_list(rand:uniform(999999)),
+    Cookiename = "cookie" ++ integer_to_list(?RAND_UNIFORM(99999)),
+    Val = integer_to_list(?RAND_UNIFORM(999999)),
     Headers = [{"Cookie", Cookiename ++ "=" ++ Val}],
     {Cookiename, Val, Headers}.
 

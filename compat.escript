@@ -8,13 +8,16 @@ main([]) ->
 	io:format("Generating compatibility for simple_bridge...\n"),
 	Hash = hash(),
     MapsFilter = maps_filter(),
+    RandUniform = rand_uniform(),
 
 	io:format("...?HASH/1 => ~p~n",[Hash]),
     io:format("...?MAPS_FILTER/2 => ~p~n",[MapsFilter]),
+    io:format("...?RAND_UNIFORM/1 => ~p~n",[RandUniform]),
 
 	Contents = [
 		"-define(HASH(Data), ",Hash,").\n"
         "-define(MAPS_FILTER(Pred, Map), ",MapsFilter,").\n"
+        "-define(RAND_UNIFORM(Max), ",RandUniform,").\n"
 	],
 
     ContentsBin = iolist_to_binary(Contents),
@@ -44,3 +47,11 @@ maps_filter() ->
             "maps:from_list(lists:filter(fun({K,V}) -> Pred(K,V) end, maps:to_list(Map)))"
     end.
                 
+
+rand_uniform() ->
+    case erlang:function_exported(rand, uniform, 1) of
+        true ->
+            "rand:uniform(Max)";
+        false ->
+            "crypto:rand_uniform(1, Max)"
+    end.
