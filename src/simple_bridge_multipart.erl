@@ -55,7 +55,7 @@ parse_multipart(Req) ->
     try
         Boundary = get_multipart_boundary(Req),
         Length = get_content_length(Req),
-        ok = crash_if_too_big(Length, #state{parts = []}),
+        ok = crash_if_too_big(Length, #state{parts = [], req=Req}),
         Data = get_opening_body(Req), 
         State = init_state(Req, Boundary, Length, Data),
         State1 = read_boundary(Data, State),
@@ -93,9 +93,30 @@ init_state(Req, Boundary, Length, Data) ->
 
 crash_if_too_big(Length, State) ->
     case Length > get_max_post_size() of
-        true  -> throw({post_too_big, State});
+        true  ->
+            %flush_socket(State),
+            throw({post_too_big, State});
         false -> ok
     end.
+
+flush_socket(_State = #state{req=Req}) ->
+    error_logger:info_msg("Flushing Socket: ~p",[Req]),
+    try flush_worker(Req)
+    catch Error:Reason -> error_logger:info_msg("Flush ended in Error: ~p:~p.~nsbw: ~p~nStacktrace: ~p", [Error, Reason, Req, erlang:get_stacktrace()]), ok
+    end.
+
+
+flush_worker(Req) ->
+    case sbw:recv_from_socket(?CHUNKSIZE, 10, Req) of
+        <<>> -> 
+            error_logger:info_msg("All Data Flushed"),
+            ok;
+        _Data ->
+            error_logger:info_msg("Flushed ~p bytes",[byte_size(_Data)]),
+            flush_worker(Req)
+    end.
+    
+
 
 process_parts(Parts) ->
     Params = convert_parts_to_params(Parts),
