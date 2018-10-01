@@ -99,22 +99,23 @@ crash_if_too_big(Length, State) ->
         false -> ok
     end.
 
-flush_socket(_State = #state{req=Req}) ->
-    error_logger:info_msg("Flushing Socket: ~p",[Req]),
-    try flush_worker(Req)
-    catch Error:Reason -> error_logger:info_msg("Flush ended in Error: ~p:~p.~nsbw: ~p~nStacktrace: ~p", [Error, Reason, Req, erlang:get_stacktrace()]), ok
-    end.
-
-
-flush_worker(Req) ->
-    case sbw:recv_from_socket(?CHUNKSIZE, 10, Req) of
-        <<>> -> 
-            error_logger:info_msg("All Data Flushed"),
-            ok;
-        _Data ->
-            error_logger:info_msg("Flushed ~p bytes",[byte_size(_Data)]),
-            flush_worker(Req)
-    end.
+%% THis is just here for experiments. Not really used.
+%flush_socket(_State = #state{req=Req}) ->
+%    error_logger:info_msg("Flushing Socket: ~p",[Req]),
+%    try flush_worker(Req)
+%    catch Error:Reason -> error_logger:info_msg("Flush ended in Error: ~p:~p.~nsbw: ~p~nStacktrace: ~p", [Error, Reason, Req, erlang:get_stacktrace()]), ok
+%    end.
+%
+%
+%flush_worker(Req) ->
+%    case sbw:recv_from_socket(?CHUNKSIZE, 10, Req) of
+%        <<>> -> 
+%            error_logger:info_msg("All Data Flushed"),
+%            ok;
+%        _Data ->
+%            error_logger:info_msg("Flushed ~p bytes",[byte_size(_Data)]),
+%            flush_worker(Req)
+%    end.
     
 
 
