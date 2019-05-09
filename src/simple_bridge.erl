@@ -103,12 +103,12 @@ make_nocatch(Module, RequestData) ->
             %% Post Params are read from the multipart parsing
             sbw:set_multipart(PostParams, Files, Bridge);
         {ok, not_multipart} -> 
-            %% If it's not a multipart post but application/x-www-urlencoded then we need to manually tell
+            %% If it's not a multipart post but application/x-www-form-urlencoded then we need to manually tell
             %% simple bridge to cache the post params in the wrapper for quick
             %% lookup
             ContentType =  sbw:header_lower(content_type, Bridge),
             case ContentType of
-                "application/x-www-urlencoded" ->
+                "application/x-www-form-urlencoded" ->
                     sbw:cache_post_params(Bridge);
                 undefined -> 
                     sbw:cache_post_params(Bridge);
