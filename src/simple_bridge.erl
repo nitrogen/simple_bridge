@@ -108,11 +108,13 @@ make_nocatch(Module, RequestData) ->
             %% lookup
             ContentType =  sbw:header_lower(content_type, Bridge),
             case ContentType of
-                "application/x-www-form-urlencoded" ->
+                "application/x-www-form-urlencoded" ++ _ ->
                     sbw:cache_post_params(Bridge);
                 undefined -> 
                     sbw:cache_post_params(Bridge);
-                _ -> Bridge
+                Other -> 
+                    error_logger:info_msg("ContentType: ~p",[Other]),
+                    Bridge
             end;
         {error, Error} -> 
             error_logger:error_msg("Error in Multipart: ~p",[Error]),
