@@ -6,7 +6,7 @@
 -export([
     start_link/0,
     init/1,
-    get_dispatch/2
+    get_dispatch_info/2
 ]).
 
 %% ===================================================================
@@ -69,11 +69,27 @@ build_dispatch() ->
 
 %% @doc Generate the dispatch tables
 build_dispatch(DocRoot,StaticPaths) ->
-    Dispatch = get_dispatch(DocRoot,StaticPaths),
-    cowboy_router:compile(Dispatch).
+    {StaticDispatches,HandlerModule,HandlerOpts} = get_dispatch_info(DocRoot,StaticPaths),
 
-%% @doc Generate a base (potentially reusable) dispatch information
-get_dispatch(DocRoot,StaticPaths) ->
+    %% Start Cowboy...
+    %% NOTE: According to Loic, there's no way to pass the buck back to cowboy 
+    %% to handle static dispatch files so we want to make sure that any large 
+    %% files get caught in general by cowboy and are never passed to the nitrogen
+    %% handler at all. In general, your best bet is to include the directory in
+    %% the static_paths section of cowboy.config
+    %%
+    %% Simple Bridge will do its best to efficiently handle static files, if
+    %% necessary but it's recommended to just make sure you properly use the
+    %% static_paths, or rewrite cowboy's dispatch table
+    BaseDispatch=[
+        %% Nitrogen will handle everything that's not handled in the StaticDispatches
+        {'_', StaticDispatches ++ [{'_', HandlerModule , HandlerOpts}]}
+    ],
+   cowboy_router:compile(BaseDispatch).
+
+%% @doc Return base, Nitrogen-specific dispatch information (potentially 
+%% reusable by third-parties
+get_dispatch_info(DocRoot,StaticPaths) ->
     StaticDispatches = lists:map(fun(Dir) ->
         Path = reformat_path(Dir),
         {StaticType, StaticFileDir} = localized_dir_file(DocRoot, Dir),
@@ -87,21 +103,9 @@ get_dispatch(DocRoot,StaticPaths) ->
     HandlerModule = simple_bridge_util:get_anchor_module(cowboy),
     HandlerOpts = [],
 
-    %% Start Cowboy...
-    %% NOTE: According to Loic, there's no way to pass the buck back to cowboy 
-    %% to handle static dispatch files so we want to make sure that any large 
-    %% files get caught in general by cowboy and are never passed to the nitrogen
-    %% handler at all. In general, your best bet is to include the directory in
-    %% the static_paths section of cowboy.config
-    %%
-    %% Simple Bridge will do its best to efficiently handle static files, if
-    %% necessary but it's recommended to just make sure you properly use the
-    %% static_paths, or rewrite cowboy's dispatch table
-    [
-        %% Nitrogen will handle everything that's not handled in the StaticDispatches
-        {'_', StaticDispatches ++ [{'_', HandlerModule , HandlerOpts}]}
-    ].
+    {StaticDispatches,HandlerModule,HandlerOpts}.
 
+  
 
 localized_dir_file(DocRoot,Path) ->
     NewPath = case hd(Path) of
