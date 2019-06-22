@@ -5,7 +5,8 @@
 -include("simple_bridge.hrl").
 -export([
     start_link/0,
-    init/1
+    init/1,
+    get_dispatch/2
 ]).
 
 %% ===================================================================
@@ -68,6 +69,11 @@ build_dispatch() ->
 
 %% @doc Generate the dispatch tables
 build_dispatch(DocRoot,StaticPaths) ->
+    Dispatch = get_dispatch(DocRoot,StaticPaths),
+    cowboy_router:compile(Dispatch).
+
+%% @doc Generate a base (potentially reusable) dispatch information
+get_dispatch(DocRoot,StaticPaths) ->
     StaticDispatches = lists:map(fun(Dir) ->
         Path = reformat_path(Dir),
         {StaticType, StaticFileDir} = localized_dir_file(DocRoot, Dir),
@@ -91,11 +97,10 @@ build_dispatch(DocRoot,StaticPaths) ->
     %% Simple Bridge will do its best to efficiently handle static files, if
     %% necessary but it's recommended to just make sure you properly use the
     %% static_paths, or rewrite cowboy's dispatch table
-    Dispatch = [
+    [
         %% Nitrogen will handle everything that's not handled in the StaticDispatches
         {'_', StaticDispatches ++ [{'_', HandlerModule , HandlerOpts}]}
-    ],
-    cowboy_router:compile(Dispatch).
+    ].
 
 
 localized_dir_file(DocRoot,Path) ->
