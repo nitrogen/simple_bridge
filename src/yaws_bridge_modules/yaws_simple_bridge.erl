@@ -151,7 +151,6 @@ build_response(_Arg, Res) ->
     %% Assemble headers...
     Headers = assemble_headers(Res),
 
-
     case Res#response.data of
         {data, Body} ->
 
@@ -179,14 +178,14 @@ build_response(_Arg, Res) ->
 
             %% Static Content should have an expires date.  If not, we're going to make one
             Headers2 = ensure_expires_header(Res, Headers),
-
+                
             %% Docroot needed to find file in Path
             Docroot = yaws_api:arg_docroot(_Arg),
             FullPath = [Docroot,Path],
 
             %% Get the content type as defined by yaws
             ContentType = yaws_api:mime_type(Path),
-           
+
             %% Get the file content
             FullResponse = case file:read_file(FullPath) of
                 {error,enoent} -> 
@@ -216,8 +215,9 @@ yaws_kosher_header(L) when is_list(L) -> L.
 ensure_expires_header(Res,Headers) ->
     case simple_bridge_util:needs_expires_header(Res#response.headers) of
         true -> 
-            Expires = simple_bridge_util:default_static_expires_header(),
-            [{header, Expires} | Headers];
+            {Header, Value} = simple_bridge_util:default_static_expires_header(),
+            ExpiresHeader = {yaws_kosher_header(Header), Value},
+            [{header, ExpiresHeader} | Headers];
         false -> Headers
     end.
     
