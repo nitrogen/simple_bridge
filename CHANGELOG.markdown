@@ -13,10 +13,11 @@
 * Fix a bug looking for a custom inets.config
 * Add dialyzer and travis rules to Makefile
 * Fix a handful of issues found by dialyzer
-* Fix a number of yaws-related issues (max post size, keepalive)
+* Fix a number of yaws-related issues (max post size, keepalive, static file
+  fallback)
 * Set the cowboy supervisor to not `infinity`.
 * Add a few more tests.
-* Ensure support up to Erlang 21.
+* Ensure support up to Erlang 22.
 
 # 2.0.1
 
