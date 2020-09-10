@@ -119,3 +119,5 @@ travis: compile $(ERLANG_VERSION)
 19: test dialyzer
 20: test dialyzer
 21: test dialyzer
+22: test dialyzer
+23: test dialyzer
