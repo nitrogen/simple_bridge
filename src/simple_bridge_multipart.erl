@@ -154,7 +154,6 @@ read_boundary(Data, State = #state { boundary=Boundary }) ->
 % We are in a part. Read headers.
 read_part_header(Data, Part, State = #state { boundary=Boundary }) ->
     {Line, Data1, Part1, State1} = get_next_line(Data, Part, State),
-    error_logger:info_msg("PARt Header"),
     case interpret_line(Line, Boundary, State1) of
         start_next_part -> throw({value_expected, Line});
         start_value -> read_part_value(Data1, Part1, State1);
@@ -182,12 +181,11 @@ update_part_with_header(_, Part) -> Part.
 
 %%% PART VALUES %%%
 
-% We are in a part's value. Read the value until we see a boundary.
-
+%% If we're already at eof, there's nothing to read, just exit from the part parsing
 read_part_value(Data, Part, State = #state { eof=true }) ->
     update_state_with_part(Part, State);
+% We are in a part's value. Read the value until we see a boundary.
 read_part_value(Data, Part, State = #state { boundary=Boundary }) ->
-    error_logger:info_msg("read part value"),
     {Line, Data1, Part1, State1} = get_next_line(Data, Part, State),
     case interpret_line(Line, Boundary, State1) of
         start_next_part ->
@@ -241,8 +239,7 @@ get_next_line(Data, Part, State)    -> get_next_line(Data, <<>>, Part, State).
 get_next_line(<<?NEWLINE, Data/binary>>, Acc, Part, State) -> {<<Acc/binary>>, Data, Part, State};
 get_next_line(<<C, Data/binary>>, Acc, Part, State) -> get_next_line(Data, <<Acc/binary, C>>, Part, State);
 get_next_line(Data, Acc, Part, State = #state{length=Length, bytes_read=BytesRead, eof=EOF}) when BytesRead >= Length ->
-    error_logger:info_msg("EOF"),
-    EOF=false,
+    EOF=false,  %% Crash if we're trying to read more data but we've already reached EOF
     State1 = State#state{eof=true},
     {Data, Acc, Part, State1};
 get_next_line(Data, Acc, Part, State) when Data == undefined orelse Data == <<>> ->
