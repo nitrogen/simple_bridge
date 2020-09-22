@@ -18,6 +18,8 @@
 * Set the cowboy supervisor to not `infinity`.
 * Add a few more tests.
 * Ensure support up to Erlang 22.
+* Fix a multipart parsing error related to mismatched content-length vs actual
+  content length.
 
 # 2.0.1
 

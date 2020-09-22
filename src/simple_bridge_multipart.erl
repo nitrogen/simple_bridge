@@ -24,7 +24,8 @@
     boundary,     % The multipart boundary
     length,       % The length of the post.
     bytes_read=0, % How many bytes we have read so far.
-    parts         % The finished parts we have accumulated.
+    parts,        % The finished parts we have accumulated.
+    eof=false
 }).
 
 -record (part, {
@@ -143,7 +144,7 @@ convert_parts_to_files(Parts) ->
 % Not yet in a part. Read the POST headers to get content boundary and length.
 read_boundary(Data, State = #state { boundary=Boundary }) ->
     {Line, Data1, undefined, State1} = get_next_line(Data, undefined, State),
-    case interpret_line(Line, Boundary) of
+    case interpret_line(Line, Boundary, State1) of
         start_next_part -> read_part_header(Data1, #part {}, State1);
         Other -> throw({unexpected, Other, Line})
     end.
@@ -153,7 +154,8 @@ read_boundary(Data, State = #state { boundary=Boundary }) ->
 % We are in a part. Read headers.
 read_part_header(Data, Part, State = #state { boundary=Boundary }) ->
     {Line, Data1, Part1, State1} = get_next_line(Data, Part, State),
-    case interpret_line(Line, Boundary) of
+    error_logger:info_msg("PARt Header"),
+    case interpret_line(Line, Boundary, State1) of
         start_next_part -> throw({value_expected, Line});
         start_value -> read_part_value(Data1, Part1, State1);
         continue ->
@@ -181,9 +183,13 @@ update_part_with_header(_, Part) -> Part.
 %%% PART VALUES %%%
 
 % We are in a part's value. Read the value until we see a boundary.
+
+read_part_value(Data, Part, State = #state { eof=true }) ->
+    update_state_with_part(Part, State);
 read_part_value(Data, Part, State = #state { boundary=Boundary }) ->
+    error_logger:info_msg("read part value"),
     {Line, Data1, Part1, State1} = get_next_line(Data, Part, State),
-    case interpret_line(Line, Boundary) of
+    case interpret_line(Line, Boundary, State1) of
         start_next_part ->
             % Finalize the write, then start the next part.
             State2 = update_state_with_part(Part1, State1),
@@ -229,10 +235,16 @@ get_prefix_and_newsize(NeedsRN, Size, Data) ->
 
 % Return the next line of input from the post, reading
 % more data if necessary.
-% get_next_line(Data, State) -> {Line, RemainingData, NewState}.
+% get_next_line(Data, Part, State) -> {Line, RemainingData, Part, NewState}.
 get_next_line(Data, Part, State)    -> get_next_line(Data, <<>>, Part, State).
+
 get_next_line(<<?NEWLINE, Data/binary>>, Acc, Part, State) -> {<<Acc/binary>>, Data, Part, State};
 get_next_line(<<C, Data/binary>>, Acc, Part, State) -> get_next_line(Data, <<Acc/binary, C>>, Part, State);
+get_next_line(Data, Acc, Part, State = #state{length=Length, bytes_read=BytesRead, eof=EOF}) when BytesRead >= Length ->
+    error_logger:info_msg("EOF"),
+    EOF=false,
+    State1 = State#state{eof=true},
+    {Data, Acc, Part, State1};
 get_next_line(Data, Acc, Part, State) when Data == undefined orelse Data == <<>> ->
     {Data1, State1, Acc1, Part1} =
     try
@@ -257,12 +269,13 @@ read_chunk(State = #state { req=Req, length=Length, bytes_read=BytesRead }) ->
     ok=crash_if_too_big(NewBytesRead, State),
     {Data, State#state { bytes_read=NewBytesRead }}.
 
-interpret_line(Line, Boundary) ->
+interpret_line(Line, Boundary, State) ->
     if
-        Line == <<"--", Boundary/binary, "--">> -> eof;
-        Line == <<"--", Boundary/binary>> -> start_next_part;
-        Line == <<>>   -> start_value;
-        true             -> continue
+        Line == <<"--", Boundary/binary, "--">>         -> eof;
+        Line == <<"--", Boundary/binary>>               -> start_next_part;
+        Line == <<>>                                    -> start_value;
+        State#state.eof                                 -> eof;
+        true                                            -> continue
     end.
 
 
