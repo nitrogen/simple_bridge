@@ -24,7 +24,7 @@ all() -> [{group, multipart}].
 
 groups() -> [
     {multipart,
-        [sequence, {repeat, 100}],
+        [sequence, {repeat, 10}],
         [post_multipart, post_multipart_post_too_big, post_multipart_file_too_big]
     }].
 
