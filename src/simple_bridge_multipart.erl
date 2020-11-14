@@ -182,7 +182,7 @@ update_part_with_header(_, Part) -> Part.
 %%% PART VALUES %%%
 
 %% If we're already at eof, there's nothing to read, just exit from the part parsing
-read_part_value(Data, Part, State = #state { eof=true }) ->
+read_part_value(_Data, Part, State = #state { eof=true }) ->
     update_state_with_part(Part, State);
 % We are in a part's value. Read the value until we see a boundary.
 read_part_value(Data, Part, State = #state { boundary=Boundary }) ->
