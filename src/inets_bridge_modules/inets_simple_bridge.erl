@@ -87,12 +87,12 @@ cookies(Req) ->
 
 query_params(Req) ->
     {_Path, QueryString} = split_request_uri(Req#mod.request_uri, []),
-    Query = httpd:parse_query(QueryString),
+    Query = ?PARSE_QS(QueryString),
     [{Key, Value} || {Key, Value} <- Query, Key /= []].
 
 post_params(Req) ->
     Body = request_body(Req),
-    Query = httpd:parse_query(Body),
+    Query = ?PARSE_QS(Body),
     [{Key, Value} || {Key, Value} <- Query, Key /= []].
 
 request_body(Req) ->
