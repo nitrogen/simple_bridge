@@ -125,9 +125,9 @@ ifeq ($(ERTS_VERSION), 11.0)
 	@(echo "Inets should not be used with Erlang 23.0 (ERTS=$(ERTS_VERSION))")
 else
 	@(echo "Inets is fine with Erlang 23 (ERTS=$(ERTS_VERSION))")
-	@(make test_inets)
+	(make test_inets)
 endif
-	test_cowboy test_yaws test_mochiweb test_webmachine
+	(make test_cowboy test_yaws test_mochiweb test_webmachine)
 
 
 
