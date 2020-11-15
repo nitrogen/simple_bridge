@@ -18,3 +18,6 @@ rebar.test.*.config
 /.project
 .idea
 .rebar
+autobahn/
+scratch/
+reports/
