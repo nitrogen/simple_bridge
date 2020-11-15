@@ -51,8 +51,8 @@ run:
 
 test: test_cowboy test_nocowboy
 
-## Cowboy doesn't support < Erlang 19
 test_nocowboy: test_yaws test_mochiweb test_inets test_webmachine
+
 
 
 test_cowboy:
@@ -109,15 +109,25 @@ dialyzer-no-race: $(DEPS_PLT)
 # TRAVIS-CI STUFF
 
 ERLANG_VERSION_CHECK := erl -eval "io:format(\"~s\",[erlang:system_info(otp_release)]), halt()."  -noshell
+ERTS_VERSION_CHECK := erl -eval "io:format(\"~s\",[erlang:system_info(version)]), halt()."  -noshell
 ERLANG_VERSION = $(shell $(ERLANG_VERSION_CHECK))
+ERTS_VERSION = $(shell $(ERTS_VERSION_CHECK))
 
 # This is primarily for Travis build testing, as each build instruction will overwrite the previous
 travis: compile $(ERLANG_VERSION)
 
-17: test_nocowboy dialyzer
-18: test_nocowboy dialyzer
 19: test dialyzer
 20: test dialyzer
 21: test dialyzer
 22: test dialyzer
-23: test dialyzer
+23:
+ifeq ($(ERTS_VERSION), 11.0)
+	@(echo "Inets should not be used with Erlang 23.0 (ERTS=$(ERTS_VERSION))")
+else
+	@(echo "Inets is fine with Erlang 23 (ERTS=$(ERTS_VERSION))")
+	@(make test_inets)
+endif
+	test_cowboy test_yaws test_mochiweb test_webmachine
+
+
+
