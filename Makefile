@@ -52,7 +52,7 @@ run:
 test: test_cowboy test_nocowboy
 
 ## Cowboy doesn't support < Erlang 19
-test_nocowboy: test_inets test_mochiweb test_webmachine test_yaws
+test_nocowboy: test_yaws test_mochiweb test_inets test_webmachine
 
 
 test_cowboy:
