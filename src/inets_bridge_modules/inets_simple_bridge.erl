@@ -87,13 +87,20 @@ cookies(Req) ->
 
 query_params(Req) ->
     {_Path, QueryString} = split_request_uri(Req#mod.request_uri, []),
-    Query = ?PARSE_QS(QueryString),
+    Query = handle_parse_qs(QueryString, ?PARSE_QS(QueryString)),
     [{Key, Value} || {Key, Value} <- Query, Key /= []].
 
 post_params(Req) ->
     Body = request_body(Req),
-    Query = ?PARSE_QS(Body),
+    Query = handle_parse_qs(Body, ?PARSE_QS(Body)),
+    error_logger:info_msg("Body: ~p~nQuery: ~p",[Body, Query]),
     [{Key, Value} || {Key, Value} <- Query, Key /= []].
+
+handle_parse_qs(_QS, Err={error, _, _}) ->
+    error_logger:warning_msg("Unable to parse QueryString for Inets. ~nReason: ~p~n",[Err]),
+    [];
+handle_parse_qs(_QS, Res) ->
+    Res.
 
 request_body(Req) ->
     Req#mod.entity_body.
