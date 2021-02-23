@@ -32,6 +32,7 @@ init(Req) ->
 protocol(Arg) -> 
     case yaws_api:arg_clisock(Arg) of
         S when is_tuple(S), element(1, S) =:= sslsocket -> https;
+        S when is_tuple(S), element(1, S) =:= ssl -> https;
         _ -> http
     end.
 
