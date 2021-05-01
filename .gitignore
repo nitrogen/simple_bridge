@@ -21,3 +21,4 @@ rebar.test.*.config
 autobahn/
 scratch/
 reports/
+_build/
