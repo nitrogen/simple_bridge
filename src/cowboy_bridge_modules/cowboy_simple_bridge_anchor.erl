@@ -97,5 +97,7 @@ massage_reply({noreply, NewState}, WSState) ->
     {ok, WSState#ws_state{state=NewState}};
 massage_reply({remote, _Reason}, WSState) ->
     {stop, WSState};
+massage_reply(noreply, WSState) ->
+    {ok, WSState};
 massage_reply(stop, WSState) ->
     {stop, WSState}.
