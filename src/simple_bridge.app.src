@@ -4,7 +4,6 @@
     {applications, [kernel, stdlib]},
     {registered,   []},
 	{mod, 		   {simple_bridge_app, []}},
-	{maintainers, ["Jesse Gumm"]},
 	{licenses, ["MIT"]},
 	{links, [
 		{"Homepage", "https://nitrogenproject.com"},

@@ -39,8 +39,8 @@ run:
 		--apps simple_bridge \
 		--config etc/simple_bridge.config
 
-
-
+publish:
+	$(REBAR) hex publish
 
 ##### COMMON TEST
 

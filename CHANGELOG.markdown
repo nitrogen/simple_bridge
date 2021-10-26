@@ -1,3 +1,7 @@
+# 2.1.1
+
+* Rebar3 Compatibility
+
 # 2.1.0
 
 * Backwards incompatible change: Converted the pre-cached headers to a map.

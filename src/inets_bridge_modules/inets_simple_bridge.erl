@@ -93,7 +93,6 @@ query_params(Req) ->
 post_params(Req) ->
     Body = request_body(Req),
     Query = handle_parse_qs(Body, ?PARSE_QS(Body)),
-    error_logger:info_msg("Body: ~p~nQuery: ~p",[Body, Query]),
     [{Key, Value} || {Key, Value} <- Query, Key /= []].
 
 handle_parse_qs(_QS, Err={error, _, _}) ->
