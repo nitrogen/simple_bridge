@@ -30,5 +30,5 @@ loop(Req) ->
         end
     catch
         exit:normal -> exit(normal);
-        T:E -> error_logger:error_msg("Error: ~p:~p~nStacktrace: ~p~n",[T, E, erlang:get_stacktrace()])
+        E:T:S -> error_logger:error_msg("Error: ~p:~p~nStacktrace: ~p~n",[E, T, S])
     end.
