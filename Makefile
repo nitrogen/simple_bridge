@@ -39,6 +39,15 @@ run: platform
 publish:
 	$(REBAR) hex publish
 
+
+dialyzer:
+	$(REBAR) as inets dialyzer
+	$(REBAR) as cowboy dialyzer
+	$(REBAR) as mochiweb dialyzer
+	$(REBAR) as webmachine dialyzer
+	$(REBAR) as yaws dialyzer
+
+
 ##### COMMON TEST
 
 test: test_cowboy test_nocowboy
