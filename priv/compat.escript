@@ -4,6 +4,7 @@
 main([]) ->
     crypto:start(),
     code:ensure_loaded(uri_string),
+    code:ensure_loaded(rand),
 
     Filename = "include/compat.hrl",
     io:format("Generating compatibility for simple_bridge...\n"),

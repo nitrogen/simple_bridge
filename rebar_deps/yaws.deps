@@ -1,3 +1,0 @@
-[
-    {yaws, "", {git, "git://github.com/erlyaws/yaws",	{tag, "yaws-2.0.8"}}}
-].

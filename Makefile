@@ -8,13 +8,11 @@ compile:
 	$(REBAR) compile
 
 clean:
-	$(REBAR) clean
+	rm -fr _build rebar.lock
 
 platform: clean
-	(escript rebar_deps/merge_deps.escript rebar.config rebar_deps/$(BACKEND).deps rebar.$(BACKEND).config)
 	echo "-simple_bridge backend $(BACKEND)" > vm.args
-	REBAR_CONFIG="rebar.$(BACKEND).config" $(REBAR) compile
-	(rm -f rebar.$(BACKEND).config)
+	$(REBAR) as $(BACKEND) compile
 
 run_cowboy:
 	(make platform run BACKEND=cowboy)
@@ -49,7 +47,6 @@ test: test_cowboy test_nocowboy
 test_nocowboy: test_yaws test_mochiweb test_inets test_webmachine
 
 
-
 test_cowboy:
 	(make test_core BACKEND=cowboy)
 
@@ -65,20 +62,15 @@ test_webmachine:
 test_yaws:
 	(make test_core BACKEND=yaws)
 
-clean_test:
-	(rm -f rebar.test.*.config)
+clean_test: clean
 	(rm -f test/*.beam)
 
-test_quick:
-	$(REBAR) --config "rebar.test.$(BACKEND).config" clean
-	$(REBAR) --config "rebar.test.$(BACKEND).config" compile
-	$(REBAR) --config "rebar.test.$(BACKEND).config" skip_deps=true ct
+test_quick: clean_test
+	$(REBAR) as $(BACKEND) ct
 
 test_core: clean clean_test
-	(escript rebar_deps/merge_deps.escript rebar.test.config rebar_deps/$(BACKEND).deps rebar.test.$(BACKEND).config)
 	(cd test; sed "s/BACKEND/$(BACKEND)/" < app.config.src > app.config)
-	$(REBAR) --config "rebar.test.$(BACKEND).config" compile
-	$(REBAR) --config "rebar.test.$(BACKEND).config" skip_deps=true ct
+	$(REBAR) as $(BACKEND) ct
 
 
 ERLANG_VERSION_CHECK := erl -eval "io:format(\"~s\",[erlang:system_info(otp_release)]), halt()."  -noshell
@@ -101,6 +93,4 @@ else
 	(make test_inets)
 endif
 	(make test_cowboy test_yaws test_mochiweb test_webmachine)
-
-
-
+24: test dialyzer

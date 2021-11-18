@@ -1,3 +1,0 @@
-[
-    {mochiweb,      {git, "https://github.com/mochi/mochiweb.git",    {tag, "v2.22.0"}}}
-].
