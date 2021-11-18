@@ -35,12 +35,13 @@ groups() ->
 	}].
 
 init_per_group(main, Config) ->
-	inets:start(),
-	application:start(simple_bridge),
+    error_logger:info_msg("CWD: ~p~n",[file:get_cwd()]),
+    {ok, _} = application:ensure_all_started(inets),
+    {ok, _} = application:ensure_all_started(simple_bridge),
 	Config.
 
 end_per_group(main, Config) ->
-	inets:stop(),
+    application:stop(inets),
 	application:stop(simple_bridge),
 	Config.
 

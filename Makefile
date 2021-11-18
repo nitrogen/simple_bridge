@@ -4,7 +4,7 @@ REBAR:=./rebar3
 
 all: compile
 
-compile:
+compile: platform
 	$(REBAR) compile
 
 clean:
@@ -12,7 +12,6 @@ clean:
 
 platform: clean
 	echo "-simple_bridge backend $(BACKEND)" > vm.args
-	$(REBAR) as $(BACKEND) compile
 
 run_cowboy:
 	(make platform run BACKEND=cowboy)
@@ -32,8 +31,8 @@ run_webmachine:
 run_yaws:
 	(make platform run BACKEND=yaws)
 
-run:
-	ERL_FLAGS="-args_file ${PWD}/vm.args" $(REBAR) shell \
+run: platform
+	ERL_FLAGS="-args_file ${PWD}/vm.args" $(REBAR) as $(BACKEND) shell \
 		--apps simple_bridge \
 		--config etc/simple_bridge.config
 
@@ -70,7 +69,7 @@ test_quick: clean_test
 
 test_core: clean clean_test
 	(cd test; sed "s/BACKEND/$(BACKEND)/" < app.config.src > app.config)
-	$(REBAR) as $(BACKEND) ct
+	$(REBAR) as $(BACKEND) ct --sys_config test/app.config
 
 
 ERLANG_VERSION_CHECK := erl -eval "io:format(\"~s\",[erlang:system_info(otp_release)]), halt()."  -noshell

@@ -29,9 +29,9 @@ groups() -> [
     }].
 
 init_per_group(_Group, Config) ->
-    inets:start(),
+    application:ensure_all_started(inets),
     application:ensure_all_started(ibrowse),
-    application:start(simple_bridge),
+    application:ensure_all_started(simple_bridge),
     Config.
 
 end_per_group(_Group, Config) ->
