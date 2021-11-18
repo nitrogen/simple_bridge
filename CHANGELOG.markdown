@@ -1,3 +1,7 @@
+# 2.1.2
+
+* Remove use of deprecated `httpd_util:flatlength`
+
 # 2.1.1
 
 * Rebar3 Compatibility
