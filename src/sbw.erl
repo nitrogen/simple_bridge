@@ -473,7 +473,8 @@ set_cookie(Name, Value, Options, Wrapper) ->
                            path=proplists:get_value(path, Options, "/"),
                            max_age=proplists:get_value(max_age, Options, 3600),
                            secure=proplists:get_value(secure, Options, false),
-                           http_only=proplists:get_value(http_only, Options, false)
+                           http_only=proplists:get_value(http_only, Options, false),
+                           same_site=proplists:get_value(same_site, Options, none)
                          },
         Cookies = Res#response.cookies,
         Cookies1 = [X || X <- Cookies, X#cookie.name /= Name],

@@ -25,6 +25,7 @@
     maybe_to_binary/1,
     to_list/1,
     to_binary/1,
+    to_existing_atom/1,
     has_header/2,
     has_any_header/2,
     ensure_header/3,
@@ -330,6 +331,12 @@ to_binary(A) when is_atom(A) ->
 to_binary(L) ->
     iolist_to_binary(L).
 
+to_existing_atom(B) when is_binary(B) ->
+    to_existing_atom(binary_to_list(B));
+to_existing_atom(L) when is_list(L) ->
+    list_to_existing_atom(L);
+to_existing_atom(A) when is_atom(A) ->
+    A.
 
 parse_ip(IP = {_,_,_,_}) ->
     IP;
@@ -362,14 +369,15 @@ parse_cookie_header(CookieData) ->
 
 create_cookie_header(#cookie{name=Name, value=Value, max_age=MaxAge,
                             secure=Secure, domain=Domain, path=Path,
-                            http_only=HttpOnly}) ->
+                            http_only=HttpOnly, same_site=SameSite}) ->
     HeaderVal = [
         to_binary(Name),"=",to_binary(Value),
         create_cookie_expires(MaxAge),
         create_cookie_secure(Secure),
         create_cookie_domain(Domain),
         create_cookie_path(Path),
-        create_cookie_http_only(HttpOnly)
+        create_cookie_http_only(HttpOnly),
+        create_cookie_same_site(SameSite)
     ],
     {<<"set-cookie">>, HeaderVal}.
 
@@ -388,3 +396,6 @@ create_cookie_path(Path) -> [<<"; path=">>, Path].
 
 create_cookie_http_only(true) -> <<"; httponly">>;
 create_cookie_http_only(_) -> <<"">>.
+
+create_cookie_same_site(undefined) -> <<"; SameSite: None">>;
+create_cookie_same_site(SameSite) -> [<<"; SameSite=">>, SameSite].

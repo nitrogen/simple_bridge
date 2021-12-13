@@ -249,8 +249,10 @@ create_cookie(Cookie) ->
         {secure, Cookie#cookie.secure},
         {path, Cookie#cookie.path},
         {http_only, Cookie#cookie.http_only},
-        {domain, Cookie#cookie.domain}
+        {domain, Cookie#cookie.domain},
+        {same_site, Cookie#cookie.same_site}
     ],
+    error_logger:info_msg("F&V: ~p",[FieldsAndValues]),
     Options = lists:foldl(fun({Field, Val}, Acc) ->
         cookie_opt(Field, Val) ++ Acc
     end, [], FieldsAndValues),
@@ -266,6 +268,8 @@ cookie_opt(domain, Domain) when Domain=/=undefined, Domain=/="", Domain =/= <<""
     [{domain, simple_bridge_util:to_list(Domain)}];
 cookie_opt(path, Path) when Path=/=undefined, Path=/="", Path =/= <<"">> ->
     [{path, simple_bridge_util:to_list(Path)}];
+cookie_opt(same_site, SameSite) when SameSite=/=undefined, SameSite=/="", SameSite =/= <<"">> ->
+    [{same_site, simple_bridge_util:to_existing_atom(SameSite)}];
 cookie_opt(_, _) ->
     [].
 
