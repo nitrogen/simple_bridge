@@ -54,10 +54,10 @@ start() ->
 run(Bridge) ->
     HTML = [
         "<h1>Hello, World!</h1>",
-        io_lib:format("METHOD: ~p~n<br><br>", [Bridge:request_method()]),
-        io_lib:format("COOKIES: ~p~n<br><br>", [Bridge:cookies()]),
-        io_lib:format("HEADERS: ~p~n<br><br>", [Bridge:headers()]),
-        io_lib:format("QUERY PARAMETERS: ~p~n<br><br>", [Bridge:query_params()])       
+        io_lib:format("METHOD: ~p~n<br><br>", [sbw:request_method(Bridge)]),
+        io_lib:format("COOKIES: ~p~n<br><br>", [sbw:cookies(Bridge)]),
+        io_lib:format("HEADERS: ~p~n<br><br>", [sbw:headers(Bridge)]),
+        io_lib:format("QUERY PARAMETERS: ~p~n<br><br>", [sbw:query_params(Bridge)])
     ],
     Bridge2 = sbw:set_status_code(200, Bridge),
     Bridge3 = sbw:set_header("Content-Type", "text/html", Bridge2),
@@ -201,11 +201,8 @@ definitions, and retuning the "Stateless" versions of each return value
 Once you have created Bridge object, you can interface with it using a series
 of standardized function calls universal to all bridges.
 
-You can interface with it using either of two mechanisms:
-
-  + Standard Erlang Calls: `sbw:function_name(Bridge)` - "sbw" is an acronym
-    for (S)imple (B)ridge (W)rapper.
-  + Tuple Module Calls: `Bridge:function_name()`
+You can interface with it using the `sbw` module "sbw" is an acronym for
+(S)imple (B)ridge (W)rapper.
 
 **NOTE:** Tuple Module style calls were officially disabled in Erlang 21 and
 *require* you to enable tuple calls as a compile option in your module with:
@@ -216,6 +213,9 @@ This option can also be specified in your rebar.config file in the `erl_opts`
 variable with:
 
 `{erl_opts, [tuple_calls]}.`
+
+Simple Bridge is no longer tested with tuple-module calls as of Simple Bridge
+2.2.0
 
 **Backwards Compatibility Note**: Simple Bridge 1.x required a separate Request
 and Response Object.  This has gone away and now a single Bridge "object"
@@ -271,11 +271,6 @@ lower-case binaries.
 `Param`, etc).  If the Key is a binary, the return type will be binary. If Key
 is an atom or a string (list), the return type will be a string.
 
-**Note:** When using Parameter-module style calls, simple remove the `Bridge`
-argument from the call.  For example, when using the `query_param` function as
-a P-mod call, use `Bridge:query_param(Param)` instead of
-`sbw:query_param(Param, Bridge)`.
-
 ### Uploaded File Interface
 
 `sbw:post_files(Bridge)` returns a list of `#sb_uploaded_file` records, but it's
@@ -328,23 +323,17 @@ run(Bridge) ->
     
 ### Response Bridge Interface
 
-As with all SimpleBridge interfaces, you can work with either the standard
-Erlang calling syntax or use the P-mod style:
-
-  + `sbw:function_name(Bridge)`
-  + `Bridge:function_name()`
-
 The Bridge modules export the following functions:
 
   * **sbw:set_status_code(Code, Bridge)** - set the HTTP status code. (200, 404, etc.)
   * **sbw:set_header(Name, Value, Bridge)** - set an HTTP header.
   * **sbw:clear_headers(Bridge)** - clear all previously set headers.
-  * **sbw:set_cookie(Name, Value, Bridge)** - set a cookie for path "/" with expiration in
-    1 hour.
+  * **sbw:set_cookie(Name, Value, Bridge)** - set a cookie for path "/" with
+    expiration in 1 hour.
   * **sbw:set_cookie(Name, Value, Options, Bridge)** - set a cookie, setting
     HTTP Options. Options is a proplist looking something supporting the
-    options `domain`, `path`, `max_age`, `secure`, and `http_only`. Any or all can
-    be specified like below.
+    options `domain`, `path`, `max_age`, `secure`, `same_site` and `http_only`.
+    Any or all can be specified like below.
 
 ```erlang
 	Options = [
@@ -352,7 +341,8 @@ The Bridge modules export the following functions:
 	   {path, "/"},
 	   {max_age, 3600}, %% time in seconds
 	   {secure, false},
-	   {http_only, false}
+	   {http_only, false},
+       {same_site, none}  %% can be: none | strict | lax
 	],
 	sbw:set_cookie("mycookie", "mycookievalue", Options, Bridge).
 ```
@@ -366,7 +356,7 @@ The Bridge modules export the following functions:
 
 
 Finally, you build the response to send to your HTTP server with the
-build_response/0 function.
+`build_response/0` function.
 
   * **sbw:build_response(Bridge)** - Create a response tuple that you can hand
     off to your HTTP server.
@@ -426,7 +416,7 @@ to simply using:
 ```erlang
 Bridge = simple_bridge:make(cowboy, Req),
 ...
-sbw:build_response(Bridge). %% Bridge:build_response() works too!
+sbw:build_response(Bridge).
 ```
 
 ### Return type changes to look out for in 2.0
@@ -456,21 +446,6 @@ with a verb** (e.g. `set_response_data`, `clear_cookies`, `build_response`,
 etc). See the "DEPRECATION NOTICE" a few sections above.
 
 
-## TODO
-
-#### Version 2.0 TODO
-
-* Fix the `simple_bridge:ensure_header` stuff to use binaries and require less
-  conversion.
-* Add Typespecs
-* Ensure that internally, `sbw:function` is used everywhere instead of
-  `Bridge:function`.
-* Test with dialyzer after being converted to `sbw:function`
-
-#### Beyond 2.0
-
-* Support compression in websockets?
-
 ## Questions or Comments
 
 We can be found on:
@@ -491,7 +466,7 @@ guidelines](https://github.com/nitrogen/nitrogen/blob/master/CONTRIB.markdown).
 Simple Bridge was created by [Rusty Klophaus](http://rusty.io) in 2008 and has
 been maintained by [Jesse Gumm](http://jessegumm.com) since 2011.
 
-Simple Bridge is copyright 2008-2015 Rusty Klophaus and Jesse Gumm.
+Simple Bridge is copyright 2008-2021 Rusty Klophaus and Jesse Gumm.
 
 Licensed under the [MIT
 License](https://github.com/nitrogen/simple_bridge/blob/master/MIT-LICENSE)
