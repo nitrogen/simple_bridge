@@ -1,13 +1,15 @@
 # 2.2.0
 
+* Add proper support for the cookie `SameSite` attribute.
 * Remove use of deprecated `httpd_util:flatlength`
 * Remove official support for P-mod/Tuple-Module calls (no code change,
   required, just removed from documentation).
-* Add proper support for the cookie `SameSite` attribute.
+* Add a bunch of build rules and rebar3 profiles to build and test all backends
+  with rebar3.
 
 # 2.1.1
 
-* Rebar3 Compatibility
+* Add basic rebar3 Compatibility
 
 # 2.1.0
 

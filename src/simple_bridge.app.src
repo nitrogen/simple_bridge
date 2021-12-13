@@ -1,6 +1,6 @@
 {application, simple_bridge, [
     {description,  "Common Interface to Erlang HTTP Servers"},
-    {vsn,          "2.1.2"},
+    {vsn,          "2.2.0"},
     {applications, [kernel, stdlib]},
     {registered,   []},
 	{mod, 		   {simple_bridge_app, []}},
