@@ -252,7 +252,6 @@ create_cookie(Cookie) ->
         {domain, Cookie#cookie.domain},
         {same_site, Cookie#cookie.same_site}
     ],
-    error_logger:info_msg("F&V: ~p",[FieldsAndValues]),
     Options = lists:foldl(fun({Field, Val}, Acc) ->
         cookie_opt(Field, Val) ++ Acc
     end, [], FieldsAndValues),
