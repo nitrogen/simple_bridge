@@ -1,6 +1,9 @@
-# 2.1.2
+# 2.2.0
 
 * Remove use of deprecated `httpd_util:flatlength`
+* Remove official support for P-mod/Tuple-Module calls (no code change,
+  required, just removed from documentation).
+* Add proper support for the cookie `SameSite` attribute.
 
 # 2.1.1
 
