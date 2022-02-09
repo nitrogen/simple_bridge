@@ -88,6 +88,7 @@ build_mimetypes(false = _HasMimetypes) ->
     Mimetypes = [
         {"html", "text/html"},
         {"js", "text/javascript"},
+        {"css", "text/css"},
         {"jpg", "image/jpeg"},
         {"jpeg", "image/jpeg"},
         {"png", "image/png"},
