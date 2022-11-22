@@ -1,7 +1,7 @@
-# 2.1.0 (In development)
+# 2.1.0
 
 * Backwards incompatible change: Converted the pre-cached headers to a map.
-* Converted to cowboy 2.0 (Thanks Eric, @etxemag75)
+* Converted to cowboy 2.x (Thanks Eric, @etxemag75)
 * Deprecated `sbw:set_cookie/5` in favor of a new, more flexible,
   `sbw:set_cookie/4`, which takes an `Options` argument for specifying
   `http_only`, `max_age`, `secure`, etc. (Dmitry Polyanovsky)
@@ -17,7 +17,9 @@
   fallback)
 * Set the cowboy supervisor to not `infinity`.
 * Add a few more tests.
-* Ensure support up to Erlang 22.
+* Ensure support up to Erlang 23.
+* Fix a multipart parsing error related to mismatched content-length vs actual
+  content length.
 
 # 2.0.1
 
