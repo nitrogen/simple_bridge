@@ -362,14 +362,15 @@ parse_cookie_header(CookieData) ->
 
 create_cookie_header(#cookie{name=Name, value=Value, max_age=MaxAge,
                             secure=Secure, domain=Domain, path=Path,
-                            http_only=HttpOnly}) ->
+                            http_only=HttpOnly, same_site=SameSite}) ->
     HeaderVal = [
         to_binary(Name),"=",to_binary(Value),
         create_cookie_expires(MaxAge),
         create_cookie_secure(Secure),
         create_cookie_domain(Domain),
         create_cookie_path(Path),
-        create_cookie_http_only(HttpOnly)
+        create_cookie_http_only(HttpOnly),
+        create_cookie_same_site(SameSite)
     ],
     {<<"set-cookie">>, HeaderVal}.
 
@@ -388,3 +389,6 @@ create_cookie_path(Path) -> [<<"; path=">>, Path].
 
 create_cookie_http_only(true) -> <<"; httponly">>;
 create_cookie_http_only(_) -> <<"">>.
+
+create_cookie_same_site(undefined) -> [<<"; samesite=">>,<<"Lax">>];
+create_cookie_same_site(SameSite) -> [<<"; samesite=">>,SameSite].
