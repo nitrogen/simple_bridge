@@ -2,19 +2,19 @@ BACKEND:=inets
 
 all: compile
 
-get-deps:
+get-deps: rebar
 	./rebar get-deps
 
-compile: get-deps
+compile: rebar get-deps
 	./rebar compile
 
-clean: clean-deps
+clean: rebar clean-deps
 	./rebar --config "rebar.$(BACKEND).config" clean
 
 clean-deps:
 	rm -fr deps/*
 
-platform: clean
+platform: rebar clean
 	(escript rebar_deps/merge_deps.escript rebar.config rebar_deps/$(BACKEND).deps rebar.$(BACKEND).config)
 	(./rebar --config "rebar.$(BACKEND).config" get-deps)
 	(./rebar --config "rebar.$(BACKEND).config" compile)
@@ -45,7 +45,17 @@ run:
 		-eval "application:start(simple_bridge)"
 
 
-
+rebar:
+	@(echo "Building rebar2 for your platform...")
+	@(mkdir -p tmp)
+	@(cd tmp && \
+	git clone https://github.com/choptastic/rebar && \
+	cd rebar && \
+	./bootstrap)
+	@(echo "Moving rebar executable into thge NitrogenProject directory")
+	@(mv tmp/rebar/rebar .)
+	@(echo "Cleaning up rebar remnants")
+	@(rm -fr tmp)
 
 ##### COMMON TEST
 
