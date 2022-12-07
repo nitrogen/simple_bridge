@@ -253,7 +253,8 @@ prepare_cookies(Req, Cookies) ->
 			  path => C#cookie.path,
 			  max_age => C#cookie.max_age,
 			  secure => C#cookie.secure,
-			  http_only => C#cookie.http_only
+			  http_only => C#cookie.http_only,
+			  same_site => C#cookie.same_site
 			 },
 			%% cowlib 1.0.0 (which is the dependency for cowboy 1.0.4) has a bug
 			%% that freaks out with {secure, false} or {http_only, false} so this

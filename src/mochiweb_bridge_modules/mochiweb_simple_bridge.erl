@@ -158,6 +158,7 @@ create_cookie_header(Cookie) ->
                {path, Cookie#cookie.path},
                {max_age, Cookie#cookie.max_age},
                {secure, Cookie#cookie.secure},
-               {http_only, Cookie#cookie.http_only}
+               {http_only, Cookie#cookie.http_only},
+               {same_site, Cookie#cookie.same_site}
               ],
     mochiweb_cookies:cookie(Name, Value, Options).
