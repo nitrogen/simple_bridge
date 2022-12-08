@@ -48,10 +48,11 @@ dialyzer:
 
 rebar3:
 	@(echo "Building rebar3 for your platform...")
+	@(rm -fr tmp)
 	@(mkdir -p tmp)
 	@(cd tmp && \
 		git clone https://github.com/erlang/rebar3 && \
-		cd rebar && \
+		cd rebar3 && \
 		./bootstrap)
 	@(echo "Moving rebar3 executable into simple_bridge")
 	@(mv tmp/rebar3/rebar3 .)
@@ -83,10 +84,10 @@ test_yaws:
 clean_test: clean
 	(rm -f test/*.beam)
 
-test_quick: clean_test
+test_quick: rebar3 clean_test
 	$(REBAR) as $(BACKEND) ct
 
-test_core: clean clean_test
+test_core: rebar3 clean clean_test
 	(cd test; sed "s/BACKEND/$(BACKEND)/" < app.config.src > app.config)
 	$(REBAR) as $(BACKEND) ct --sys_config test/app.config
 
