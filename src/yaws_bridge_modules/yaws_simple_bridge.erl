@@ -268,13 +268,8 @@ cookie_opt(domain, Domain) when Domain=/=undefined, Domain=/="", Domain =/= <<""
     [{domain, simple_bridge_util:to_list(Domain)}];
 cookie_opt(path, Path) when Path=/=undefined, Path=/="", Path =/= <<"">> ->
     [{path, simple_bridge_util:to_list(Path)}];
-<<<<<<< HEAD
 cookie_opt(same_site, SameSite) when SameSite=/=undefined, SameSite=/="", SameSite =/= <<"">> ->
     [{same_site, simple_bridge_util:to_existing_atom(SameSite)}];
-=======
-cookie_opt(same_site,SameSite) when SameSite == lax orelse SameSite == none orelse SameSite == strict ->
-    [{same_site,SameSite}];
->>>>>>> master
 cookie_opt(_, _) ->
     [].
 
