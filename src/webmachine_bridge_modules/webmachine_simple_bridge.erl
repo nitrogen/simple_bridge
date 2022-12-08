@@ -105,10 +105,7 @@ build_response(Req, Res) ->
     Code = Res#response.status_code,
     case Res#response.data of
         {data, Body} ->
-            %% httpd_util:flatlength expects a list and body could be a binary,
-            %% so wrap it in a list, and we have ourselves an iolist. MUCH
-            %% EXCITE!
-            Size = integer_to_list(httpd_util:flatlength([Body])),
+            Size = integer_to_list(erlang:iolist_size(Body)),
 
             %% Assemble headers...
             Headers = lists:flatten([
