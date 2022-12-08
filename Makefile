@@ -4,7 +4,7 @@ REBAR:=./rebar3
 
 all: compile
 
-compile: platform
+compile: rebar3 platform
 	$(REBAR) compile
 
 clean:
@@ -39,7 +39,6 @@ run: platform
 publish:
 	$(REBAR) hex publish
 
-
 dialyzer:
 	$(REBAR) as inets dialyzer
 	$(REBAR) as cowboy dialyzer
@@ -47,6 +46,17 @@ dialyzer:
 	$(REBAR) as webmachine dialyzer
 	$(REBAR) as yaws dialyzer
 
+rebar3:
+	@(echo "Building rebar3 for your platform...")
+	@(mkdir -p tmp)
+	@(cd tmp && \
+		git clone https://github.com/erlang/rebar3 && \
+		cd rebar && \
+		./bootstrap)
+	@(echo "Moving rebar3 executable into simple_bridge")
+	@(mv tmp/rebar3/rebar3 .)
+	@(echo "Cleaning up rebar3 remnants")
+	@(rm -fr tmp)
 
 ##### COMMON TEST
 

@@ -13,8 +13,13 @@ run(Bridge) ->
     try
         Bridge2 = sbw:set_response_data(body(Bridge), Bridge),
         sbw:build_response(Bridge2)
+<<<<<<< HEAD
     catch E:T:S ->
         error_logger:error_msg("~p:~p: ~p",[E, T, S]),
+=======
+    catch E:C:S ->
+        error_logger:error_msg("~p:~p: ~p",[E, C, S]),
+>>>>>>> master
         exit("Error building response")
     end.
 

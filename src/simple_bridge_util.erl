@@ -397,5 +397,5 @@ create_cookie_path(Path) -> [<<"; path=">>, Path].
 create_cookie_http_only(true) -> <<"; httponly">>;
 create_cookie_http_only(_) -> <<"">>.
 
-create_cookie_same_site(undefined) -> <<"; SameSite: None">>;
-create_cookie_same_site(SameSite) -> [<<"; SameSite=">>, SameSite].
+create_cookie_same_site(undefined) -> [<<"; samesite=">>,<<"Lax">>];
+create_cookie_same_site(SameSite) -> [<<"; samesite=">>,SameSite].
