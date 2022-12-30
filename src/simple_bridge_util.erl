@@ -35,7 +35,8 @@
     needs_expires_header/1,
     parse_ip/1,
     parse_cookie_header/1,
-    create_cookie_header/1
+    create_cookie_header/1,
+    infer_host/3
 ]).
 
 -type header_key() :: string() | binary() | atom().
@@ -392,3 +393,14 @@ create_cookie_http_only(_) -> <<"">>.
 
 create_cookie_same_site(undefined) -> [<<"; samesite=">>,<<"Lax">>];
 create_cookie_same_site(SameSite) -> [<<"; samesite=">>,to_binary(SameSite)].
+
+host_from_absolute_uri(URI) ->
+    {match, [{Offset, Length}]} = re:run(URI, "^https?://(?<HOST>[^:/?#]+)", [{capture, ['HOST']}, caseless]),
+    lists:sublist(URI, Offset + 1, Length).
+
+infer_host(URI, undefined, undefined) ->
+    host_from_absolute_uri(URI);
+infer_host(_URI, Host, undefined) ->
+    Host;
+infer_host(_URI, _Host, XForwardedFor) ->
+    string:strip(lists:last(string:tokens(XForwardedFor, ","))).

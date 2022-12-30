@@ -11,6 +11,7 @@
 -export ([
         init/1,
         protocol/1,
+        host/1,
         request_method/1, 
         path/1, 
         uri/1,
@@ -36,6 +37,14 @@ init(Req) ->
 
 protocol(Req) ->
     wrq:scheme(Req).
+
+host(Req) ->
+  % @TODO: Can we get the absolute URI without all this?
+  BaseURI = wrq:base_uri(Req),
+  MochiHeaders = wrq:req_headers(Req),
+  Host = mochiweb_headers:get_value("host", MochiHeaders),
+  XForwardedFor = mochiweb_headers:get_value("x-forwarded-for", MochiHeaders),
+  simple_bridge_util:infer_host(BaseURI, Host, XForwardedFor).
 
 request_method(Req) -> 
     wrq:method(Req).

@@ -10,6 +10,7 @@
 -export ([
         init/1,
         protocol/1,
+        host/1,
         request_method/1,
         path/1,
         uri/1,
@@ -40,7 +41,13 @@ protocol(Req) ->
         _ -> http
     end.
 
-request_method(Req) -> 
+host(Req) ->
+    Headers = headers(Req),
+    Host = proplists:get_value("host", Headers),
+    XForwardedFor = proplists:get_value("x-forwarded-for", Headers),
+    simple_bridge_util:infer_host(Req#mod.absolute_uri, Host, XForwardedFor).
+
+request_method(Req) ->
     list_to_atom(Req#mod.method).
 
 path(Req) -> 
