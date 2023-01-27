@@ -225,6 +225,8 @@ application. A single bridge will do, pig.
 
 ### Request Bridge Interface
 
+  * **sbw:protocol(Bridge)** - returns request protocol as atom 'http' or 'https'.
+  * **sbw:host(Bridge)** - returns the host value for the request, or the root host from the `x-forwarded-for` header.
   * **sbw:request_method(Bridge)** - returns atom 'GET', 'POST', 'HEAD', etc.
   * **sbw:path(Bridge)** - returns the requested path and file (string)
   * **sbw:peer_ip(Bridge)** - returns the client's IP address in tuple format

@@ -14,6 +14,7 @@
     set_error/2,
     cache_post_params/1,
     protocol/1,
+    host/1,
     path/1,
     uri/1,
     peer_ip/1,
@@ -198,6 +199,7 @@ error(Wrapper) ->
         (Wrapper#sbw.mod):FunctionName(Wrapper#sbw.req)).
 
 ?PASSTHROUGH(protocol).
+?PASSTHROUGH(host).
 ?PASSTHROUGH(path).
 ?PASSTHROUGH(uri).
 ?PASSTHROUGH(peer_ip).

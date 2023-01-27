@@ -24,6 +24,7 @@
 -callback uri(req())                         -> string().
 -callback path(req())                        -> string().
 -callback headers(req())                     -> [{key(), value()}] | map().
+-callback host(req())                        -> string().
 -callback query_params(req())                -> [{key(), value()}].
 -callback post_params(req())                 -> [{key(), value()}].
 -callback peer_ip(req())                     -> ipv4() | ipv8().

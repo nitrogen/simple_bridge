@@ -12,6 +12,7 @@
 -export([
         init/1,
         protocol/1,
+        host/1,
         request_method/1,
         path/1,
         uri/1,
@@ -68,6 +69,11 @@ protocol(ReqKey) ->
         <<"https">> -> https
     end.
 
+host(ReqKey) ->
+    {_RequestCache, Req} = get_key(ReqKey),
+    % @TODO: Could x-forwarded-for be the better value here if it exists?
+    Host = cowboy_req:host(Req),
+    simple_bridge_util:to_list(Host).
 
 request_method(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
