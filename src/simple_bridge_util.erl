@@ -398,4 +398,4 @@ create_cookie_http_only(true) -> <<"; httponly">>;
 create_cookie_http_only(_) -> <<"">>.
 
 create_cookie_same_site(undefined) -> [<<"; samesite=">>,<<"Lax">>];
-create_cookie_same_site(SameSite) -> [<<"; samesite=">>,SameSite].
+create_cookie_same_site(SameSite) -> [<<"; samesite=">>,to_binary(SameSite)].

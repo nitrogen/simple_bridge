@@ -101,7 +101,15 @@ peer_port(ReqKey) ->
 
 headers(ReqKey) ->
     {_RequestCache, Req} = get_key(ReqKey),
-    cowboy_req:headers(Req).
+    Headers = cowboy_req:headers(Req),
+    % When running in TLS mode cowboy doesn't provide a Host
+    % header in the request's headers, but rather it provides
+    % a `host` param in the request itself.
+    case Headers of
+        #{<<"host">> := _}      -> Headers;
+        #{}                     -> maps:put(<<"host">>, cowboy_req:host(Req), Headers);
+        _ when is_list(Headers) -> Headers ++ [{<<"host">>, cowboy_req:host(Req)}]
+    end.
 
 cookies(ReqKey) ->
     {RequestCache, Req} = get_key(ReqKey),
