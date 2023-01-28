@@ -9,6 +9,7 @@
 -export ([
     init/1,
     protocol/1,
+    host/1,
     request_method/1, 
     path/1,
     uri/1,
@@ -51,6 +52,12 @@ init(Req) ->
 
 protocol(Req) ->
     mochiweb_request:get(scheme, Req).
+
+host(Req) ->
+    Headers = mochiweb_request:get(headers, Req),
+    Host = mochiweb_headers:get_value("host", Headers),
+    XForwardedFor = mochiweb_headers:get_value("x-forwarded-for", Headers),
+    simple_bridge_util:infer_host(undefined, Host, XForwardedFor).
 
 request_method(Req) -> 
     mochiweb_request:get(method, Req).

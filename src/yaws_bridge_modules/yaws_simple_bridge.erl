@@ -11,7 +11,7 @@
 -include("simple_bridge.hrl").
 -export ([
     init/1,
-    request_method/1, protocol/1, path/1, uri/1,
+    request_method/1, protocol/1, host/1, path/1, uri/1,
     peer_ip/1, peer_port/1,
     headers/1, cookies/1,
     native_header_type/0,
@@ -35,6 +35,14 @@ protocol(Arg) ->
         S when is_tuple(S), element(1, S) =:= ssl -> https;
         _ -> http
     end.
+
+host(Arg) ->
+    % @TODO: Can we get the full URL without parsing and printing or importing an internal yaws .hrl?
+    URL = yaws_api:request_url(Arg),
+    [_Scheme, Host, _Port, _Path, _QueryPart] = yaws_api:format_url(URL),
+    Headers = yaws_api:arg_headers(Arg),
+    XForwardedFor = yaws_api:headers_x_forwarded_for(Headers) ,
+    simple_bridge_util:infer_host(undefined, Host, XForwardedFor).
 
 request_method(Arg) ->
     yaws_api:http_request_method(yaws_api:arg_req(Arg)).

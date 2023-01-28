@@ -36,7 +36,8 @@
     needs_expires_header/1,
     parse_ip/1,
     parse_cookie_header/1,
-    create_cookie_header/1
+    create_cookie_header/1,
+    infer_host/3
 ]).
 
 -type header_key() :: string() | binary() | atom().
@@ -399,3 +400,20 @@ create_cookie_http_only(_) -> <<"">>.
 
 create_cookie_same_site(undefined) -> [<<"; samesite=">>,<<"Lax">>];
 create_cookie_same_site(SameSite) -> [<<"; samesite=">>,to_binary(SameSite)].
+
+host_from_absolute_uri(URI) ->
+    ParseMap = uri_string:parse(URI),
+    Host = maps:get(host, ParseMap, undefined),
+    Host.
+
+infer_host(URI, undefined, undefined) ->
+    host_from_absolute_uri(URI);
+infer_host(_URI, Host, undefined) ->
+    maybe_strip_port_from_host(Host);
+infer_host(_URI, _Host, XForwardedFor) ->
+    string:strip(lists:last(string:tokens(XForwardedFor, ","))).
+
+maybe_strip_port_from_host(Domain) ->
+    [X | _] = string:split(Domain, ":"),
+    X.
+    

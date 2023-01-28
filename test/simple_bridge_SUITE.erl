@@ -14,6 +14,7 @@
 	protocol/1,
 	path/1,
 	uri/1,
+    host/1,
 	request_method_get/1,
 	request_method_post/1,
 	request_body/1,
@@ -31,7 +32,7 @@ all() -> [{group, main}].
 groups() ->
 	[{main, 
 		[parallel, {repeat, 1}],
-		[peer_ip, request_method_get, request_method_post, request_body, protocol, path, query_params, post_params, static, deep_static, deeper_static, cookie_list, cookie_binary]
+		[host, uri, peer_ip, request_method_get, request_method_post, request_body, protocol, path, query_params, post_params, static, deep_static, deeper_static, cookie_list, cookie_binary]
 	}].
 
 init_per_group(main, Config) ->
@@ -56,8 +57,10 @@ path(_) ->
 	"\"/path\"" = request("path").
 
 uri(_) ->
-	"http://127.0.0.1:8000/uri" = request("uri").
+	"\"/uri\"" = request("uri").
 
+host(_) ->
+    "\"127.0.0.1\"" = request("host").
 
 request_method_get(_) ->
 	"'GET'" = request("request_method_get").
@@ -122,7 +125,7 @@ get_static(File) ->
 request(Path) ->
 	URL = "http://127.0.0.1:8000/" ++ Path,
 	{ok, {_, _, Val}} = httpc:request(URL),
-	Val.
+    Val.
 
 post(Path, Body) ->
 	URL = "http://127.0.0.1:8000/" ++ Path,
