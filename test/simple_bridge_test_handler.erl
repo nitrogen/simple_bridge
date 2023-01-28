@@ -11,6 +11,7 @@ run(Bridge) ->
     Bridge2 = run(Path, Bridge),
 	sbw:build_response(Bridge2).
 
+run("/host", Bridge) -> simple_call(host, Bridge);
 run("/peer_ip", Bridge) -> simple_call(peer_ip, Bridge);
 run("/protocol", Bridge) -> simple_call(protocol, Bridge);
 run("/path", Bridge) -> simple_call(path, Bridge);

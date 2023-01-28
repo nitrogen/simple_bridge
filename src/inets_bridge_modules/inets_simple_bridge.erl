@@ -45,6 +45,7 @@ host(Req) ->
     Headers = headers(Req),
     Host = proplists:get_value("host", Headers),
     XForwardedFor = proplists:get_value("x-forwarded-for", Headers),
+    error_logger:info_msg("~p, ~p, ~p~n",[Req#mod.absolute_uri, Host, XForwardedFor]),
     simple_bridge_util:infer_host(Req#mod.absolute_uri, Host, XForwardedFor).
 
 request_method(Req) ->

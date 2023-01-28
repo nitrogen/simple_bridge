@@ -395,12 +395,18 @@ create_cookie_same_site(undefined) -> [<<"; samesite=">>,<<"Lax">>];
 create_cookie_same_site(SameSite) -> [<<"; samesite=">>,to_binary(SameSite)].
 
 host_from_absolute_uri(URI) ->
-    {match, [{Offset, Length}]} = re:run(URI, "^https?://(?<HOST>[^:/?#]+)", [{capture, ['HOST']}, caseless]),
-    lists:sublist(URI, Offset + 1, Length).
+    ParseMap = uri_string:parse(URI),
+    Host = maps:get(host, ParseMap, undefined),
+    Host.
 
 infer_host(URI, undefined, undefined) ->
     host_from_absolute_uri(URI);
 infer_host(_URI, Host, undefined) ->
-    Host;
+    maybe_strip_port_from_host(Host);
 infer_host(_URI, _Host, XForwardedFor) ->
     string:strip(lists:last(string:tokens(XForwardedFor, ","))).
+
+maybe_strip_port_from_host(Domain) ->
+    [X | _] = string:split(Domain, ":"),
+    X.
+    
