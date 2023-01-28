@@ -1,4 +1,4 @@
-# 2.2.0
+# 2.2.0 (in-progress)
 
 * Add proper support for the cookie `SameSite` attribute.
 * Remove use of deprecated `httpd_util:flatlength`
@@ -6,6 +6,9 @@
   required, just removed from documentation).
 * Add a bunch of build rules and rebar3 profiles to build and test all backends
   with rebar3.
+* Add `sbw:host/1` that will try to intelligently return the hostname from the
+  request, either from the full URI, the host header, or the X-forwarded-for
+  header.
 
 # 2.1.1
 
