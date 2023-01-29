@@ -34,6 +34,7 @@ init([]) ->
     Opts = #{env => #{dispatch => Dispatch},
              max_keepalive => 100},
 
+    %% TODO: This should be cowboy:start_tls ir using TLS.
     cowboy:start_clear(http, [{ip, IP}, {port, Port}], Opts),
 
     {ok, { {one_for_one, 5, 10}, []}}.
