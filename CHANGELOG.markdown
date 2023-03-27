@@ -1,3 +1,10 @@
+# 2.3.0
+
+* Add support `sbw:host/1` function (#80, thanks @dmsnell)
+* Ensure a cookie's `SameSite` attribute is properly cast to a binary (fixing a
+  crash if it's specified as, say, an atom)
+* Add CSS to inets fallback mimetype support
+
 # 2.2.0
 
 * Add proper support for the cookie `SameSite` attribute.
