@@ -468,7 +468,7 @@ guidelines](https://github.com/nitrogen/nitrogen/blob/master/CONTRIB.markdown).
 Simple Bridge was created by [Rusty Klophaus](http://rusty.io) in 2008 and has
 been maintained by [Jesse Gumm](http://jessegumm.com) since 2011.
 
-Simple Bridge is copyright 2008-2021 Rusty Klophaus and Jesse Gumm.
+Simple Bridge is copyright 2008-2023 Rusty Klophaus and Jesse Gumm.
 
 Licensed under the [MIT
-License](https://github.com/nitrogen/simple_bridge/blob/master/MIT-LICENSE)
+License](https://github.com/nitrogen/simple_bridge/blob/master/LICENSE.markdown)
