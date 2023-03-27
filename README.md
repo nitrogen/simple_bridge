@@ -132,7 +132,7 @@ A Handler module is expected to export the following functions:
 
   + `run(Bridge)` - Bridge will be an initialized instance of a SimpleBridge
     object, and the last step of the run will be the return value of
-    `BridgeX:build_response()`
+    `sbw:build_response(Bridge)`
   + `ws_init(Bridge)` - Called when a websocket connection is initialized.
     + Return Values:
       + `ok` - Everything went okay, proceed with the connection.
@@ -280,10 +280,9 @@ inconvenient to have to include the `simple_bridge.hrl` header in your
 application's modules.  The safer and more portable approach is to use the
 `sb_uploaded_file` module provided by Simple Bridge.
 
-As with the Bridge module above, all `sb_uploaded_file` objects can be referenced in either of two ways:
+As with the Bridge module above, all `sb_uploaded_file` objects can be referenced by:
 
-  + Standard Erlang Calls: `sb_uploaded_file:function_name(File)`
-  + Parameter Module Style Calls: `File:function_name()`
+  + `sb_uploaded_file:function_name(File)`
 
 `sb_uploaded_file` exports the following functions:
 
@@ -358,7 +357,7 @@ The Bridge modules export the following functions:
 
 
 Finally, you build the response to send to your HTTP server with the
-`build_response/0` function.
+`sbw:build_response/1` function.
 
   * **sbw:build_response(Bridge)** - Create a response tuple that you can hand
     off to your HTTP server.
@@ -461,7 +460,7 @@ We can be found on:
 
 If you wish to contribute to SimpleBridge's development, check out our
 [contribution
-guidelines](https://github.com/nitrogen/nitrogen/blob/master/CONTRIB.markdown).
+guidelines](https://github.com/nitrogen/nitrogen/blob/master/CONTRIB.md).
 
 ## License and Copyright
 
@@ -471,4 +470,4 @@ been maintained by [Jesse Gumm](http://jessegumm.com) since 2011.
 Simple Bridge is copyright 2008-2023 Rusty Klophaus and Jesse Gumm.
 
 Licensed under the [MIT
-License](https://github.com/nitrogen/simple_bridge/blob/master/LICENSE.markdown)
+License](https://github.com/nitrogen/simple_bridge/blob/master/LICENSE.md)

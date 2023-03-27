@@ -192,8 +192,8 @@ binarize_header(Header) when is_list(Header) ->
 %% list, it will be easier to check for existence, and shouldn't require all
 %% this conversion that's being done right here.
 %%
-%% Checks if `Header` exists as a key in `HeaderList`
-%% if it doesn't, inserts it with the value `Value`
+%% Checks if Header exists as a key in HeaderList
+%% if it doesn't, inserts it with the provided Value.
 -spec ensure_header(header_list(), {header_key(), term()}) -> header_list().
 ensure_header(HeaderList,{Header,Value}) ->
     ensure_header(HeaderList,Header,Value).
