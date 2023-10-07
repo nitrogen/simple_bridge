@@ -451,7 +451,7 @@ etc). See the "DEPRECATION NOTICE" a few sections above.
 
 We can be found on:
 
-  * [The Nitrogen Discord](https://discord.nitrogenproject.com)
+  * [The Nitrogen Discord](http://discord.nitrogenproject.com)
   * [The Erlang Slack](https://erlef.org/slack-invite/erlef) in `#nitrogen`
   * [The Erlang Forum](https://erlangforums.com/c/erlang-frameworks/nitrogen-forum/66)
   * [The Nitrogen Mailing List](https://groups.google.com/forum/#!forum/nitrogenweb)
