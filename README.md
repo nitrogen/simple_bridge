@@ -451,8 +451,10 @@ etc). See the "DEPRECATION NOTICE" a few sections above.
 
 We can be found on:
 
+  * [The Nitrogen Discord](https://discord.nitrogenproject.com)
+  * [The Erlang Slack](https://erlef.org/slack-invite/erlef) in `#nitrogen`
+  * [The Erlang Forum](https://erlangforums.com/c/erlang-frameworks/nitrogen-forum/66)
   * [The Nitrogen Mailing List](https://groups.google.com/forum/#!forum/nitrogenweb)
-  * irc.freenode.net: #nitrogen
   * Or you can email Jesse Gumm directly at
     [gumm@sigma-star.com](mailto:gumm@sigma-star.com)
 
@@ -460,7 +462,7 @@ We can be found on:
 
 If you wish to contribute to SimpleBridge's development, check out our
 [contribution
-guidelines](https://github.com/nitrogen/nitrogen/blob/master/CONTRIB.md).
+guidelines](https://github.com/nitrogen/nitrogen/blob/master/CONTRIB.markdown).
 
 ## License and Copyright
 
