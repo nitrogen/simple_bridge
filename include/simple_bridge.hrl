@@ -22,7 +22,7 @@
 -type key()			:: atom() | binary().
 -type value()		:: binary() | string().
 -type ipv4()		:: {integer(), integer(), integer(), integer()}.
--type ipv8()		:: {integer(), integer(), integer(), integer(), integer(), integer(), integer(), integer()}.
+-type ipv6()		:: {integer(), integer(), integer(), integer(), integer(), integer(), integer(), integer()}.
 
 -record(sb_uploaded_file, { original_name, temp_file, size, field_name, data }).
 -record(request_cache, {request, docroot="", body=""}).

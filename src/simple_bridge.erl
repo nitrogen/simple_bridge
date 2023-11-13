@@ -27,7 +27,7 @@
 -callback host(req())                        -> string().
 -callback query_params(req())                -> [{key(), value()}].
 -callback post_params(req())                 -> [{key(), value()}].
--callback peer_ip(req())                     -> ipv4() | ipv8().
+-callback peer_ip(req())                     -> ipv4() | ipv6().
 -callback build_response(req(), #response{}) -> any().
 -callback native_header_type()               -> map | list.
 
@@ -39,7 +39,6 @@ start() ->
 
 start(Backend) ->
     start(Backend, undefined).
-
 
 start(Backend, Handler) when is_atom(Backend) ->
     application:load(simple_bridge),
