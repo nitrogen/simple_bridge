@@ -16,7 +16,7 @@
 %-compile(export_all).
 -include("simple_bridge.hrl").
 
--define(else, true).
+-define(otherwise, true).
 
 -define(WS_MAGIC, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").
 -define(WS_VERSION, "13").
@@ -66,7 +66,7 @@ attempt_hijacking(Bridge, Handler) ->
                     hijack_request_fail(Bridge)
             end,
             {hijacked, HijackedBridge};
-        ?else ->
+        ?otherwise ->
             spared      %% Spared from being hijacked
     end.
 
@@ -380,10 +380,10 @@ type(?WS_BINARY) -> binary;
 type(?WS_TEXT) -> text.
 
 -define(DO_FRAMES(Mask),
-    if 
+    if
         byte_size(Data) >= PayloadLen ->
             do_frames(Fin,RSV,Op,PayloadLen,Mask,Data);
-        ?else ->
+        ?otherwise ->
             [Raw]
     end).
 
