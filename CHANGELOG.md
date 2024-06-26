@@ -1,3 +1,7 @@
+# 2.3.1 (in progress)
+
+* Fixed a compatibility but with Erlang 27 (@bunnylushington)
+
 # 2.3.0
 
 * Add support `sbw:host/1` function (#80, thanks @dmsnell)
