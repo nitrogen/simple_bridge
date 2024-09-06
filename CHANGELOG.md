@@ -1,4 +1,4 @@
-# 2.3.1 (in progress)
+# 2.3.1
 
 * Fixed a compatibility but with Erlang 27 (@bunnylushington)
 

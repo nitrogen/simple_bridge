@@ -24,3 +24,5 @@ reports/
 _build/
 vm.args
 rebar3
+doc/
+rebar3.crashdump
