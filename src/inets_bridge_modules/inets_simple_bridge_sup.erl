@@ -30,7 +30,8 @@ init([]) ->
             case proplists:get_value(httpd, Services) of
                 undefined ->
                     build_config(HasMimetypes);
-                _ -> ok
+                HttpdConfig ->
+                    merge_config(HasMimetypes, HttpdConfig)
             end
     end,
 
@@ -80,6 +81,34 @@ build_config(HasMimetypes) ->
             NewServices = [Httpd | Services],
             application:set_env(inets, services, NewServices)
     end.
+
+merge_config(HasMimetypes, HttpdConfig) ->
+    io:format("Configuration for inets httpd exists, merging with simple_bridge.config...~n"),
+    {Address, Port} = simple_bridge_util:get_address_and_port(inets),
+    {DocRoot, StaticPaths} = simple_bridge_util:get_docroot_and_static_paths(inets),
+    io:format("Starting Inets Server at ~p:~p~n", [Address, Port]),
+    io:format("Static Paths: ~p~nDocument Root for Static: ~s~n", [StaticPaths, DocRoot]),
+
+    Modules = proplists:get_value(modules, HttpdConfig, []),
+
+    DefaultHttpd = [
+        {bind_address, simple_bridge_util:parse_ip(Address)},
+        {port, Port},
+        {server_name, "simple_bridge_inets"},
+        {server_root, "."},
+        {document_root, DocRoot},
+        {modules, lists:append(Modules, [simple_bridge_util:get_anchor_module(inets)])},
+        {mime_types, build_mimetypes(HasMimetypes)}
+    ],
+
+    HttpdConfig0 = proplists:delete(modules, HttpdConfig),
+
+    MergedHttpd = lists:umerge(lists:sort(HttpdConfig0), lists:sort(DefaultHttpd)),
+
+    {ok, Services} = application:get_env(inets, services),
+
+    NewServices = lists:keyreplace(httpd, 1, Services, {httpd, MergedHttpd}),
+    application:set_env(inets, services, NewServices).
 
 build_mimetypes(true = _HasMimetypes) ->
     [{binary_to_list(Ext), binary_to_list(hd(mimetypes:ext_to_mimes(Ext)))} 
