@@ -1,4 +1,4 @@
-# 2.3.2 (in progress)
+# 2.3.2
 
 - Fixed a warning in the compatibility script
 - Fixed OTP29 warnings related to bare `catch` expressions.
