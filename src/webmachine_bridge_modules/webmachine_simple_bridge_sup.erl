@@ -5,7 +5,7 @@
 -export([
     start_link/0,
     init/1
-]).
+    ]).
 
 %% Helper macro for declaring children of supervisor
 -define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
@@ -25,17 +25,17 @@ init([]) ->
     application:start(inets),
     application:start(crypto),
     application:load(webmachine),
-
+    
     {Address, Port} = simple_bridge_util:get_address_and_port(webmachine),
     Dispatch = generate_dispatch(),
-
+    
     io:format("Starting Webmachine Server on ~p:~p~n", [Address, Port]),
-
+    
     Options = [
-        {ip, Address}, 
-        {port, Port},
-        {dispatch, Dispatch}
-    ],
+            {ip, Address}, 
+            {port, Port},
+            {dispatch, Dispatch}
+            ],
     Web = {webmachine_mochiweb,
             {webmachine_mochiweb, start, [Options]},
             permanent, 5000, worker, [mochiweb_socket_server]},
@@ -43,36 +43,49 @@ init([]) ->
     {ok, _} = application:ensure_all_started(webmachine),
     {ok, { {one_for_one, 5, 10}, Processes} }.
 
-generate_dispatch() ->
-    case application:get_env(simple_bridge, webmachine_dispatch) of
-        {ok, Dispatch} -> Dispatch;
+generate_dispatch() ->    
+    DispatchStrategy = case application:get_env(simple_bridge, dispatch_strategy) of
+        {ok, override} -> override;
+        {ok, merge} -> merge;
+        _ -> override
+    end,    
+    Dispatches = case application:get_env(simple_bridge, webmachine_dispatch) of
+        {ok, CustomDispatches} -> 
+            if 
+                DispatchStrategy =:= override -> CustomDispatches;
+                true -> make_default_dispatch(CustomDispatches)
+            end;
         undefined ->
             case application:get_env(simple_bridge, webmachine_dispatch_fun) of
                 {ok, {M,F}} ->
-                    M:F();
+                    CustomDispatches = M:F(),
+                    if 
+                        DispatchStrategy =:= override -> CustomDispatches;
+                        true -> make_default_dispatch(CustomDispatches) 
+                    end;
                 undefined ->
-                    build_dispatch()
+                    make_default_dispatch([])
             end
-    end.
+    end,
+    build_dispatch(Dispatches).
 
-build_dispatch() ->
+make_default_dispatch(CustomRoutes) ->
     {DocRoot, StaticPaths} = simple_bridge_util:get_docroot_and_static_paths(webmachine),
-    io:format("Static Paths: ~p~nDocument Root for Static: ~s~n",
-              [StaticPaths, DocRoot]),
-    build_dispatch(DocRoot, StaticPaths).
-    
-
-build_dispatch(DocRoot, StaticPaths) -> 
-    Handler = simple_bridge_util:get_env(handler),
+    io:format("Static Paths: ~p~nDocument Root for Static: ~s~nCustom Routes: ~p~n",
+        [StaticPaths, DocRoot, CustomRoutes]),
+    %% Static content handlers can be defined manually like so:
+    %% {["js", '*'],       webmachine_simple_bridge_static, [{root, "./site/static/js"}]},
+    %% {["css", '*'],      webmachine_simple_bridge_static, [{root, "./site/static/css"}]},
+    %% {["images", '*'],   webmachine_simple_bridge_static, [{root, "./site/static/images"}]},
+    %%
+    %% But instead of doing it manually, we'll load it from the configuration
     StaticDispatches = [make_static_dispatch(DocRoot, StaticPath) || StaticPath <- StaticPaths],
-    StaticDispatches ++ [
-        %% Static content handlers can be defined manually like so:
-        %% {["js", '*'],       webmachine_simple_bridge_static, [{root, "./site/static/js"}]},
-        %% {["css", '*'],      webmachine_simple_bridge_static, [{root, "./site/static/css"}]},
-        %% {["images", '*'],   webmachine_simple_bridge_static, [{root, "./site/static/images"}]},
-        %%
-        %% But instead of doing it manually, we'll load it from the configuration
+    StaticDispatches ++ CustomRoutes.
 
+
+build_dispatch(Dispatches) ->     
+    Handler = simple_bridge_util:get_env(handler),
+    Dispatches ++ [        
         %% Add routes to your modules here. The last entry makes the
         %% system use simple_bridge's handler, which is a generic handler for
         %% all non-static requests, and uses the `handler` configuration
@@ -85,7 +98,7 @@ build_dispatch(DocRoot, StaticPaths) ->
         %% {["path","to","module2",'*'], HandlerModule2, InitialState2}
         %% {["path","to","module3",'*'], HandlerModule3, InitialState3}
         {['*'], simple_bridge_util:get_anchor_module(webmachine), Handler}
-    ].
+        ].
 
 join_path(Root,Path) when is_binary(Root) orelse is_binary(Path) ->
     join_path(wf:to_list(Root),wf:to_list(Path));
