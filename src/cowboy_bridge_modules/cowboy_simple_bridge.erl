@@ -162,9 +162,7 @@ recv_from_socket(_Length, _Timeout, ReqKey) ->
             Data;
         {more, Data, NewReq} ->
             put_key(ReqKey, RequestCache#request_cache{request = NewReq}),
-            Data;
-        {error, Reason} ->
-            exit({error, Reason}) %% exit(normal) instead?
+            Data
     end.
 
 
@@ -174,7 +172,7 @@ protocol_version(ReqKey) ->
     case Version of
         'HTTP/1.1' -> {1, 1};
         'HTTP/1.0' -> {1, 0};
-        {H, L} -> {H, L}
+        'HTTP/2' -> {2, 0}
     end.
 
 %% RESPONSE
